@@ -14,12 +14,11 @@ export default class Game extends Phaser.Scene {
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
   id: number = NaN;
   playerPos  = { x: 0, y: 0 };
-  handledPlayerData: boolean = true;
   sentPos = { x: 0, y: 0};
 
   preload() {}
 
-  create() {     
+  create() {
     // @ts-ignore
     this.cursors = this.input.keyboard.createCursorKeys();
 
@@ -73,4 +72,4 @@ export default class Game extends Phaser.Scene {
       playerRectangles[this.id].y = this.playerPos.y;
     }
   }
-} 
+}
