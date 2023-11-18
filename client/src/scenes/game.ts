@@ -95,13 +95,23 @@ export default class Game extends Phaser.Scene {
     if (this.cursors?.down.isDown) {
       move.y = 1;
     }
+
     if (move.x === 0 && move.y === 0) {
       return;
     }
-    if (this.physics.world.bounds.contains(this.playerPos.x + move.x, this.playerPos.y + move.y)) {
-      this.playerPos.x += move.x;
-      this.playerPos.y += move.y;
-    }
+
+    let playerWidth = 50;
+    let playerHeight = 100;
+    if (
+        this.physics.world.bounds.x <= (this.playerPos.x + move.x) - playerWidth / 2 &&
+        this.physics.world.bounds.y <= (this.playerPos.y + move.y) - playerHeight / 2 &&
+        this.physics.world.bounds.right >= (this.playerPos.x + move.x) + playerWidth / 2 &&
+        this.physics.world.bounds.bottom >= (this.playerPos.y + move.y) + playerHeight / 2
+      )
+      {
+        this.playerPos.x += move.x;
+        this.playerPos.y += move.y;
+      }
   }
 
   update() {
