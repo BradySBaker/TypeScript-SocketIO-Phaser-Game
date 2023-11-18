@@ -16,7 +16,7 @@ const io = new Server(3000, {
 });
 
 io.on('connection', (socket: Socket) => {
-  const newPlayer: Player = { x: 0, y: 0 };
+  const newPlayer: Player = { x: 300, y: 300 };
   playerPositions.push(newPlayer);
   let playerId = playerCount;
   io.to(socket.id).emit('playerData', playerPositions, playerId);
