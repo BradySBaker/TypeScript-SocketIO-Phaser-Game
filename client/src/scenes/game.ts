@@ -16,8 +16,8 @@ export default class Game extends Phaser.Scene {
 
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
   id: number = NaN;
-  playerPos  = { x: 0, y: 0 };
-  sentPos = { x: 0, y: 0};
+  playerPos: Player = {x: 0, y: 0};
+  sentPos: Player = {x: 0, y: 0};
 
 
   preload() {}
@@ -30,7 +30,6 @@ export default class Game extends Phaser.Scene {
       }
     });
 
-    this.physics.world.enable(this.playerGroup);
 
     this.physics.add.collider(this.playerGroup, this.playerGroup, (object1, object2) => {
       const player1 = object1 as Phaser.GameObjects.Rectangle;
@@ -40,7 +39,7 @@ export default class Game extends Phaser.Scene {
       console.log(player1.y, player2.y);
   });
 
-    this.physics.world.setBoundsCollision(false, false, false, true);
+    this.physics.world.setBoundsCollision(true);
 
     // @ts-ignore
     this.cursors = this.input.keyboard.createCursorKeys();
@@ -54,6 +53,8 @@ export default class Game extends Phaser.Scene {
       data.forEach((curPlayer: Player, idx) => {
         playerRectangles[idx] = this.add.rectangle(curPlayer.x, curPlayer.y, 50, 100, 0xfffff);
         this.playerGroup?.add(playerRectangles[idx]);
+        this.playerPos.x = curPlayer.x;
+        this.playerPos.y = curPlayer.y;
       });
     });
 
@@ -81,25 +82,33 @@ export default class Game extends Phaser.Scene {
   }
 
   handleMovement() {
+    let move: Player = {x: 0, y: 0};
     if (this.cursors?.right.isDown ) {
-      this.playerPos.x++;
+      move.x = 1;
     }
     if (this.cursors?.left.isDown) {
-      this.playerPos.x--;
+      move.x = -1;
     }
     if (this.cursors?.up.isDown) {
-      this.playerPos.y--;
+      move.y = -1;
     }
     if (this.cursors?.down.isDown) {
-      this.playerPos.y++;
+      move.y = 1;
+    }
+    if (move.x === 0 && move.y === 0) {
+      return;
+    }
+    if (this.physics.world.bounds.contains(this.playerPos.x + move.x, this.playerPos.y + move.y)) {
+      this.playerPos.x += move.x;
+      this.playerPos.y += move.y;
     }
   }
 
   update() {
     this.handleMovement();
     if (this.id !== undefined && playerRectangles[this.id]) {
-      playerRectangles[this.id].x = this.playerPos.x;
-      playerRectangles[this.id].y = this.playerPos.y;
+        playerRectangles[this.id].x = this.playerPos.x;
+        playerRectangles[this.id].y = this.playerPos.y;
     }
   }
 }
