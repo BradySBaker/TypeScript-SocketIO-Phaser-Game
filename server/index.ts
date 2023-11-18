@@ -4,10 +4,10 @@ let playerCount: number = 0;
 
 type Player = {
   x: number,
-  y: number
+  y: number,
 };
 
-let playerPositions: Player[] = [];
+let playerPositions: {[playerId: number]: Player} = {};
 
 const io = new Server(3000, {
   cors: {
@@ -16,9 +16,8 @@ const io = new Server(3000, {
 });
 
 io.on('connection', (socket: Socket) => {
-  const newPlayer: Player = { x: 300, y: 300 };
-  playerPositions.push(newPlayer);
   let playerId = playerCount;
+  playerPositions[playerId] = {x: 300, y: 300 };
   io.to(socket.id).emit('playerData', playerPositions, playerId);
   io.emit('newPlayer', playerPositions, playerId);
   playerCount++;
@@ -28,9 +27,11 @@ io.on('connection', (socket: Socket) => {
     io.emit('updatePosition', pos, playerId);
   })
 
+  socket.on('disconnect', () => {
+    console.log(`Player ${playerId} disconnected`);
+    delete playerPositions[playerId];
+    io.emit('deletePlayer', playerId);
+  });
+
 });
 
-
-io.on('disconnect', () => {
-
-});

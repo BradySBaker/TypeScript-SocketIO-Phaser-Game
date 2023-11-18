@@ -3,6 +3,15 @@ import { io } from 'socket.io-client';
 
 const socket = io('http://localhost:3000');
 
+window.addEventListener('beforeunload', () => {
+  socket.disconnect(); // Manually disconnect the Socket.IO connection
+  console.log('Disconnecting before page unload');
+});
+
+window.addEventListener('unload', () => {
+  socket.disconnect(); // Manually disconnect the Socket.IO connection
+  console.log('Page unloaded');
+});
 
 const playerRectangles: { [id: number]: Phaser.GameObjects.Rectangle } = {};
 
@@ -65,22 +74,27 @@ export default class Game extends Phaser.Scene {
       console.log('connected');
     });
 
-    socket.on('playerData', (data: Player[], id: number) => {
+    socket.on('playerData', (data: {[id: number]: Player}, id: number) => { //Recieved personal player data
       this.id = id;
-      data.forEach((curPlayer: Player, idx) => {
-        playerRectangles[idx] = this.add.rectangle(curPlayer.x, curPlayer.y, 50, 100, 0xfffff);
-        this.playerGroup?.add(playerRectangles[idx]);
-        this.playerPos.x = curPlayer.x;
-        this.playerPos.y = curPlayer.y;
-      });
+      for (let playerId in data) {
+        playerRectangles[playerId] = this.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
+        this.playerGroup?.add(playerRectangles[playerId]);
+        this.playerPos.x = data[playerId].x;
+        this.playerPos.y = data[playerId].y;
+      }
     });
 
-    socket.on('newPlayer', (pos, id) => {
+    socket.on('newPlayer', (pos, id) => { //New player joined
       if (id === this.id) {
         return;
       }
       playerRectangles[id] = this.add.rectangle(pos.x, pos.y, 50, 100, 0xfffff);
       this.playerGroup?.add(playerRectangles[id]);
+    });
+
+    socket.on('deletePlayer', (id) => { //Player left
+      playerRectangles[id].destroy();
+      delete playerRectangles[id];
     });
 
     setInterval(() => {
