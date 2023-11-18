@@ -28,7 +28,9 @@ io.on('connection', (socket: Socket) => {
   })
 
   socket.on('disconnect', () => {
-    console.log(playerId);
+    console.log(`Player ${playerId} disconnected`);
+    delete playerPositions[playerId];
+    io.emit('deletePlayer', playerId);
   });
 
 });

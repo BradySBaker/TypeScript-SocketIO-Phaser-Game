@@ -74,7 +74,7 @@ export default class Game extends Phaser.Scene {
       console.log('connected');
     });
 
-    socket.on('playerData', (data: {[id: number]: Player}, id: number) => {
+    socket.on('playerData', (data: {[id: number]: Player}, id: number) => { //Recieved personal player data
       this.id = id;
       for (let playerId in data) {
         playerRectangles[playerId] = this.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
@@ -84,12 +84,17 @@ export default class Game extends Phaser.Scene {
       }
     });
 
-    socket.on('newPlayer', (pos, id) => {
+    socket.on('newPlayer', (pos, id) => { //New player joined
       if (id === this.id) {
         return;
       }
       playerRectangles[id] = this.add.rectangle(pos.x, pos.y, 50, 100, 0xfffff);
       this.playerGroup?.add(playerRectangles[id]);
+    });
+
+    socket.on('deletePlayer', (id) => { //Player left
+      playerRectangles[id].destroy();
+      delete playerRectangles[id];
     });
 
     setInterval(() => {
