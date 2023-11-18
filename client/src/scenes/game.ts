@@ -12,6 +12,7 @@ type Player = {
 }
 
 export default class Game extends Phaser.Scene {
+  collision = false;
   playerGroup?: Phaser.GameObjects.Group;
 
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
@@ -32,15 +33,31 @@ export default class Game extends Phaser.Scene {
 
 
     this.physics.add.collider(this.playerGroup, this.playerGroup, (object1, object2) => {
-      const player1 = object1 as Phaser.GameObjects.Rectangle;
-      const player2 = object2 as Phaser.GameObjects.Rectangle;
+      let curPlayer;
+      let otherPlayer;
+      if (playerRectangles[this.id] === object1) {
+        curPlayer = object1 as Phaser.GameObjects.Rectangle;
+        otherPlayer = object2 as Phaser.GameObjects.Rectangle;
+      } else {
+        curPlayer = object2 as Phaser.GameObjects.Rectangle;
+        otherPlayer = object1 as Phaser.GameObjects.Rectangle;
+      }
 
-      console.log(player1.x, player2.x);
-      console.log(player1.y, player2.y);
+      const overlapRect = Phaser.Geom.Rectangle.Intersection(curPlayer.getBounds(), otherPlayer.getBounds());
+
+      let separationX = overlapRect.width / 2;
+      let separationY = overlapRect.height / 2;
+
+      if (overlapRect.width < overlapRect.height) {
+        this.playerPos.x += curPlayer.x > otherPlayer.x ? separationX : -separationX;
+      } else {
+        this.playerPos.y += curPlayer.y > otherPlayer.y ? separationY : -separationY;
+      }
+
+
   });
 
     this.physics.world.setBoundsCollision(true);
-
     // @ts-ignore
     this.cursors = this.input.keyboard.createCursorKeys();
 
@@ -75,7 +92,6 @@ export default class Game extends Phaser.Scene {
     }, 50);
 
     socket.on('updatePosition', (pos: Player, id: number) => {
-      console.log('updated')
       playerRectangles[id].x = pos.x;
       playerRectangles[id].y = pos.y;
     });
