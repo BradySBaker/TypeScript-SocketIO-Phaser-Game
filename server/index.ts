@@ -31,6 +31,6 @@ io.on('connection', (socket: Socket) => {
 });
 
 
-io.on('disconnect', () => {
-
+io.on('disconnect', (userId) => {
+  console.log(userId);
 });
