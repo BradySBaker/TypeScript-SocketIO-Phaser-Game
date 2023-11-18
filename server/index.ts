@@ -22,14 +22,15 @@ io.on('connection', (socket: Socket) => {
   io.to(socket.id).emit('playerData', playerPositions, playerId);
   io.emit('newPlayer', playerPositions, playerId);
   playerCount++;
-  socket.on('updatePosition', (pos: Player) => {
+
+  socket.on('updatePosition', (pos: Player) => { //recieved player position and sends it to all clients
     playerPositions[playerId] = pos;
     io.emit('updatePosition', pos, playerId);
   })
+
 });
 
 
 io.on('disconnect', () => {
 
 });
-//

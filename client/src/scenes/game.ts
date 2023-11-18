@@ -25,13 +25,18 @@ export default class Game extends Phaser.Scene {
     socket.on('connect', () => {
       console.log('connected');
     });
+
     socket.on('playerData', (data: Player[], id: number) => {
       this.id = id;
       data.forEach((curPlayer: Player, idx) => {
         playerRectangles[idx] = this.add.rectangle(curPlayer.x, curPlayer.y, 50, 100, 0xfffff);
       });
     });
+
     socket.on('newPlayer', (pos, id) => {
+      if (id === this.id) {
+        return;
+      }
       playerRectangles[id] = this.add.rectangle(pos.x, pos.y, 50, 100, 0xfffff);
     });
 
