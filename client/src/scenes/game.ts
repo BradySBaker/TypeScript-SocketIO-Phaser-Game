@@ -1,24 +1,47 @@
-import Phaser from "phaser";
+import Phaser, { GameObjects } from "phaser";
 import { io } from 'socket.io-client';
 
 const socket = io('http://localhost:3000');
 
-type Player = {
-  x: number,
-  y: number
-};
 
 const playerRectangles: { [id: number]: Phaser.GameObjects.Rectangle } = {};
 
+type Player = {
+  x: number;
+  y: number;
+}
+
 export default class Game extends Phaser.Scene {
+  playerGroup?: Phaser.GameObjects.Group;
+
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
   id: number = NaN;
   playerPos  = { x: 0, y: 0 };
   sentPos = { x: 0, y: 0};
 
+
   preload() {}
 
   create() {
+    this.playerGroup = this.add.group({
+      classType: Phaser.GameObjects.Rectangle,
+      createCallback: (player) => {
+        this.physics.world.enable(player);
+      }
+    });
+
+    this.physics.world.enable(this.playerGroup);
+
+    this.physics.add.collider(this.playerGroup, this.playerGroup, (object1, object2) => {
+      const player1 = object1 as Phaser.GameObjects.Rectangle;
+      const player2 = object2 as Phaser.GameObjects.Rectangle;
+
+      console.log(player1.x, player2.x);
+      console.log(player1.y, player2.y);
+  });
+
+    this.physics.world.setBoundsCollision(false, false, false, true);
+
     // @ts-ignore
     this.cursors = this.input.keyboard.createCursorKeys();
 
@@ -30,6 +53,7 @@ export default class Game extends Phaser.Scene {
       this.id = id;
       data.forEach((curPlayer: Player, idx) => {
         playerRectangles[idx] = this.add.rectangle(curPlayer.x, curPlayer.y, 50, 100, 0xfffff);
+        this.playerGroup?.add(playerRectangles[idx]);
       });
     });
 
@@ -38,6 +62,7 @@ export default class Game extends Phaser.Scene {
         return;
       }
       playerRectangles[id] = this.add.rectangle(pos.x, pos.y, 50, 100, 0xfffff);
+      this.playerGroup?.add(playerRectangles[id]);
     });
 
     setInterval(() => {
