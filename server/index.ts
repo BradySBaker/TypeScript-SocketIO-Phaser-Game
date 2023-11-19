@@ -2,12 +2,15 @@ import { Socket, Server } from 'socket.io';
 
 let playerCount: number = 0;
 
-type Player = {
+type GameObject = {
   x: number,
   y: number,
 };
 
-let playerPositions: {[playerId: number]: Player} = {};
+type GameObjectGroup = {[playerId: number]: GameObject};
+
+let playerPositions: GameObjectGroup = {};
+let projectilePositions: GameObjectGroup = {};
 
 const io = new Server(3000, {
   cors: {
@@ -22,15 +25,20 @@ io.on('connection', (socket: Socket) => {
   io.emit('newPlayer', playerPositions, playerId);
   playerCount++;
 
-  socket.on('updatePosition', (pos: Player) => { //recieved player position and sends it to all clients
+  socket.on('updatePosition', (pos: GameObject) => { //recieved Game Object position and sends it to all clients
     playerPositions[playerId] = pos;
     io.emit('updatePosition', pos, playerId);
   })
 
   socket.on('disconnect', () => {
-    console.log(`Player ${playerId} disconnected`);
+    console.log(`Game Object ${playerId} disconnected`);
     delete playerPositions[playerId];
     io.emit('deletePlayer', playerId);
+  });
+
+  socket.on('newProjectile', (pos: GameObject, direction: string) => {
+    console.log(pos, direction);
+    console.log(projectilePositions);
   });
 
 });

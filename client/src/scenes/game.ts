@@ -1,5 +1,6 @@
 import Phaser, { GameObjects } from "phaser";
 import { io } from 'socket.io-client';
+import projectileController from './controllers/projectileController.ts';
 
 const socket = io('http://localhost:3000');
 
@@ -15,19 +16,28 @@ window.addEventListener('unload', () => {
 
 const playerRectangles: { [id: number]: Phaser.GameObjects.Rectangle } = {};
 
+type PlayerPos = {
+  x: number,
+  y: number
+}
+
 type Player = {
-  x: number;
-  y: number;
+  pos: PlayerPos;
+  direction: string;
 }
 
 export default class Game extends Phaser.Scene {
   collision = false;
   playerGroup?: Phaser.GameObjects.Group;
-
+  projectileController = new projectileController(this, socket);
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
   id: number = NaN;
-  playerPos: Player = {x: 0, y: 0};
-  sentPos: Player = {x: 0, y: 0};
+  player: Player = {direction: 'right', pos: {x: 0, y: 0}};
+  sentPos: PlayerPos = {x: 0, y: 0};
+  // @ts-ignore
+  spaceKey: Phaser.Input.Keyboard.KeyCodes;
+  shootTimer: number = 0;
+
 
 
   preload() {}
@@ -58,9 +68,9 @@ export default class Game extends Phaser.Scene {
       let separationY = overlapRect.height / 2;
 
       if (overlapRect.width < overlapRect.height) {
-        this.playerPos.x += curPlayer.x > otherPlayer.x ? separationX : -separationX;
+        this.player.pos.x += curPlayer.x > otherPlayer.x ? separationX : -separationX;
       } else {
-        this.playerPos.y += curPlayer.y > otherPlayer.y ? separationY : -separationY;
+        this.player.pos.y += curPlayer.y > otherPlayer.y ? separationY : -separationY;
       }
 
 
@@ -69,18 +79,20 @@ export default class Game extends Phaser.Scene {
     this.physics.world.setBoundsCollision(true);
     // @ts-ignore
     this.cursors = this.input.keyboard.createCursorKeys();
+    // @ts-ignore
+    this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
     socket.on('connect', () => {
       console.log('connected');
     });
 
-    socket.on('playerData', (data: {[id: number]: Player}, id: number) => { //Recieved personal player data
+    socket.on('playerData', (data: {[id: number]: PlayerPos}, id: number) => { //Recieved personal player data
       this.id = id;
       for (let playerId in data) {
         playerRectangles[playerId] = this.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
         this.playerGroup?.add(playerRectangles[playerId]);
-        this.playerPos.x = data[playerId].x;
-        this.playerPos.y = data[playerId].y;
+        this.player.pos.x = data[playerId].x;
+        this.player.pos.y = data[playerId].y;
       }
     });
 
@@ -98,25 +110,27 @@ export default class Game extends Phaser.Scene {
     });
 
     setInterval(() => {
-      if (this.id !== undefined && (this.playerPos.x !== this.sentPos.x || this.playerPos.y !== this.sentPos.y)) {
-        socket.emit('updatePosition', this.playerPos);
-        this.sentPos.x = this.playerPos.x;
-        this.sentPos.y = this.playerPos.y;
+      if (this.id !== undefined && (this.player.pos.x !== this.sentPos.x || this.player.pos.y !== this.sentPos.y)) {
+        socket.emit('updatePosition', this.player.pos);
+        this.sentPos.x = this.player.pos.x;
+        this.sentPos.y = this.player.pos.y;
       }
     }, 50);
 
-    socket.on('updatePosition', (pos: Player, id: number) => {
+    socket.on('updatePosition', (pos: PlayerPos, id: number) => {
       playerRectangles[id].x = pos.x;
       playerRectangles[id].y = pos.y;
     });
   }
 
   handleMovement() {
-    let move: Player = {x: 0, y: 0};
+    let move: PlayerPos = {x: 0, y: 0};
     if (this.cursors?.right.isDown ) {
+      this.player.direction = 'right';
       move.x = 1;
     }
     if (this.cursors?.left.isDown) {
+      this.player.direction = 'left';
       move.x = -1;
     }
     if (this.cursors?.up.isDown) {
@@ -133,22 +147,34 @@ export default class Game extends Phaser.Scene {
     let playerWidth = 50;
     let playerHeight = 100;
     if (
-        this.physics.world.bounds.x <= (this.playerPos.x + move.x) - playerWidth / 2 &&
-        this.physics.world.bounds.y <= (this.playerPos.y + move.y) - playerHeight / 2 &&
-        this.physics.world.bounds.right >= (this.playerPos.x + move.x) + playerWidth / 2 &&
-        this.physics.world.bounds.bottom >= (this.playerPos.y + move.y) + playerHeight / 2
+        this.physics.world.bounds.x <= (this.player.pos.x + move.x) - playerWidth / 2 &&
+        this.physics.world.bounds.y <= (this.player.pos.y + move.y) - playerHeight / 2 &&
+        this.physics.world.bounds.right >= (this.player.pos.x + move.x) + playerWidth / 2 &&
+        this.physics.world.bounds.bottom >= (this.player.pos.y + move.y) + playerHeight / 2
       )
       {
-        this.playerPos.x += move.x;
-        this.playerPos.y += move.y;
+        this.player.pos.x += move.x;
+        this.player.pos.y += move.y;
       }
+  }
+
+  handleShoot() {
+    if (this.spaceKey.isDown && this.shootTimer === 0) {
+      this.shootTimer = 50;
+      console.log('Space pressed');
+      this.projectileController.createProjectile(this.player);
+    }
+    if (this.shootTimer !== 0) {
+      this.shootTimer--;
+    }
   }
 
   update() {
     this.handleMovement();
+    this.handleShoot();
     if (this.id !== undefined && playerRectangles[this.id]) {
-        playerRectangles[this.id].x = this.playerPos.x;
-        playerRectangles[this.id].y = this.playerPos.y;
+        playerRectangles[this.id].x = this.player.pos.x;
+        playerRectangles[this.id].y = this.player.pos.y;
     }
   }
 }
