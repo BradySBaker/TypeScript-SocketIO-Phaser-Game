@@ -63,7 +63,7 @@ io.on('connection', (socket: Socket) => {
   socket.on('playerHit', (id) => {
     if (playerPositions[id]) {
       delete (playerPositions[id]);
-      io.emit('deletePlayer', playerId);
+      io.emit('deletePlayer', id);
     }
   });
 
