@@ -1,6 +1,6 @@
 import Phaser, { GameObjects } from "phaser";
 import { io } from 'socket.io-client';
-import projectileController from './controllers/projectileController.ts';
+import ProjectileController from './controllers/ProjectileController.js';
 
 const socket = io('http://localhost:3000');
 
@@ -29,7 +29,7 @@ type Player = {
 export default class Game extends Phaser.Scene {
   collision = false;
   playerGroup?: Phaser.GameObjects.Group;
-  projectileController = new projectileController(this, socket);
+  ProjectileController?: ProjectileController;
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
   id: number = NaN;
   player: Player = {direction: 'right', pos: {x: 0, y: 0}};
@@ -49,6 +49,8 @@ export default class Game extends Phaser.Scene {
         this.physics.world.enable(player);
       }
     });
+
+    this.ProjectileController = new ProjectileController(this, socket, this.playerGroup);
 
 
     this.physics.add.collider(this.playerGroup, this.playerGroup, (object1, object2) => {
@@ -73,7 +75,6 @@ export default class Game extends Phaser.Scene {
         this.player.pos.y += curPlayer.y > otherPlayer.y ? separationY : -separationY;
       }
 
-
   });
 
     this.physics.world.setBoundsCollision(true);
@@ -90,6 +91,7 @@ export default class Game extends Phaser.Scene {
       this.id = id;
       for (let playerId in data) {
         playerRectangles[playerId] = this.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
+        playerRectangles[playerId].name = playerId;
         this.playerGroup?.add(playerRectangles[playerId]);
         this.player.pos.x = data[playerId].x;
         this.player.pos.y = data[playerId].y;
@@ -123,12 +125,13 @@ export default class Game extends Phaser.Scene {
     });
 
     socket.on('projectileData', (projectiles: {[id: number]: {direction: string, pos: {x:number, y: number}}}) => { //Handle all projectiles
-      this.projectileController.handleProjectiles(projectiles);
+      this.ProjectileController?.handleProjectiles(projectiles);
     });
   }
 
   handleMovement() {
     let move: PlayerPos = {x: 0, y: 0};
+
     if (this.cursors?.right.isDown ) {
       this.player.direction = 'right';
       move.x = 1;
@@ -165,8 +168,7 @@ export default class Game extends Phaser.Scene {
   handleShoot() {
     if (this.spaceKey.isDown && this.shootTimer === 0) {
       this.shootTimer = 50;
-      console.log('Space pressed');
-      this.projectileController.createProjectile(this.player);
+      this.ProjectileController?.createProjectile(this.player);
     }
     if (this.shootTimer !== 0) {
       this.shootTimer--;

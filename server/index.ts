@@ -37,22 +37,30 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('newProjectile', (pos: GameObject, direction: string) => {
-    projectilePositions[projectileCount] = {direction: direction, pos: {x: pos.x, y: pos.y}};
+    projectilePositions[projectileCount] = {direction: direction, pos: {x: direction === 'left' ? pos.x - 25: pos.x + 20, y: pos.y}};
     projectileCount++;
+  });
+
+  socket.on('playerHit', (id) => {
+    console.log(id);
+    if (playerPositions[id]) {
+      delete (playerPositions[id]);
+      io.emit('deletePlayer', playerId);
+    }
   });
 
   setInterval(() => {
     for (let id in projectilePositions) {
       let curProjectile = projectilePositions[id];
       if (curProjectile.direction === 'right') {
-        curProjectile.pos.x+=20;
+        curProjectile.pos.x += 4;
       } else {
-        curProjectile.pos.x-=20;
+        curProjectile.pos.x -= 4;
       }
-      curProjectile.pos.y+=10;
+      curProjectile.pos.y += 4;
     }
     socket.emit('projectileData', projectilePositions);
-  }, 50);
+  }, 10);
 
 
 });
