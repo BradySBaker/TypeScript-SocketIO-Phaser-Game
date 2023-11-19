@@ -1,16 +1,16 @@
 import { Socket, Server } from 'socket.io';
 
 let playerCount: number = 0;
+let projectileCount: number = 0;
 
 type GameObject = {
   x: number,
   y: number,
 };
 
-type GameObjectGroup = {[playerId: number]: GameObject};
 
-let playerPositions: GameObjectGroup = {};
-let projectilePositions: GameObjectGroup = {};
+let playerPositions: {[playerId: number]: GameObject} = {};
+let projectilePositions: {[playerId: number]: {direction: string, pos: GameObject}} = {};
 
 const io = new Server(3000, {
   cors: {
@@ -37,9 +37,23 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('newProjectile', (pos: GameObject, direction: string) => {
-    console.log(pos, direction);
-    console.log(projectilePositions);
+    projectilePositions[projectileCount] = {direction: direction, pos: {x: pos.x, y: pos.y}};
+    projectileCount++;
   });
+
+  setInterval(() => {
+    for (let id in projectilePositions) {
+      let curProjectile = projectilePositions[id];
+      if (curProjectile.direction === 'right') {
+        curProjectile.pos.x+=20;
+      } else {
+        curProjectile.pos.x-=20;
+      }
+      curProjectile.pos.y+=10;
+    }
+    socket.emit('projectileData', projectilePositions);
+  }, 50);
+
 
 });
 

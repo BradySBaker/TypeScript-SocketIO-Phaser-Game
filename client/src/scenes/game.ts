@@ -117,9 +117,13 @@ export default class Game extends Phaser.Scene {
       }
     }, 50);
 
-    socket.on('updatePosition', (pos: PlayerPos, id: number) => {
+    socket.on('updatePosition', (pos: PlayerPos, id: number) => { //Handle player update
       playerRectangles[id].x = pos.x;
       playerRectangles[id].y = pos.y;
+    });
+
+    socket.on('projectileData', (projectiles: {[id: number]: {direction: string, pos: {x:number, y: number}}}) => { //Handle all projectiles
+      this.projectileController.handleProjectiles(projectiles);
     });
   }
 
