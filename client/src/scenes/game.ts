@@ -24,7 +24,14 @@ type PlayerPos = {
 type Player = {
   pos: PlayerPos;
   direction: string;
+  id: number;
 }
+
+type GameObject = {
+  x: number,
+  y: number
+}
+
 
 export default class Game extends Phaser.Scene {
   collision = false;
@@ -32,7 +39,7 @@ export default class Game extends Phaser.Scene {
   ProjectileController?: ProjectileController;
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
   id: number = NaN;
-  player: Player = {direction: 'right', pos: {x: 0, y: 0}};
+  player: Player = {direction: 'right', pos: {x: 0, y: 0}, id: this.id};
   sentPos: PlayerPos = {x: 0, y: 0};
   // @ts-ignore
   spaceKey: Phaser.Input.Keyboard.KeyCodes;
@@ -88,7 +95,9 @@ export default class Game extends Phaser.Scene {
     });
 
     socket.on('playerData', (data: {[id: number]: PlayerPos}, id: number) => { //Recieved personal player data
+      console.log(data);
       this.id = id;
+      this.player.id = id;
       for (let playerId in data) {
         playerRectangles[playerId] = this.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
         playerRectangles[playerId].name = playerId;
@@ -111,6 +120,11 @@ export default class Game extends Phaser.Scene {
       delete playerRectangles[id];
     });
 
+
+    socket.on('deleteProjectile', (id) => {
+      this.ProjectileController?.deleteProjectile(id);
+    });
+
     setInterval(() => {
       if (this.id !== undefined && (this.player.pos.x !== this.sentPos.x || this.player.pos.y !== this.sentPos.y)) {
         socket.emit('updatePosition', this.player.pos);
@@ -124,7 +138,7 @@ export default class Game extends Phaser.Scene {
       playerRectangles[id].y = pos.y;
     });
 
-    socket.on('projectileData', (projectiles: {[id: number]: {direction: string, pos: {x:number, y: number}}}) => { //Handle all projectiles
+    socket.on('projectileData', (projectiles: {[id: number]: {direction: string, pos: GameObject, startPos: GameObject, playerId: number}}) => { //Handle all projectiles
       this.ProjectileController?.handleProjectiles(projectiles);
     });
   }
