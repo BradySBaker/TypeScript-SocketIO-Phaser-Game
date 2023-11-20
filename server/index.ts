@@ -14,7 +14,7 @@ let projectilePositions: {[playerId: number]: {direction: string, pos: GameObjec
 
 const io = new Server(3000, {
   cors: {
-    origin: ['http://localhost:2000']
+    origin: ['*']
   }
 });
 
