@@ -4,14 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "client": "parcel client/src/index.html --dist-dir client/dist -p 2000",
     "server": "nodemon --exec 'ts-node' server/index.ts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "parcel": "^2.9.3",
-    "phaser": "^3.60.0",
     "socket.io-client": "^4.7.2"
   },
   "devDependencies": {
