@@ -25,6 +25,7 @@ export default class CharacterController {
   vy = 1.1;
   sentPos: PlayerPos = {x: 0, y: 0};
   game: Game;
+  prevJump = 0;
 
   // @ts-ignore
   constructor(game: Game, socket: Socket) {
@@ -77,6 +78,9 @@ export default class CharacterController {
     this.handleGround();
     let move: PlayerPos = {x: 0, y: 0};
 
+    // const timeNow = this.game.time.now;
+    // const timeSinceJump = timeNow - this.prevJump;
+
     if (this.cursors?.right.isDown ) {
       this.player.direction = 'right';
       move.x = 4 * this.game.deltaTime;
@@ -85,7 +89,14 @@ export default class CharacterController {
       this.player.direction = 'left';
       move.x = -4 * this.game.deltaTime;
     }
+    if (this.cursors?.up.isDown && this.ground) {
+			this.prevJump = this.game.time.now;
+      this.vy = -4;
+      move.y += this.vy;
+      this.ground = false;
+    }
     if (!this.ground) {
+      this.vy += .1 * this.game.deltaTime
       move.y += this.vy;
     }
 
@@ -158,7 +169,7 @@ export default class CharacterController {
       if (id === this.id) {
         return;
       }
-      playerRectangles[id] = this.add.rectangle(pos.x, pos.y, 50, 100, 0xfffff);
+      playerRectangles[id] = this.game.add.rectangle(pos.x, pos.y, 50, 100, 0xfffff);
       this.playerGroup?.add(playerRectangles[id]);
     });
 
