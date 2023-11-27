@@ -62,9 +62,9 @@ export default class Game extends Phaser.Scene {
   }
 
 
-  update(time, delta: number,bv) {
+  update(time, delta: number) {
     this.deltaTime = delta / (1000 / 60);
-    this.PlayerController.handleMovement();
+    this.PlayerController?.handleMovement();
     this.handleShoot();
   }
 
