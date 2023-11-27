@@ -16,6 +16,7 @@ const playerRectangles: { [id: number]: Phaser.GameObjects.Rectangle } = {};
 
 
 export default class CharacterController {
+  playersToMove: {[id: number]: PlayerPos} = {};
   socket: Socket;
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
   player: Player;
@@ -75,6 +76,7 @@ export default class CharacterController {
 
 
   handleMovement() {
+    this.interpolatePlayerPositions();
     this.handleGround();
     let move: PlayerPos = {x: 0, y: 0};
 
@@ -138,7 +140,14 @@ export default class CharacterController {
 
 
 
-
+  interpolatePlayerPositions() {
+    for (let id in this.playersToMove) {
+      let newPos = this.playersToMove[id];
+      let curPos = playerRectangles[id];
+      playerRectangles[id].x = curPos.x + (newPos.x - curPos.x) * .5;
+      playerRectangles[id].y = curPos.y + (newPos.y - curPos.y) * .5;
+    }
+  }
 
 
 
@@ -156,8 +165,11 @@ export default class CharacterController {
     }, 50);
 
     this.socket.on('updatePosition', (pos: PlayerPos, id: number) => { //Handle player update
-      playerRectangles[id].x = pos.x;
-      playerRectangles[id].y = pos.y;
+      if (id === this.id) {
+        playerRectangles[id].x = pos.x;
+        playerRectangles[id].y = pos.y;
+      }
+      this.playersToMove[id] = pos;
     });
 
     this.socket.on('deletePlayer', (id) => { //Player left
@@ -175,7 +187,6 @@ export default class CharacterController {
 
 
     this.socket.on('playerData', (data: {[id: number]: PlayerPos}, id: number) => { //Recieved personal player data
-      console.log('occured');
       this.id = id;
       this.player.id = id;
       for (let playerId in data) {
