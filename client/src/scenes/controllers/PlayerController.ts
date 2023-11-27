@@ -91,12 +91,12 @@ export default class CharacterController {
     }
     if (this.cursors?.up.isDown && this.ground) {
 			this.prevJump = this.game.time.now;
-      this.vy = -4;
+      this.vy = -10;
       move.y += this.vy;
       this.ground = false;
     }
     if (!this.ground) {
-      this.vy += .1 * this.game.deltaTime
+      this.vy += .5 * this.game.deltaTime
       move.y += this.vy;
     }
 
