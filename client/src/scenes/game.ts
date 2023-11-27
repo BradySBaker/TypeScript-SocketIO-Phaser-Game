@@ -15,11 +15,6 @@ window.addEventListener('unload', () => {
   console.log('Page unloaded');
 });
 
-type PlayerPos = {
-  x: number,
-  y: number
-}
-
 
 type GameObject = {
   x: number,
@@ -33,6 +28,8 @@ export default class Game extends Phaser.Scene {
   // @ts-ignore
   spaceKey: Phaser.Input.Keyboard.KeyCodes;
   shootTimer: number = 0;
+  deltaTime: number = 0;
+
 
 
 
@@ -64,9 +61,17 @@ export default class Game extends Phaser.Scene {
     });
   }
 
+
+  update(time, delta: number,bv) {
+    this.deltaTime = delta / (1000 / 60);
+    this.PlayerController.handleMovement();
+    this.handleShoot();
+  }
+
+
   handleShoot() {
     if (this.spaceKey.isDown && this.shootTimer === 0) {
-      this.shootTimer = 50;
+      this.shootTimer = 20;
       this.ProjectileController?.createProjectile(this.PlayerController.player);
     }
     if (this.shootTimer !== 0) {
@@ -74,8 +79,4 @@ export default class Game extends Phaser.Scene {
     }
   }
 
-  update() {
-    this.PlayerController.handleMovement();
-    this.handleShoot();
-  }
 }

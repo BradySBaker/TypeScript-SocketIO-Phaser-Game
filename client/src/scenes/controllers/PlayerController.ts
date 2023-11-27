@@ -1,3 +1,4 @@
+import Game from '../game.js';
 import { Socket } from "socket.io-client";
 
 type PlayerPos = {
@@ -16,7 +17,6 @@ const playerRectangles: { [id: number]: Phaser.GameObjects.Rectangle } = {};
 
 export default class CharacterController {
   socket: Socket;
-  scene: Phaser.Scene;
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
   player: Player;
   playerGroup?: Phaser.GameObjects.Group;
@@ -24,9 +24,11 @@ export default class CharacterController {
   ground = false;
   vy = 1.1;
   sentPos: PlayerPos = {x: 0, y: 0};
+  game: Game;
 
-  constructor(scene: Phaser.Scene, socket: Socket) {
-    this.scene = scene;
+  // @ts-ignore
+  constructor(game: Game, socket: Socket) {
+    this.game = game;
     this.socket = socket;
     this.player = {direction: 'right', pos: {x: 0, y: 0}, id: this.id};
   }
@@ -34,17 +36,17 @@ export default class CharacterController {
 
   setupPlayer() {
     // @ts-ignore
-    this.cursors = this.scene.input.keyboard.createCursorKeys();
-    this.playerGroup = this.scene.add.group({
+    this.cursors = this.game.input.keyboard.createCursorKeys();
+    this.playerGroup = this.game.add.group({
       classType: Phaser.GameObjects.Rectangle,
       createCallback: (player) => {
-        this.scene.physics.world.enable(player);
+        this.game.physics.world.enable(player);
       }
     });
 
     this.retrievePlayerData();
 
-    this.scene.physics.add.collider(this.playerGroup, this.playerGroup, (object1, object2) => {
+    this.game.physics.add.collider(this.playerGroup, this.playerGroup, (object1, object2) => {
       let curPlayer;
       let otherPlayer;
       if (playerRectangles[this.id] === object1) {
@@ -69,16 +71,19 @@ export default class CharacterController {
   });
   }
 
+
+
   handleMovement() {
+    this.handleGround();
     let move: PlayerPos = {x: 0, y: 0};
 
     if (this.cursors?.right.isDown ) {
       this.player.direction = 'right';
-      move.x = 1;
+      move.x = 4 * this.game.deltaTime;
     }
     if (this.cursors?.left.isDown) {
       this.player.direction = 'left';
-      move.x = -1;
+      move.x = -4 * this.game.deltaTime;
     }
     if (!this.ground) {
       move.y += this.vy;
@@ -91,10 +96,10 @@ export default class CharacterController {
     let playerWidth = 50;
     let playerHeight = 100;
     if (
-        this.scene.physics.world.bounds.x <= (this.player.pos.x + move.x) - playerWidth / 2 &&
-        this.scene.physics.world.bounds.y <= (this.player.pos.y + move.y) - playerHeight / 2 &&
-        this.scene.physics.world.bounds.right >= (this.player.pos.x + move.x) + playerWidth / 2 &&
-        this.scene.physics.world.bounds.bottom >= (this.player.pos.y + move.y) + playerHeight / 2
+        this.game.physics.world.bounds.x <= (this.player.pos.x + move.x) - playerWidth / 2 &&
+        this.game.physics.world.bounds.y <= (this.player.pos.y + move.y) - playerHeight / 2 &&
+        this.game.physics.world.bounds.right >= (this.player.pos.x + move.x) + playerWidth / 2 &&
+        this.game.physics.world.bounds.bottom >= (this.player.pos.y + move.y) + playerHeight / 2
       )
       {
         this.player.pos.x += move.x;
@@ -105,6 +110,29 @@ export default class CharacterController {
         playerRectangles[this.id].y = this.player.pos.y;
       }
   }
+
+
+
+
+  handleGround() {
+    if (this.player.pos.y > 500) {
+      this.ground = true;
+    }
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
   retrievePlayerData() {
@@ -130,7 +158,7 @@ export default class CharacterController {
       if (id === this.id) {
         return;
       }
-      playerRectangles[id] = this.scene.add.rectangle(pos.x, pos.y, 50, 100, 0xfffff);
+      playerRectangles[id] = this.add.rectangle(pos.x, pos.y, 50, 100, 0xfffff);
       this.playerGroup?.add(playerRectangles[id]);
     });
 
@@ -140,7 +168,7 @@ export default class CharacterController {
       this.id = id;
       this.player.id = id;
       for (let playerId in data) {
-        playerRectangles[playerId] = this.scene.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
+        playerRectangles[playerId] = this.game.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
         playerRectangles[playerId].name = playerId;
         this.playerGroup?.add(playerRectangles[playerId]);
         this.player.pos.x = data[playerId].x;
@@ -148,4 +176,5 @@ export default class CharacterController {
       }
     });
   }
+
 };
