@@ -1,3 +1,5 @@
+import Game from '../game.js';
+
 import { Socket } from "socket.io-client";
 
 type GameObject = {
@@ -7,15 +9,15 @@ type GameObject = {
 
 export default class ProjectileController {
   line: Phaser.GameObjects.Graphics;
-  scene: Phaser.Scene;
   projectileObj: {[id: number]: Phaser.GameObjects.Ellipse} = {};
   socket: Socket;
   playerGroup: Phaser.GameObjects.Group;
+  game: Game;
 
-  constructor(scene: Phaser.Scene, socket: Socket, playerGroup: Phaser.GameObjects.Group) {
-    this.scene = scene;
+  constructor(game: Game, socket: Socket, playerGroup: Phaser.GameObjects.Group) {
+    this.game = game;
     this.socket = socket;
-    this.line = this.scene.add.graphics();
+    this.line = this.game.add.graphics();
     this.playerGroup = playerGroup;
   }
 
@@ -48,7 +50,7 @@ export default class ProjectileController {
     for (let id in projectiles) {
       let curProjectile = projectiles[id];
       if (!this.projectileObj[id]) {
-        this.projectileObj[id] = this.scene.add.ellipse(curProjectile.pos.x, curProjectile.pos.y, 10, 10, 0xFF0000);
+        this.projectileObj[id] = this.game.add.ellipse(curProjectile.pos.x, curProjectile.pos.y, 10, 10, 0xFF0000);
       } else {
         this.projectileObj[id].x = curProjectile.pos.x;
         this.projectileObj[id].y = curProjectile.pos.y
