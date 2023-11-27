@@ -168,8 +168,9 @@ export default class CharacterController {
       if (id === this.id) {
         playerRectangles[id].x = pos.x;
         playerRectangles[id].y = pos.y;
+      } else {
+        this.playersToMove[id] = pos;
       }
-      this.playersToMove[id] = pos;
     });
 
     this.socket.on('deletePlayer', (id) => { //Player left
