@@ -142,8 +142,15 @@ export default class CharacterController {
 
   interpolatePlayerPositions() {
     for (let id in this.playersToMove) {
+      if (!playerRectangles[id]) {
+        return;
+      }
       let newPos = this.playersToMove[id];
       let curPos = playerRectangles[id];
+      if (newPos.x === curPos.x && newPos.y === curPos.y) {
+        delete this.playersToMove[id];
+        return;
+      }
       playerRectangles[id].x = curPos.x + (newPos.x - curPos.x) * .5;
       playerRectangles[id].y = curPos.y + (newPos.y - curPos.y) * .5;
     }
