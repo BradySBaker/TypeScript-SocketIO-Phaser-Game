@@ -23,11 +23,8 @@ type GameObject = {
 
 
 export default class Game extends Phaser.Scene {
-  ProjectileController?: ProjectileController;
   PlayerController?: PlayerController;
-  // @ts-ignore
-  spaceKey: Phaser.Input.Keyboard.KeyCodes;
-  shootTimer: number = 0;
+  ProjectileController?: ProjectileController;
   deltaTime: number = 0;
   gameWidth = window.innerWidth
   gameHeight: any
@@ -55,8 +52,6 @@ export default class Game extends Phaser.Scene {
 
 
     this.physics.world.setBoundsCollision(true);
-    // @ts-ignore
-    this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
 
     socket.on('deleteProjectile', (id) => {
@@ -73,19 +68,7 @@ export default class Game extends Phaser.Scene {
   update(time, delta: number) {
     this.deltaTime = delta / (1000 / 60);
     this.PlayerController?.handleMovement();
-    this.handleShoot();
     this.handleBackgrounds();
-  }
-
-
-  handleShoot() {
-    if (this.spaceKey.isDown && this.shootTimer === 0) {
-      this.shootTimer = 20;
-      this.ProjectileController?.createProjectile(this.PlayerController.player);
-    }
-    if (this.shootTimer !== 0) {
-      this.shootTimer--;
-    }
   }
 
 

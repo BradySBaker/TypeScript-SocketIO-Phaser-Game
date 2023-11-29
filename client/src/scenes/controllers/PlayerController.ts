@@ -1,3 +1,4 @@
+import { prefetch } from 'webpack';
 import Game from '../game.js';
 import { Socket } from "socket.io-client";
 
@@ -16,6 +17,9 @@ export const playerRectangles: { [id: number]: Phaser.GameObjects.Rectangle } = 
 
 
 export class PlayerController {
+  // @ts-ignore
+  spaceKey: Phaser.Input.Keyboard.KeyCodes;
+  shootTimer = 0;
   playersToMove: {[id: number]: PlayerPos} = {};
   socket: Socket;
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
@@ -27,10 +31,13 @@ export class PlayerController {
   sentPos: PlayerPos = {x: 0, y: 0};
   game: Game;
   prevJump = 0;
-  spear?: Phaser.GameObjects.Rectangle;
+  spearObj?: {spear: Phaser.GameObjects.Rectangle, thrown: boolean, vel: number};
+  isMouseHeld = false;
 
   // @ts-ignore
   constructor(game: Game, socket: Socket) {
+    // @ts-ignore
+    this.spaceKey = game.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.game = game;
     this.socket = socket;
     this.player = {direction: 'right', pos: {x: 0, y: 0}, id: this.id};
@@ -40,7 +47,9 @@ export class PlayerController {
   setupPlayer() {
     // @ts-ignore
     this.cursors = this.game.input.keyboard.createCursorKeys();
+
     this.playerGroup = this.game.add.group({
+
       classType: Phaser.GameObjects.Rectangle,
       createCallback: (player) => {
         this.game.physics.world.enable(player);
@@ -80,6 +89,7 @@ export class PlayerController {
     this.interpolatePlayerPositions();
     this.handleGround();
     this.handleSpearRotation();
+    this.handleSpearThrow();
     let move: PlayerPos = {x: 0, y: 0};
 
     // const timeNow = this.game.time.now;
@@ -123,9 +133,9 @@ export class PlayerController {
       if (this.id !== undefined && playerRectangles[this.id]) {
         playerRectangles[this.id].y = this.player.pos.y;
         playerRectangles[this.id].x = this.player.pos.x;
-        if (this.spear) {
-          this.spear.y = this.player.pos.y;
-          this.spear.x = this.player.direction === 'left' ? this.player.pos.x : this.player.pos.x;
+        if (this.spearObj?.spear && !this.spearObj.thrown) {
+          this.spearObj.spear.y = this.player.pos.y;
+          this.spearObj.spear.x = this.player.direction === 'left' ? this.player.pos.x : this.player.pos.x;
         }
       }
   }
@@ -143,23 +153,41 @@ export class PlayerController {
 
 
   handleSpearThrow() {
-    if (!this.spear) {
+    if (!this.spearObj?.spear) {
       return;
+    }
+    if (this.spearObj.thrown) {
+      this.spearObj.spear.x += this.spearObj.vel;
+      return;
+    }
+
+    if (this.spaceKey.isDown) {
+      if (Math.abs(this.spearObj.spear.x - this.player.pos.x) < 50) {
+        this.spearObj.spear.x += this.player.direction === 'left' ? 2 : -2;
+      } else {
+        this.spearObj.spear.y += this.spearObj .spear.y < this.player.pos.y ? 2 : -2;
+      }
+    } else if (this.spearObj.spear.x !== this.player.pos.x) {
+      this.spearObj.thrown = true;
+      this.spearObj.vel = (this.player.pos.x - this.spearObj.spear.x)/5;
     }
 
   }
 
   handleSpearRotation() {
-    if (!this.spear) {
+    if (!this.spearObj?.spear) {
+      return;
+    }
+    if (this.spearObj.thrown) {
       return;
     }
     let mouseWorldX = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).x;
 		let mouseWorldY = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).y;
     let targetSpearRad = Phaser.Math.Angle.Between(
-			this.spear.x, this.spear.y,
+			this.spearObj.spear.x, this.spearObj.spear.y,
 			mouseWorldX, mouseWorldY
 		)
-    let spearRadAngle = this.spear.angle*Math.PI/180;
+    let spearRadAngle = this.spearObj?.spear.angle*Math.PI/180;
 
     if (targetSpearRad < -Math.PI/2 && spearRadAngle > 0) {
 			targetSpearRad += Math.PI*2;
@@ -168,7 +196,7 @@ export class PlayerController {
 		}
 
 		let spearMouseAngle = Phaser.Math.RadToDeg(targetSpearRad);
-    this.spear.angle = spearMouseAngle;
+    this.spearObj.spear.angle = spearMouseAngle;
   }
 
 
@@ -232,9 +260,7 @@ export class PlayerController {
     this.socket.on('playerData', (data: {[id: number]: PlayerPos}, id: number) => { //Recieved personal player data
       this.id = id;
       this.player.id = id;
-      this.spear = this.game.add.rectangle(data[id].x, data[id].y, 100, 10, 0xff0000)
-      .setOrigin(0, .5)
-		  .setDepth(1);
+      this.spearObj = {spear: this.game.add.rectangle(data[id].x, data[id].y - 100, 100, 10, 0xff0000).setOrigin(0, .5).setDepth(1), thrown: false, vel: 0};
 
       for (let playerId in data) {
         playerRectangles[playerId] = this.game.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
