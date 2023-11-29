@@ -172,10 +172,7 @@ export class PlayerController {
       const launchAngleInRadians = Phaser.Math.DegToRad(this.spearObj.spear.angle);
 
       this.spearObj.thrown = true;
-      console.log(Math.floor((this.player.pos.x - this.spearObj.spear.x)));
-      this.spearObj.vel.x = Math.floor((this.player.pos.x - this.spearObj.spear.x)/5);
-      this.spearObj.vel.x *= Math.cos(launchAngleInRadians) > 0 ? 1 : -1;
-      console.log(this.spearObj.vel.x);
+      this.spearObj.vel.x = Math.floor((this.player.pos.x - this.spearObj.spear.x)/2);
 
 
       const verticalVelocity = Math.abs(this.spearObj.vel.x) * Math.sin(launchAngleInRadians);
@@ -208,7 +205,6 @@ export class PlayerController {
         }
       }
     } else {
-      console.log(spearMouseAngle);
       if (spearMouseAngle < -64 || spearMouseAngle > 64) {
         if (spearMouseAngle > 0) {
           spearMouseAngle = 64;
