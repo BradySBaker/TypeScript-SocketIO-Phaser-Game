@@ -120,6 +120,7 @@ export default class CharacterController {
       }
       if (this.id !== undefined && playerRectangles[this.id]) {
         playerRectangles[this.id].y = this.player.pos.y;
+        playerRectangles[this.id].x = this.player.pos.x;
       }
   }
 
@@ -173,6 +174,9 @@ export default class CharacterController {
     this.socket.on('updatePosition', (pos: PlayerPos, id: number) => { //Handle player update
       if (id !== this.id) {
         this.playersToMove[id] = pos;
+      } else {
+        playerRectangles[id].x = pos.x;
+        playerRectangles[id].y = pos.y;
       }
     });
 

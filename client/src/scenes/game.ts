@@ -74,7 +74,6 @@ export default class Game extends Phaser.Scene {
     this.deltaTime = delta / (1000 / 60);
     this.PlayerController?.handleMovement();
     this.handleShoot();
-    this.handleBackgrounds();
   }
 
 
@@ -122,13 +121,6 @@ export default class Game extends Phaser.Scene {
 			.setScrollFactor(0, 1)
 			.setScale(1.4)
 		})
-	}
-
-	handleBackgrounds() {
-		for (let i =0 ; i< this.backgrounds.length; i++) {
-			const bg = this.backgrounds[i];
-			bg.sprite.tilePositionX = this.PlayerController?.player.pos.x * bg.ratioX/1.4;
-		}
 	}
 
 }
