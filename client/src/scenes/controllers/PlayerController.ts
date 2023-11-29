@@ -159,6 +159,11 @@ export class PlayerController {
     if (this.spearObj.thrown) {
       this.spearObj.spear.x += this.spearObj.vel.x;
       this.spearObj.spear.y += this.spearObj.vel.y;
+      if (Math.abs(this.spearObj.vel.x) > 0) {
+        this.spearObj.vel.x -= .05;
+      }
+      this.spearObj.spear.angle += this.spearObj.vel.x > 0 ? 1 : -1;
+      this.spearObj.vel.y += .5;
       return;
     }
 
