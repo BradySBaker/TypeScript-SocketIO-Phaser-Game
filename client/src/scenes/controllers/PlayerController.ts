@@ -12,10 +12,10 @@ type Player = {
   id: number;
 }
 
-const playerRectangles: { [id: number]: Phaser.GameObjects.Rectangle } = {};
+export const playerRectangles: { [id: number]: Phaser.GameObjects.Rectangle } = {};
 
 
-export default class CharacterController {
+export class PlayerController {
   playersToMove: {[id: number]: PlayerPos} = {};
   socket: Socket;
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
@@ -119,8 +119,8 @@ export default class CharacterController {
         this.player.pos.y += move.y;
       }
       if (this.id !== undefined && playerRectangles[this.id]) {
-        playerRectangles[this.id].x = this.player.pos.x;
         playerRectangles[this.id].y = this.player.pos.y;
+        playerRectangles[this.id].x = this.player.pos.x;
       }
   }
 
@@ -172,11 +172,11 @@ export default class CharacterController {
     }, 50);
 
     this.socket.on('updatePosition', (pos: PlayerPos, id: number) => { //Handle player update
-      if (id === this.id) {
+      if (id !== this.id) {
+        this.playersToMove[id] = pos;
+      } else {
         playerRectangles[id].x = pos.x;
         playerRectangles[id].y = pos.y;
-      } else {
-        this.playersToMove[id] = pos;
       }
     });
 
@@ -198,8 +198,9 @@ export default class CharacterController {
       this.id = id;
       this.player.id = id;
       for (let playerId in data) {
-        playerRectangles[playerId] = this.game.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
-        playerRectangles[playerId].name = playerId;
+        playerRectangles[playerId] = this.game.add.rectangle(window.innerWidth/2, data[playerId].y, 50, 100, 0xfffff);
+        playerRectangles[playerId].name = playerId
+        this.game.cameras.main.startFollow(playerRectangles[playerId]);
         this.playerGroup?.add(playerRectangles[playerId]);
         this.player.pos.x = data[playerId].x;
         this.player.pos.y = data[playerId].y;
