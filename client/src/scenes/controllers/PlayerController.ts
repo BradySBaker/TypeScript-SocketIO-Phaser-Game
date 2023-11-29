@@ -162,7 +162,7 @@ export class PlayerController {
       if (Math.abs(this.spearObj.vel.x) > 0) {
         this.spearObj.vel.x -= .05;
       }
-      this.spearObj.spear.angle += this.spearObj.vel.x > 0 ? 1 : -1;
+      this.spearObj.spear.angle += this.spearObj.vel.x > 0 ? 1.5 : -1.5;
       this.spearObj.vel.y += .5;
       return;
     }
@@ -195,6 +195,7 @@ export class PlayerController {
     }
     let mouseWorldX = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).x;
 		let mouseWorldY = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).y;
+    this.game.cameras.main.zoom = .5;
     let targetSpearRad = Phaser.Math.Angle.Between(
 			this.spearObj.spear.x, this.spearObj.spear.y,
 			mouseWorldX, mouseWorldY
