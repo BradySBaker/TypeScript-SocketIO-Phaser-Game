@@ -1,17 +1,17 @@
 import Phaser, { GameObjects } from "phaser";
-import { io } from 'socket.io-client';
 import ProjectileController from './controllers/ProjectileController.js';
 import PlayerController from './controllers/PlayerController.js';
 
-const socket = io('http://localhost:3000');
+import { io } from 'socket.io-client';
+let socket;
 
 window.addEventListener('beforeunload', () => {
-  socket.disconnect(); // Manually disconnect the Socket.IO connection
+  socket.disconnect();
   console.log('Disconnecting before page unload');
 });
 
 window.addEventListener('unload', () => {
-  socket.disconnect(); // Manually disconnect the Socket.IO connection
+  socket.disconnect();
   console.log('Page unloaded');
 });
 
@@ -29,13 +29,25 @@ export default class Game extends Phaser.Scene {
   spaceKey: Phaser.Input.Keyboard.KeyCodes;
   shootTimer: number = 0;
   deltaTime: number = 0;
+  gameWidth = window.innerWidth
+  gameHeight: any
+  backgrounds: { ratioX: number; sprite: GameObjects.TileSprite;}[] = [];
 
 
 
-
-  preload() {}
+  preload() {
+    this.load.image('sky', './assets/sky2.png');
+    this.load.image('ground', './assets/ground2.png');
+    this.load.image('mountains1', './assets/mountains1.png');
+    this.load.image('mountains2', './assets/mountains2.png');
+    this.load.on('complete', () => {
+      socket = io('http://localhost:3000');
+    });
+  }
 
   create() {
+    this.gameHeight = this.sys.game.canvas.height;
+		this.createBackgrounds();
 
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
@@ -45,10 +57,6 @@ export default class Game extends Phaser.Scene {
     this.physics.world.setBoundsCollision(true);
     // @ts-ignore
     this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
-
-    socket.on('connect', () => {
-      console.log('connected');
-    });
 
 
     socket.on('deleteProjectile', (id) => {
@@ -66,6 +74,7 @@ export default class Game extends Phaser.Scene {
     this.deltaTime = delta / (1000 / 60);
     this.PlayerController?.handleMovement();
     this.handleShoot();
+    this.handleBackgrounds();
   }
 
 
@@ -78,5 +87,48 @@ export default class Game extends Phaser.Scene {
       this.shootTimer--;
     }
   }
+
+
+
+
+  createBackgrounds() {
+		var skyOffset = -window.innerWidth/4
+		if (this.gameHeight <= 500) {
+			skyOffset = -window.innerWidth;
+		}
+		this.add.image(skyOffset, -800, 'sky')
+		.setOrigin(0, 0)
+		.setScrollFactor(0, .3)
+		.setScale(1.3);
+
+		this.backgrounds.push({
+			ratioX: 0.1,
+			sprite: this.add.tileSprite(-window.innerWidth/2, 0, window.innerWidth*1.6, 450, 'mountains2')
+			.setOrigin(0,0)
+			.setScrollFactor(0, .6)
+			.setScale(1.4)
+		})
+		this.backgrounds.push({
+			ratioX: 0.4,
+			sprite: this.add.tileSprite(-window.innerWidth/2, 0, window.innerWidth*1.6, 450, 'mountains1')
+			.setOrigin(0,0)
+			.setScrollFactor(0, .8)
+			.setScale(1.4)
+		})
+		this.backgrounds.push({
+			ratioX: 1,
+			sprite: this.add.tileSprite(-window.innerWidth/2, 0, window.innerWidth*1.6, 600, 'ground')
+			.setOrigin(0,0)
+			.setScrollFactor(0, 1)
+			.setScale(1.4)
+		})
+	}
+
+	handleBackgrounds() {
+		for (let i =0 ; i< this.backgrounds.length; i++) {
+			const bg = this.backgrounds[i];
+			bg.sprite.tilePositionX = this.PlayerController?.player.pos.x * bg.ratioX/1.4;
+		}
+	}
 
 }

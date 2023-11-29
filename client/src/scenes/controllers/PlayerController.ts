@@ -119,7 +119,6 @@ export default class CharacterController {
         this.player.pos.y += move.y;
       }
       if (this.id !== undefined && playerRectangles[this.id]) {
-        playerRectangles[this.id].x = this.player.pos.x;
         playerRectangles[this.id].y = this.player.pos.y;
       }
   }
@@ -172,10 +171,7 @@ export default class CharacterController {
     }, 50);
 
     this.socket.on('updatePosition', (pos: PlayerPos, id: number) => { //Handle player update
-      if (id === this.id) {
-        playerRectangles[id].x = pos.x;
-        playerRectangles[id].y = pos.y;
-      } else {
+      if (id !== this.id) {
         this.playersToMove[id] = pos;
       }
     });
@@ -198,7 +194,7 @@ export default class CharacterController {
       this.id = id;
       this.player.id = id;
       for (let playerId in data) {
-        playerRectangles[playerId] = this.game.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
+        playerRectangles[playerId] = this.game.add.rectangle(window.innerWidth/2, data[playerId].y, 50, 100, 0xfffff);
         playerRectangles[playerId].name = playerId;
         this.playerGroup?.add(playerRectangles[playerId]);
         this.player.pos.x = data[playerId].x;
