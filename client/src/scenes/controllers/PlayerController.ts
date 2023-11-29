@@ -31,7 +31,7 @@ export class PlayerController {
   sentPos: PlayerPos = {x: 0, y: 0};
   game: Game;
   prevJump = 0;
-  spearObj?: {spear: Phaser.GameObjects.Rectangle, thrown: boolean, vel: number};
+  spearObj?: {spear: Phaser.GameObjects.Rectangle, thrown: boolean, vel: PlayerPos};
   isMouseHeld = false;
 
   // @ts-ignore
@@ -157,7 +157,8 @@ export class PlayerController {
       return;
     }
     if (this.spearObj.thrown) {
-      this.spearObj.spear.x += this.spearObj.vel;
+      this.spearObj.spear.x += this.spearObj.vel.x;
+      this.spearObj.spear.y += this.spearObj.vel.y;
       return;
     }
 
@@ -168,8 +169,17 @@ export class PlayerController {
         this.spearObj.spear.y += this.spearObj .spear.y < this.player.pos.y ? 2 : -2;
       }
     } else if (this.spearObj.spear.x !== this.player.pos.x) {
+      const launchAngleInRadians = Phaser.Math.DegToRad(this.spearObj.spear.angle);
+
       this.spearObj.thrown = true;
-      this.spearObj.vel = (this.player.pos.x - this.spearObj.spear.x)/5;
+      console.log(Math.floor((this.player.pos.x - this.spearObj.spear.x)));
+      this.spearObj.vel.x = Math.floor((this.player.pos.x - this.spearObj.spear.x)/5);
+      this.spearObj.vel.x *= Math.cos(launchAngleInRadians) > 0 ? 1 : -1;
+      console.log(this.spearObj.vel.x);
+
+
+      const verticalVelocity = Math.abs(this.spearObj.vel.x) * Math.sin(launchAngleInRadians);
+      this.spearObj.vel.y = verticalVelocity;
     }
 
   }
@@ -186,18 +196,29 @@ export class PlayerController {
     let targetSpearRad = Phaser.Math.Angle.Between(
 			this.spearObj.spear.x, this.spearObj.spear.y,
 			mouseWorldX, mouseWorldY
-		)
-    let spearRadAngle = this.spearObj?.spear.angle*Math.PI/180;
-
-    if (targetSpearRad < -Math.PI/2 && spearRadAngle > 0) {
-			targetSpearRad += Math.PI*2;
-		} else if (targetSpearRad > Math.PI/2 && spearRadAngle < 0) {
-				targetSpearRad -= Math.PI*2;
-		}
+    );
 
 		let spearMouseAngle = Phaser.Math.RadToDeg(targetSpearRad);
-    this.spearObj.spear.angle = spearMouseAngle;
-  }
+    if (this.player.direction === 'left') {
+      if (spearMouseAngle > -120 && spearMouseAngle < 120) {
+        if (spearMouseAngle > 0) {
+          spearMouseAngle = 120;
+        } else {
+          spearMouseAngle = -120;
+        }
+      }
+    } else {
+      console.log(spearMouseAngle);
+      if (spearMouseAngle < -64 || spearMouseAngle > 64) {
+        if (spearMouseAngle > 0) {
+          spearMouseAngle = 64;
+        } else {
+          spearMouseAngle = -64;
+        }
+      }
+    }
+  this.spearObj.spear.angle = spearMouseAngle;
+}
 
 
 
@@ -260,7 +281,7 @@ export class PlayerController {
     this.socket.on('playerData', (data: {[id: number]: PlayerPos}, id: number) => { //Recieved personal player data
       this.id = id;
       this.player.id = id;
-      this.spearObj = {spear: this.game.add.rectangle(data[id].x, data[id].y - 100, 100, 10, 0xff0000).setOrigin(0, .5).setDepth(1), thrown: false, vel: 0};
+      this.spearObj = {spear: this.game.add.rectangle(data[id].x, data[id].y - 100, 100, 10, 0xff0000).setOrigin(0, .5).setDepth(1), thrown: false, vel: {x: 0, y: 0}};
 
       for (let playerId in data) {
         playerRectangles[playerId] = this.game.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
