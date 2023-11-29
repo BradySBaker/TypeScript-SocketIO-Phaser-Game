@@ -130,6 +130,8 @@ export class PlayerController {
   handleGround() {
     if (this.player.pos.y > 500) {
       this.ground = true;
+      playerRectangles[this.id].y = 500;
+      this.player.pos.y = 500;
     }
   }
 
@@ -147,7 +149,7 @@ export class PlayerController {
       }
       let newPos = this.playersToMove[id];
       let curPos = playerRectangles[id];
-      if (newPos.x === curPos.x && newPos.y === curPos.y) {
+      if (Math.abs((newPos.x - curPos.x)) < .1 && Math.abs((newPos.y - curPos.y)) < .1) {
         delete this.playersToMove[id];
         return;
       }
@@ -198,7 +200,7 @@ export class PlayerController {
       this.id = id;
       this.player.id = id;
       for (let playerId in data) {
-        playerRectangles[playerId] = this.game.add.rectangle(window.innerWidth/2, data[playerId].y, 50, 100, 0xfffff);
+        playerRectangles[playerId] = this.game.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
         playerRectangles[playerId].name = playerId
         this.game.cameras.main.startFollow(playerRectangles[playerId]);
         this.playerGroup?.add(playerRectangles[playerId]);

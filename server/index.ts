@@ -39,9 +39,9 @@ setInterval(() => {
 io.on('connection', (socket: Socket) => {
   console.log(socket.id + 'connected');
   let playerId = playerCount;
-  playerPositions[playerId] = {x: 300, y: 300 };
+  playerPositions[playerId] = {x: 500, y: 500 };
   io.to(socket.id).emit('playerData', playerPositions, playerId);
-  io.emit('newPlayer', playerPositions, playerId);
+  io.emit('newPlayer', playerPositions[playerId], playerId);
   playerCount++;
 
   socket.on('updatePosition', (pos: GameObject) => { //recieved Game Object position and sends it to all clients
