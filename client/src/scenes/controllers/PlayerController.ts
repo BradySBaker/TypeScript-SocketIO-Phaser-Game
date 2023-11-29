@@ -27,6 +27,7 @@ export class PlayerController {
   sentPos: PlayerPos = {x: 0, y: 0};
   game: Game;
   prevJump = 0;
+  spear?: Phaser.GameObjects.Rectangle;
 
   // @ts-ignore
   constructor(game: Game, socket: Socket) {
@@ -78,6 +79,7 @@ export class PlayerController {
   handleMovement() {
     this.interpolatePlayerPositions();
     this.handleGround();
+    this.handleSpearRotation();
     let move: PlayerPos = {x: 0, y: 0};
 
     // const timeNow = this.game.time.now;
@@ -121,6 +123,10 @@ export class PlayerController {
       if (this.id !== undefined && playerRectangles[this.id]) {
         playerRectangles[this.id].y = this.player.pos.y;
         playerRectangles[this.id].x = this.player.pos.x;
+        if (this.spear) {
+          this.spear.y = this.player.pos.y;
+          this.spear.x = this.player.direction === 'left' ? this.player.pos.x : this.player.pos.x;
+        }
       }
   }
 
@@ -136,7 +142,34 @@ export class PlayerController {
   }
 
 
+  handleSpearThrow() {
+    if (!this.spear) {
+      return;
+    }
 
+  }
+
+  handleSpearRotation() {
+    if (!this.spear) {
+      return;
+    }
+    let mouseWorldX = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).x;
+		let mouseWorldY = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).y;
+    let targetSpearRad = Phaser.Math.Angle.Between(
+			this.spear.x, this.spear.y,
+			mouseWorldX, mouseWorldY
+		)
+    let spearRadAngle = this.spear.angle*Math.PI/180;
+
+    if (targetSpearRad < -Math.PI/2 && spearRadAngle > 0) {
+			targetSpearRad += Math.PI*2;
+		} else if (targetSpearRad > Math.PI/2 && spearRadAngle < 0) {
+				targetSpearRad -= Math.PI*2;
+		}
+
+		let spearMouseAngle = Phaser.Math.RadToDeg(targetSpearRad);
+    this.spear.angle = spearMouseAngle;
+  }
 
 
 
@@ -199,6 +232,10 @@ export class PlayerController {
     this.socket.on('playerData', (data: {[id: number]: PlayerPos}, id: number) => { //Recieved personal player data
       this.id = id;
       this.player.id = id;
+      this.spear = this.game.add.rectangle(data[id].x, data[id].y, 100, 10, 0xff0000)
+      .setOrigin(0, .5)
+		  .setDepth(1);
+
       for (let playerId in data) {
         playerRectangles[playerId] = this.game.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
         playerRectangles[playerId].name = playerId
