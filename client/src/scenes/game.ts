@@ -2,8 +2,8 @@ import Phaser, { GameObjects } from "phaser";
 import ProjectileController from './controllers/ProjectileController.js';
 import PlayerController from './controllers/PlayerController.js';
 
-import { io } from 'socket.io-client';
-let socket;
+import * as socketClient from 'socket.io-client';
+let socket: socketClient.Socket;
 
 window.addEventListener('beforeunload', () => {
   socket.disconnect();
@@ -41,7 +41,7 @@ export default class Game extends Phaser.Scene {
     this.load.image('mountains1', './assets/mountains1.png');
     this.load.image('mountains2', './assets/mountains2.png');
     this.load.on('complete', () => {
-      socket = io('http://localhost:3000');
+      socket = socketClient.io('http://localhost:3000');
     });
   }
 
