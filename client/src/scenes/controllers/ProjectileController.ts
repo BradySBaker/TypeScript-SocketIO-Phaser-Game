@@ -20,6 +20,7 @@ export default class ProjectileController {
   playerGroup: Phaser.GameObjects.Group;
   game: Game;
   spear?: Phaser.GameObjects.Rectangle;
+  thrownSpearsData: {[id: number]: {pos: GameObject, angle: number}} = {}
   thrownSpears: {[id: number]: {spear: Phaser.GameObjects.Rectangle, vel: GameObject}} = {};
   // @ts-ignore
   spaceKey: Phaser.Input.Keyboard.KeyCodes;
@@ -123,6 +124,8 @@ handleSpearThrow(player: Player) {
     const launchAngleInRadians = Phaser.Math.DegToRad(this.spear.angle);
 
     this.thrownSpears[this.curSpearId] = {spear: this.spear, vel: {x: 0, y: 0}};
+    this.thrownSpearsData[this.curSpearId] = {pos: {x: this.spear.x, y: this.spear.y}, angle: this.spear.angle};
+
     this.spear = undefined;
     this.thrownSpears[this.curSpearId].vel.x = Math.floor((player.pos.x - this.thrownSpears[this.curSpearId].spear.x)/2);
 
@@ -139,15 +142,17 @@ handleSpearThrow(player: Player) {
       spearObj.vel.x -= .05;
     }
     if (spearObj.vel.x < 0 && Math.abs(spearObj.spear.angle) > 100) {
-      spearObj.spear.angle -= 10 / Math.sqrt(spearObj.vel.x * -1);
+      spearObj.spear.angle -= 8 / Math.sqrt(spearObj.vel.x * -1);
     } else if (spearObj.spear.angle < 90) {
-      spearObj.spear.angle += 10 / Math.sqrt(spearObj.vel.x);
+      spearObj.spear.angle += 8 / Math.sqrt(spearObj.vel.x);
     } else {
       spearObj.spear.angle += spearObj.vel.x < 0 ? -.5 : .5;
     }
     spearObj.vel.y += .5;
+    this.thrownSpearsData[id].pos = {x: spearObj.spear.x, y: spearObj.spear.y};
+    this.thrownSpearsData[id].angle = spearObj.spear.angle;
   }
 
 }
 
-}
+};

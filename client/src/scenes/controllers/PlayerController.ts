@@ -1,6 +1,7 @@
 import { prefetch } from 'webpack';
 import Game from '../game.js';
 import { Socket } from "socket.io-client";
+import { GameObjects } from 'phaser';
 
 type PlayerPos = {
   x: number,
@@ -167,6 +168,10 @@ export class PlayerController {
 
   retrievePlayerData() {
     setInterval(() => {
+      if (this.game.ProjectileController?.curSpearId !== 0) {
+        this.socket.emit('updateSpearPositions', this.id, this.game.ProjectileController?.thrownSpearsData);
+      }
+
       if (this.id !== undefined && (this.player.pos.x !== this.sentPos.x || this.player.pos.y !== this.sentPos.y)) {
         this.socket.emit('updatePosition', this.player.pos);
         this.sentPos.x = this.player.pos.x;
@@ -210,6 +215,10 @@ export class PlayerController {
       this.game.cameras.main.startFollow(playerRectangles[this.id]);
       this.game.cameras.main.followOffset.set(-100, 350);
 
+    });
+
+    this.socket.on('updateSpearPositions', (playerId: Number, thrownSpearsData: {[id: number]: {pos: PlayerPos, angle: number}}) => {
+      console.log(thrownSpearsData);
     });
   }
 
