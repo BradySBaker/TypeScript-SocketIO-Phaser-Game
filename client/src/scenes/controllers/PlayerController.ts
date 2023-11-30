@@ -17,8 +17,6 @@ export const playerRectangles: { [id: number]: Phaser.GameObjects.Rectangle } = 
 
 
 export class PlayerController {
-  // @ts-ignore
-  spaceKey: Phaser.Input.Keyboard.KeyCodes;
   shootTimer = 0;
   playersToMove: {[id: number]: PlayerPos} = {};
   socket: Socket;
@@ -31,13 +29,10 @@ export class PlayerController {
   sentPos: PlayerPos = {x: 0, y: 0};
   game: Game;
   prevJump = 0;
-  spearObj?: {spear: Phaser.GameObjects.Rectangle, thrown: boolean, vel: PlayerPos};
   isMouseHeld = false;
 
   // @ts-ignore
   constructor(game: Game, socket: Socket) {
-    // @ts-ignore
-    this.spaceKey = game.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.game = game;
     this.socket = socket;
     this.player = {direction: 'right', pos: {x: 0, y: 0}, id: this.id};
@@ -88,8 +83,8 @@ export class PlayerController {
   handleMovement() {
     this.interpolatePlayerPositions();
     this.handleGround();
-    this.handleSpearRotation();
-    this.handleSpearThrow();
+    this.game.ProjectileController?.handleSpearRotation(this.player);
+    this.game.ProjectileController?.handleSpearThrow(this.player);
     let move: PlayerPos = {x: 0, y: 0};
 
     // const timeNow = this.game.time.now;
@@ -123,9 +118,9 @@ export class PlayerController {
     if (this.id !== undefined && playerRectangles[this.id]) {
       playerRectangles[this.id].y = this.player.pos.y;
       playerRectangles[this.id].x = this.player.pos.x;
-      if (this.spearObj?.spear && !this.spearObj.thrown) {
-        this.spearObj.spear.y = this.player.pos.y;
-        this.spearObj.spear.x = this.player.direction === 'left' ? this.player.pos.x : this.player.pos.x;
+      if (this.game.ProjectileController?.spearObj?.spear && !this.game.ProjectileController.spearObj.thrown) {
+        this.game.ProjectileController.spearObj.spear.y = this.player.pos.y;
+        this.game.ProjectileController.spearObj.spear.x = this.player.direction === 'left' ? this.player.pos.x : this.player.pos.x;
       }
     }
   }
@@ -143,74 +138,6 @@ export class PlayerController {
   }
 
 
-  handleSpearThrow() {
-    if (!this.spearObj?.spear) {
-      return;
-    }
-    if (this.spearObj.thrown) {
-      this.spearObj.spear.x += this.spearObj.vel.x;
-      this.spearObj.spear.y += this.spearObj.vel.y;
-      if (Math.abs(this.spearObj.vel.x) > 0) {
-        this.spearObj.vel.x -= .05;
-      }
-      this.spearObj.spear.angle += this.spearObj.vel.x > 0 ? 1.5 : -1.5;
-      this.spearObj.vel.y += .5;
-      return;
-    }
-
-    if (this.spaceKey.isDown) {
-      if (Math.abs(this.spearObj.spear.x - this.player.pos.x) < 50) {
-        this.spearObj.spear.x += this.player.direction === 'left' ? 2 : -2;
-      } else {
-        this.spearObj.spear.y += this.spearObj .spear.y < this.player.pos.y ? 2 : -2;
-      }
-    } else if (this.spearObj.spear.x !== this.player.pos.x) {
-      const launchAngleInRadians = Phaser.Math.DegToRad(this.spearObj.spear.angle);
-
-      this.spearObj.thrown = true;
-      this.spearObj.vel.x = Math.floor((this.player.pos.x - this.spearObj.spear.x)/2);
-
-
-      const verticalVelocity = Math.abs(this.spearObj.vel.x) * Math.sin(launchAngleInRadians);
-      this.spearObj.vel.y = verticalVelocity;
-    }
-
-  }
-
-  handleSpearRotation() {
-    if (!this.spearObj?.spear) {
-      return;
-    }
-    if (this.spearObj.thrown) {
-      return;
-    }
-    let mouseWorldX = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).x;
-		let mouseWorldY = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).y;
-    let targetSpearRad = Phaser.Math.Angle.Between(
-			this.spearObj.spear.x, this.spearObj.spear.y,
-			mouseWorldX, mouseWorldY
-    );
-
-		let spearMouseAngle = Phaser.Math.RadToDeg(targetSpearRad);
-    if (this.player.direction === 'left') {
-      if (spearMouseAngle > -120 && spearMouseAngle < 120) {
-        if (spearMouseAngle > 0) {
-          spearMouseAngle = 120;
-        } else {
-          spearMouseAngle = -120;
-        }
-      }
-    } else {
-      if (spearMouseAngle < -64 || spearMouseAngle > 64) {
-        if (spearMouseAngle > 0) {
-          spearMouseAngle = 64;
-        } else {
-          spearMouseAngle = -64;
-        }
-      }
-    }
-  this.spearObj.spear.angle = spearMouseAngle;
-}
 
 
 
@@ -273,8 +200,6 @@ export class PlayerController {
     this.socket.on('playerData', (data: {[id: number]: PlayerPos}, id: number) => { //Recieved personal player data
       this.id = id;
       this.player.id = id;
-      this.spearObj = {spear: this.game.add.rectangle(data[id].x, data[id].y - 100, 100, 10, 0xff0000).setOrigin(0, .5).setDepth(1), thrown: false, vel: {x: 0, y: 0}};
-
       for (let playerId in data) {
         playerRectangles[playerId] = this.game.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
         playerRectangles[playerId].name = playerId

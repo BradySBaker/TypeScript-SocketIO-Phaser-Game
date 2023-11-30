@@ -79,10 +79,10 @@ export default class Game extends Phaser.Scene {
 		if (this.gameHeight <= 500) {
 			skyOffset = -window.innerWidth;
 		}
-		this.add.image(skyOffset, -400, 'sky')
+		this.add.image(skyOffset, -800, 'sky')
 		.setOrigin(0, 0)
 		.setScrollFactor(0, .3)
-		.setScale(1.3);
+		.setScale(1.6);
 
     this.backgrounds.push({
       ratioX: 0.05,
