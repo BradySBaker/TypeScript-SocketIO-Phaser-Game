@@ -1,5 +1,7 @@
+import { prefetch } from 'webpack';
 import Game from '../game.js';
 import { Socket } from "socket.io-client";
+import { GameObjects } from 'phaser';
 
 type PlayerPos = {
   x: number,
@@ -16,6 +18,7 @@ export const playerRectangles: { [id: number]: Phaser.GameObjects.Rectangle } = 
 
 
 export class PlayerController {
+  shootTimer = 0;
   playersToMove: {[id: number]: PlayerPos} = {};
   socket: Socket;
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
@@ -27,6 +30,7 @@ export class PlayerController {
   sentPos: PlayerPos = {x: 0, y: 0};
   game: Game;
   prevJump = 0;
+  isMouseHeld = false;
 
   // @ts-ignore
   constructor(game: Game, socket: Socket) {
@@ -39,7 +43,9 @@ export class PlayerController {
   setupPlayer() {
     // @ts-ignore
     this.cursors = this.game.input.keyboard.createCursorKeys();
+    this.game.cameras.main.zoom = .6;
     this.playerGroup = this.game.add.group({
+
       classType: Phaser.GameObjects.Rectangle,
       createCallback: (player) => {
         this.game.physics.world.enable(player);
@@ -78,6 +84,8 @@ export class PlayerController {
   handleMovement() {
     this.interpolatePlayerPositions();
     this.handleGround();
+    this.game.ProjectileController?.handleSpearRotation(this.player);
+    this.game.ProjectileController?.handleSpearThrow(this.player);
     let move: PlayerPos = {x: 0, y: 0};
 
     // const timeNow = this.game.time.now;
@@ -106,35 +114,29 @@ export class PlayerController {
       return;
     }
 
-    let playerWidth = 50;
-    let playerHeight = 100;
-    if (
-        this.game.physics.world.bounds.x <= (this.player.pos.x + move.x) - playerWidth / 2 &&
-        this.game.physics.world.bounds.y <= (this.player.pos.y + move.y) - playerHeight / 2 &&
-        this.game.physics.world.bounds.right >= (this.player.pos.x + move.x) + playerWidth / 2 &&
-        this.game.physics.world.bounds.bottom >= (this.player.pos.y + move.y) + playerHeight / 2
-      )
-      {
-        this.player.pos.x += move.x;
-        this.player.pos.y += move.y;
+    this.player.pos.x += move.x;
+    this.player.pos.y += move.y;
+    if (this.id !== undefined && playerRectangles[this.id]) {
+      playerRectangles[this.id].y = this.player.pos.y;
+      playerRectangles[this.id].x = this.player.pos.x;
+      if (this.game.ProjectileController?.spearObj?.spear && !this.game.ProjectileController.spearObj.thrown) {
+        this.game.ProjectileController.spearObj.spear.y = this.player.pos.y;
+        this.game.ProjectileController.spearObj.spear.x = this.player.direction === 'left' ? this.player.pos.x : this.player.pos.x;
       }
-      if (this.id !== undefined && playerRectangles[this.id]) {
-        playerRectangles[this.id].y = this.player.pos.y;
-        playerRectangles[this.id].x = this.player.pos.x;
-      }
+    }
   }
 
 
 
 
   handleGround() {
-    if (this.player.pos.y > 500) {
+    if (playerRectangles[this.id]);
+    if (this.player.pos.y > 900) {
       this.ground = true;
-      playerRectangles[this.id].y = 500;
-      this.player.pos.y = 500;
+      playerRectangles[this.id].y = 900;
+      this.player.pos.y = 900;
     }
   }
-
 
 
 
@@ -166,6 +168,10 @@ export class PlayerController {
 
   retrievePlayerData() {
     setInterval(() => {
+      if (this.game.ProjectileController?.curSpearId !== 0) {
+        this.socket.emit('updateSpearPositions', this.id, this.game.ProjectileController?.thrownSpearsData);
+      }
+
       if (this.id !== undefined && (this.player.pos.x !== this.sentPos.x || this.player.pos.y !== this.sentPos.y)) {
         this.socket.emit('updatePosition', this.player.pos);
         this.sentPos.x = this.player.pos.x;
@@ -202,11 +208,17 @@ export class PlayerController {
       for (let playerId in data) {
         playerRectangles[playerId] = this.game.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
         playerRectangles[playerId].name = playerId
-        this.game.cameras.main.startFollow(playerRectangles[playerId]);
         this.playerGroup?.add(playerRectangles[playerId]);
         this.player.pos.x = data[playerId].x;
         this.player.pos.y = data[playerId].y;
       }
+      this.game.cameras.main.startFollow(playerRectangles[this.id]);
+      this.game.cameras.main.followOffset.set(-100, 350);
+
+    });
+
+    this.socket.on('updateSpearPositions', (playerId: Number, thrownSpearsData: {[id: number]: {pos: PlayerPos, angle: number}}) => {
+      console.log(thrownSpearsData);
     });
   }
 

@@ -68,6 +68,10 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
+  socket.on('updateSpearPositions', (playerId: number, spearData: {[id: number]: {pos: GameObject, angle: number}}) => {
+    socket.broadcast.emit('updateSpearPositions', playerId, spearData);
+  });
+
 
 
 

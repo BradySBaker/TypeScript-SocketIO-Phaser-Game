@@ -23,11 +23,8 @@ type GameObject = {
 
 
 export default class Game extends Phaser.Scene {
-  ProjectileController?: ProjectileController;
   PlayerController?: PlayerController;
-  // @ts-ignore
-  spaceKey: Phaser.Input.Keyboard.KeyCodes;
-  shootTimer: number = 0;
+  ProjectileController?: ProjectileController;
   deltaTime: number = 0;
   gameWidth = window.innerWidth
   gameHeight: any
@@ -55,8 +52,6 @@ export default class Game extends Phaser.Scene {
 
 
     this.physics.world.setBoundsCollision(true);
-    // @ts-ignore
-    this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
 
 
     socket.on('deleteProjectile', (id) => {
@@ -73,53 +68,41 @@ export default class Game extends Phaser.Scene {
   update(time, delta: number) {
     this.deltaTime = delta / (1000 / 60);
     this.PlayerController?.handleMovement();
-    this.handleShoot();
     this.handleBackgrounds();
-  }
-
-
-  handleShoot() {
-    if (this.spaceKey.isDown && this.shootTimer === 0) {
-      this.shootTimer = 20;
-      this.ProjectileController?.createProjectile(this.PlayerController.player);
-    }
-    if (this.shootTimer !== 0) {
-      this.shootTimer--;
-    }
   }
 
 
 
 
   createBackgrounds() {
-		var skyOffset = -window.innerWidth/4
+		var skyOffset = -window.innerWidth/3;
 		if (this.gameHeight <= 500) {
 			skyOffset = -window.innerWidth;
 		}
 		this.add.image(skyOffset, -800, 'sky')
 		.setOrigin(0, 0)
 		.setScrollFactor(0, .3)
-		.setScale(1.3);
+		.setScale(1.6);
 
     this.backgrounds.push({
       ratioX: 0.05,
-      sprite: this.add.tileSprite(0, 0, this.scale.width * 1.6, 450, 'mountains2')
+      sprite: this.add.tileSprite(-this.scale.width/3, 100, this.scale.width * 1.6, 450, 'mountains2')
           .setOrigin(0, 0)
           .setScrollFactor(0, .6)
-          .setScale(1.4)
+          .setScale(2)
     });
 
     this.backgrounds.push({
         ratioX: 0.1,
-        sprite: this.add.tileSprite(0, 0, this.scale.width * 1.6, 450, 'mountains1')
+        sprite: this.add.tileSprite(-this.scale.width/3, 200, this.scale.width * 1.6, 450, 'mountains1')
             .setOrigin(0, 0)
             .setScrollFactor(0, .8)
-            .setScale(1.4)
+            .setScale(2)
     });
 
     this.backgrounds.push({
         ratioX: 1,
-        sprite: this.add.tileSprite(0, 0, this.scale.width * 1.6, 600, 'ground')
+        sprite: this.add.tileSprite(-this.scale.width/3, 400, this.scale.width * 1.6, 600, 'ground')
             .setOrigin(0, 0)
             .setScrollFactor(0, 1)
             .setScale(1.4)

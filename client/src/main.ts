@@ -4,6 +4,8 @@ import Game from "./scenes/game.js";
 const config = {
 	backgroundColor: '2c003e',
 	type: Phaser.AUTO,
+  width: window.innerWidth,
+	height: Math.min(Math.max(window.innerHeight, 400), 800),
 	physics: {
 		default: 'arcade',
 		arcade: {
