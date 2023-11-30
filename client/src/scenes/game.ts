@@ -75,34 +75,34 @@ export default class Game extends Phaser.Scene {
 
 
   createBackgrounds() {
-		var skyOffset = -window.innerWidth/4
+		var skyOffset = -window.innerWidth/3;
 		if (this.gameHeight <= 500) {
 			skyOffset = -window.innerWidth;
 		}
-		this.add.image(skyOffset, -800, 'sky')
+		this.add.image(skyOffset, -400, 'sky')
 		.setOrigin(0, 0)
 		.setScrollFactor(0, .3)
 		.setScale(1.3);
 
     this.backgrounds.push({
       ratioX: 0.05,
-      sprite: this.add.tileSprite(0, 0, this.scale.width * 1.6, 450, 'mountains2')
+      sprite: this.add.tileSprite(-this.scale.width/3, 100, this.scale.width * 1.6, 450, 'mountains2')
           .setOrigin(0, 0)
           .setScrollFactor(0, .6)
-          .setScale(1.4)
+          .setScale(2)
     });
 
     this.backgrounds.push({
         ratioX: 0.1,
-        sprite: this.add.tileSprite(0, 0, this.scale.width * 1.6, 450, 'mountains1')
+        sprite: this.add.tileSprite(-this.scale.width/3, 200, this.scale.width * 1.6, 450, 'mountains1')
             .setOrigin(0, 0)
             .setScrollFactor(0, .8)
-            .setScale(1.4)
+            .setScale(2)
     });
 
     this.backgrounds.push({
         ratioX: 1,
-        sprite: this.add.tileSprite(0, 0, this.scale.width * 1.6, 600, 'ground')
+        sprite: this.add.tileSprite(-this.scale.width/3, 400, this.scale.width * 1.6, 600, 'ground')
             .setOrigin(0, 0)
             .setScrollFactor(0, 1)
             .setScale(1.4)
