@@ -12,14 +12,15 @@ export default class ProjectileController {
   socket: Socket;
   playerGroup: Phaser.GameObjects.Group;
   game: Game;
-  spear?: Phaser.GameObjects.Rectangle;
+  spear?: Phaser.GameObjects.Sprite;
   curSpearData: {[id: number]: {pos: GameObject, angle: number}} = {}
-  curThrownSpears: {[id: number]: {spear: Phaser.GameObjects.Rectangle, vel: GameObject}} = {};
-  otherThrownSpears: {[playerID: number]: {[spearID: number]: Phaser.GameObjects.Rectangle}} = {};
+  curThrownSpears: {[id: number]: {spear: Phaser.GameObjects.Sprite, vel: GameObject}} = {};
+  otherThrownSpears: {[playerID: number]: {[spearID: number]: Phaser.GameObjects.Sprite}} = {};
   curSpearId = 0;
 
 
   constructor(game: Game, socket: Socket, playerGroup: Phaser.GameObjects.Group) {
+
     this.game = game;
     this.socket = socket;
     this.line = this.game.add.graphics();
@@ -100,7 +101,7 @@ export default class ProjectileController {
 
   handleSpearThrow(player: Player) {
     if (!this.spear && this.game.input.activePointer.isDown) {
-      this.spear = this.game.add.rectangle(player.pos.x, player.pos.y, 100, 10, 0xff0000).setOrigin(0, .5).setDepth(1);
+      this.spear = this.game.add.sprite(player.pos.x, player.pos.y, 'spear').setOrigin(0, .5).setDepth(1);
     }
 
 

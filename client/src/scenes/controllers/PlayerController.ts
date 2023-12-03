@@ -246,7 +246,7 @@ export class PlayerController {
           thrownSpears[playerID] = {};
         }
         if (!thrownSpears[playerID][spearID]) {
-          thrownSpears[playerID][spearID] = this.game.add.rectangle(curSpearData.pos.x, curSpearData.pos.y, 100, 10, 0xff0000).setOrigin(0, .5).setDepth(1);
+          thrownSpears[playerID][spearID] = this.game.add.sprite(curSpearData.pos.x, curSpearData.pos.y, 'spear').setOrigin(0, .5).setDepth(1);
           thrownSpears[playerID][spearID].angle = curSpearData.angle;
         } else {
           let thrownSpear = thrownSpears[playerID][spearID];
