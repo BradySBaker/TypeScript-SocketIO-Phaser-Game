@@ -2,6 +2,8 @@ import Game from '../game.js';
 
 import { Socket } from "socket.io-client";
 
+import global from '../global.js';
+
 let spearReadySpeed = 2;
 
 export default class ProjectileController {
@@ -97,39 +99,42 @@ export default class ProjectileController {
         }
       }
     }
-  this.spear.angle = spearMouseAngle;
-}
-
-handleSpearThrow(player: Player) {
-  if (!this.spear && this.spaceKey.isDown) {
-    this.spear = this.game.add.rectangle(player.pos.x, player.pos.y, 100, 10, 0xff0000).setOrigin(0, .5).setDepth(1);
+    this.spear.angle = spearMouseAngle;
   }
 
-
-  if (this.spaceKey.isDown && this.spear) { //Ready spear
-    if (Math.abs(this.spear.x - player.pos.x) < 50) {
-      this.spear.x += (player.direction === 'left' ? spearReadySpeed : -spearReadySpeed) * this.game.deltaTime;
-    } else {
-      this.spear.y += (this.spear.y < player.pos.y ? spearReadySpeed : -spearReadySpeed) * this.game.deltaTime;
+  handleSpearThrow(player: Player) {
+    if (!this.spear && this.spaceKey.isDown) {
+      this.spear = this.game.add.rectangle(player.pos.x, player.pos.y, 100, 10, 0xff0000).setOrigin(0, .5).setDepth(1);
     }
-  } else if (this.spear && this.spear.x !== player.pos.x) { //Throw spear
-    const launchAngleInRadians = Phaser.Math.DegToRad(this.spear.angle);
 
-    this.curThrownSpears[this.curSpearId] = {spear: this.spear, vel: {x: 0, y: 0}};
-    this.curSpearData[this.curSpearId] = {pos: {x: this.spear.x, y: this.spear.y}, angle: this.spear.angle};
 
-    this.spear = undefined;
-    this.curThrownSpears[this.curSpearId].vel.x = Math.floor((player.pos.x - this.curThrownSpears[this.curSpearId].spear.x)/2);
+    if (this.spaceKey.isDown && this.spear) { //Ready spear
+      if (Math.abs(this.spear.x - player.pos.x) < 50) {
+        this.spear.x += (player.direction === 'left' ? spearReadySpeed : -spearReadySpeed) * this.game.deltaTime;
+      } else {
+        this.spear.y += (this.spear.y < player.pos.y ? spearReadySpeed : -spearReadySpeed) * this.game.deltaTime;
+      }
+    } else if (this.spear && this.spear.x !== player.pos.x) { //Throw spear
+      const launchAngleInRadians = Phaser.Math.DegToRad(this.spear.angle);
 
-    const verticalVelocity = Math.abs(this.curThrownSpears[this.curSpearId].vel.x) * Math.sin(launchAngleInRadians);
-    this.curThrownSpears[this.curSpearId].vel.y = verticalVelocity;
-    this.curSpearId++;
-  }
-  for (let id in this.curThrownSpears) {
-    let spearObj = this.curThrownSpears[id];
+      this.curThrownSpears[this.curSpearId] = {spear: this.spear, vel: {x: 0, y: 0}};
+      this.curSpearData[this.curSpearId] = {pos: {x: this.spear.x, y: this.spear.y}, angle: this.spear.angle};
+
+      this.spear = undefined;
+      this.curThrownSpears[this.curSpearId].vel.x = Math.floor((player.pos.x - this.curThrownSpears[this.curSpearId].spear.x)/2);
+
+      const verticalVelocity = Math.abs(this.curThrownSpears[this.curSpearId].vel.x) * Math.sin(launchAngleInRadians);
+      this.curThrownSpears[this.curSpearId].vel.y = verticalVelocity;
+      this.curSpearId++;
+    }
+    for (let id in this.curThrownSpears) {
+      let spearObj = this.curThrownSpears[id];
+      if (spearObj.spear.y - spearObj.spear.height >= global.ground) {
+        spearObj.spear.y = global.ground + spearObj.spear.height;
+        continue;
+      }
       spearObj.spear.x += spearObj.vel.x * this.game.deltaTime;
       spearObj.spear.y += spearObj.vel.y * this.game.deltaTime;
-      // if (spearObj.spear.x > )
       if (Math.abs(spearObj.vel.x) > 0) {
         spearObj.vel.x -= .05;
       }

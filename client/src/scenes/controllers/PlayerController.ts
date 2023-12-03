@@ -1,7 +1,7 @@
-import { prefetch } from 'webpack';
 import Game from '../game.js';
 import { Socket } from "socket.io-client";
-import { GameObjects } from 'phaser';
+
+import global from '../global.js';
 
 export const playerRectangles: { [id: number]: Phaser.GameObjects.Rectangle } = {};
 
@@ -105,6 +105,11 @@ export class PlayerController {
 
     this.player.pos.x += move.x;
     this.player.pos.y += move.y;
+    if (!playerRectangles[this.id]) {
+      return;
+    }
+    playerRectangles[this.id].x = this.player.pos.x;
+    playerRectangles[this.id].y = this.player.pos.y;
   }
 
 
@@ -114,10 +119,10 @@ export class PlayerController {
     if (!playerRectangles[this.id]) {
       return;
     }
-    if (this.player.pos.y > 900) {
+    if (this.player.pos.y > global.ground) {
       this.ground = true;
-      playerRectangles[this.id].y = 900;
-      this.player.pos.y = 900;
+      playerRectangles[this.id].y = global.ground;
+      this.player.pos.y = global.ground;
     }
   }
 
