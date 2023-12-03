@@ -20,18 +20,29 @@ export class PlayerController {
   game: Game;
   prevJump = 0;
   isMouseHeld = false;
+  // @ts-ignore
+  spaceKey: Phaser.Input.Keyboard.KeyCodes;
 
   // @ts-ignore
   constructor(game: Game, socket: Socket) {
     this.game = game;
     this.socket = socket;
     this.player = {direction: 'right', pos: {x: 0, y: 0}, id: this.id};
+    // @ts-ignore
+    this.spaceKey = game.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   }
 
 
   setupPlayer() {
     // @ts-ignore
-    this.cursors = this.game.input.keyboard.createCursorKeys();
+    this.cursors = this.game.input.keyboard.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.W,
+      down: Phaser.Input.Keyboard.KeyCodes.S,
+      left: Phaser.Input.Keyboard.KeyCodes.A,
+      right: Phaser.Input.Keyboard.KeyCodes.D
+  });
+
+
     this.game.cameras.main.zoom = .6;
     this.playerGroup = this.game.add.group({
 
@@ -79,7 +90,10 @@ export class PlayerController {
 
     // const timeNow = this.game.time.now;
     // const timeSinceJump = timeNow - this.prevJump;
-
+    if (!this.ground) {
+      this.vy += .5 * this.game.deltaTime
+      move.y += this.vy;
+    }
     if (this.cursors?.right.isDown ) {
       this.player.direction = 'right';
       move.x = 4 * this.game.deltaTime;
@@ -88,21 +102,16 @@ export class PlayerController {
       this.player.direction = 'left';
       move.x = -4 * this.game.deltaTime;
     }
-    if (this.cursors?.up.isDown && this.ground) {
+    if (this.spaceKey.isDown && this.ground) {
 			this.prevJump = this.game.time.now;
       this.vy = -10;
       move.y += this.vy;
       this.ground = false;
     }
-    if (!this.ground) {
-      this.vy += .5 * this.game.deltaTime
-      move.y += this.vy;
-    }
 
     if (move.x === 0 && move.y === 0) {
       return;
     }
-
     this.player.pos.x += move.x;
     this.player.pos.y += move.y;
     if (!playerRectangles[this.id]) {
@@ -110,6 +119,10 @@ export class PlayerController {
     }
     playerRectangles[this.id].x = this.player.pos.x;
     playerRectangles[this.id].y = this.player.pos.y;
+    if (this.game.ProjectileController?.spear) {
+      this.game.ProjectileController.spear.x += move.x;
+      this.game.ProjectileController.spear.y = this.player.pos.y;
+    }
   }
 
 

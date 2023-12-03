@@ -16,14 +16,10 @@ export default class ProjectileController {
   curSpearData: {[id: number]: {pos: GameObject, angle: number}} = {}
   curThrownSpears: {[id: number]: {spear: Phaser.GameObjects.Rectangle, vel: GameObject}} = {};
   otherThrownSpears: {[playerID: number]: {[spearID: number]: Phaser.GameObjects.Rectangle}} = {};
-  // @ts-ignore
-  spaceKey: Phaser.Input.Keyboard.KeyCodes;
   curSpearId = 0;
 
 
   constructor(game: Game, socket: Socket, playerGroup: Phaser.GameObjects.Group) {
-    // @ts-ignore
-    this.spaceKey = game.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.game = game;
     this.socket = socket;
     this.line = this.game.add.graphics();
@@ -103,12 +99,12 @@ export default class ProjectileController {
   }
 
   handleSpearThrow(player: Player) {
-    if (!this.spear && this.spaceKey.isDown) {
+    if (!this.spear && this.game.input.activePointer.isDown) {
       this.spear = this.game.add.rectangle(player.pos.x, player.pos.y, 100, 10, 0xff0000).setOrigin(0, .5).setDepth(1);
     }
 
 
-    if (this.spaceKey.isDown && this.spear) { //Ready spear
+    if (this.game.input.activePointer.isDown && this.spear) { //Ready spear
       if (Math.abs(this.spear.x - player.pos.x) < 50) {
         this.spear.x += (player.direction === 'left' ? spearReadySpeed : -spearReadySpeed) * this.game.deltaTime;
       } else {

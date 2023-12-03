@@ -13,7 +13,11 @@ const config = {
 			gravity: { y: 0 },
 			debug: true
 		}
-	}
+	},
+  input: {
+    activePointers: 1,
+    target: 'canvas'
+  }
 }
 
 const game = new Phaser.Game(config);
