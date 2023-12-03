@@ -190,7 +190,7 @@ export class PlayerController {
     });
 
 
-    this.socket.on('playerData', (data: {[id: number]: GameObject}, id: number) => { //Recieved personal player data
+    this.socket.on('playerData', (data: {[id: number]: GameObject}, id: number, spearPositions: {[playerId: number]: {[spearID: number]: {pos: GameObject, angle: number}}}) => { //Recieved personal player data
       this.id = id;
       this.player.id = id;
       for (let playerId in data) {
@@ -199,6 +199,15 @@ export class PlayerController {
         this.playerGroup?.add(playerRectangles[playerId]);
         this.player.pos.x = data[playerId].x;
         this.player.pos.y = data[playerId].y;
+      }
+      let thrownSpears = this.game.ProjectileController?.otherThrownSpears;
+      for (let playerID in spearPositions) {
+        for (let spearID in spearPositions[playerID]) {
+          let curSpearData = spearPositions[playerID][spearID];
+          thrownSpears[playerID] = {};
+          thrownSpears[playerID][spearID] = this.game.add.rectangle(curSpearData.pos.x, curSpearData.pos.y, 100, 10, 0xff0000).setOrigin(0, .5).setDepth(1);
+          thrownSpears[playerID][spearID].angle = curSpearData.angle;
+        }
       }
       this.game.cameras.main.startFollow(playerRectangles[this.id]);
       this.game.cameras.main.followOffset.set(-100, 350);

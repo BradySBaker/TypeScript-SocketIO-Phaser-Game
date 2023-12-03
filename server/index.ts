@@ -10,6 +10,7 @@ let projectileCount: number = 0;
 
 let playerPositions: {[playerId: number]: GameObject} = {};
 let projectilePositions: {[playerId: number]: {direction: string, pos: GameObject, startPos: GameObject, playerId: number}} = {};
+let spearPositions: {[playerId: number]: {[spearID: number]: {pos: GameObject, angle: number}}} = {};
 
 const io = new Server(3000, {
   cors: {
@@ -39,7 +40,7 @@ io.on('connection', (socket: Socket) => {
   console.log(socket.id + 'connected');
   let playerId = playerCount;
   playerPositions[playerId] = {x: 500, y: 500 };
-  io.to(socket.id).emit('playerData', playerPositions, playerId);
+  io.to(socket.id).emit('playerData', playerPositions, playerId, spearPositions);
   io.emit('newPlayer', playerPositions[playerId], playerId);
   playerCount++;
 
@@ -68,6 +69,7 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('updateSpearPositions', (playerId: number, spearData: {[id: number]: {pos: GameObject, angle: number}}) => {
+    spearPositions[playerId] = spearData;
     socket.broadcast.emit('updateSpearPositions', playerId, spearData);
   });
 
