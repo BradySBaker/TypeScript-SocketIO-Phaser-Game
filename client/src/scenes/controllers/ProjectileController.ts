@@ -2,17 +2,6 @@ import Game from '../game.js';
 
 import { Socket } from "socket.io-client";
 
-type GameObject = {
-    x: number,
-    y: number
-}
-
-type Player = {
-  pos: PlayerPos;
-  direction: string;
-  id: number;
-}
-
 let spearReadySpeed = 2;
 
 export default class ProjectileController {
@@ -140,6 +129,7 @@ handleSpearThrow(player: Player) {
     let spearObj = this.curThrownSpears[id];
       spearObj.spear.x += spearObj.vel.x * this.game.deltaTime;
       spearObj.spear.y += spearObj.vel.y * this.game.deltaTime;
+      // if (spearObj.spear.x > )
       if (Math.abs(spearObj.vel.x) > 0) {
         spearObj.vel.x -= .05;
       }

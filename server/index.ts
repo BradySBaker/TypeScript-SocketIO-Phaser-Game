@@ -1,13 +1,12 @@
 import { Socket, Server } from 'socket.io';
 
-let playerCount: number = 0;
-let projectileCount: number = 0;
-
 type GameObject = {
   x: number,
-  y: number,
-};
+  y: number
+}
 
+let playerCount: number = 0;
+let projectileCount: number = 0;
 
 let playerPositions: {[playerId: number]: GameObject} = {};
 let projectilePositions: {[playerId: number]: {direction: string, pos: GameObject, startPos: GameObject, playerId: number}} = {};

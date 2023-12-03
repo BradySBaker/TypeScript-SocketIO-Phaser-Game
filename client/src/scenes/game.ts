@@ -16,12 +16,6 @@ window.addEventListener('unload', () => {
 });
 
 
-type GameObject = {
-  x: number,
-  y: number
-}
-
-
 export default class Game extends Phaser.Scene {
   PlayerController?: PlayerController;
   ProjectileController?: ProjectileController;
