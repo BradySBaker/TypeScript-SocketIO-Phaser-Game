@@ -95,10 +95,18 @@ export class PlayerController {
       move.y += this.vy;
     }
     if (this.cursors?.right.isDown ) {
+      if (this.player.direction === 'left' && this.game.ProjectileController?.spear) { //cancel spear
+        this.game.ProjectileController.spear.destroy();
+        this.game.ProjectileController.spear = undefined
+      }
       this.player.direction = 'right';
       move.x = 4 * this.game.deltaTime;
     }
     if (this.cursors?.left.isDown) {
+      if (this.player.direction === 'right' && this.game.ProjectileController?.spear) { //cancel spear
+        this.game.ProjectileController.spear.destroy();
+        this.game.ProjectileController.spear = undefined;
+      }
       this.player.direction = 'left';
       move.x = -4 * this.game.deltaTime;
     }
