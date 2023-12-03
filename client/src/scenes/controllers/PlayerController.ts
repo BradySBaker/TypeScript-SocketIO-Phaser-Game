@@ -130,7 +130,6 @@ export class PlayerController {
 
 
   handleGround() {
-    if (playerRectangles[this.id]);
     if (this.player.pos.y > 900) {
       this.ground = true;
       playerRectangles[this.id].y = 900;
@@ -169,7 +168,7 @@ export class PlayerController {
   retrievePlayerData() {
     setInterval(() => {
       if (this.game.ProjectileController?.curSpearId !== 0) {
-        this.socket.emit('updateSpearPositions', this.id, this.game.ProjectileController?.thrownSpearsData);
+        this.socket.emit('updateSpearPositions', this.id, this.game.ProjectileController?.curSpearData);
       }
 
       if (this.id !== undefined && (this.player.pos.x !== this.sentPos.x || this.player.pos.y !== this.sentPos.y)) {
@@ -217,8 +216,27 @@ export class PlayerController {
 
     });
 
-    this.socket.on('updateSpearPositions', (playerId: Number, thrownSpearsData: {[id: number]: {pos: PlayerPos, angle: number}}) => {
-      console.log(thrownSpearsData);
+    this.socket.on('updateSpearPositions', (playerID: number, thrownSpearsData: {[id: number]: {pos: PlayerPos, angle: number}}) => {
+      if (!this.game.ProjectileController) {
+        return;
+      }
+      for (let spearID in thrownSpearsData) {
+        let curSpearData = thrownSpearsData[spearID];
+        let thrownSpears = this.game.ProjectileController?.otherThrownSpears;
+        if (!thrownSpears[playerID]) {
+          thrownSpears[playerID] = {};
+        }
+        if (!thrownSpears[playerID][spearID]) {
+          thrownSpears[playerID][spearID] = this.game.add.rectangle(curSpearData.pos.x, curSpearData.pos.y, 100, 10, 0xff0000).setOrigin(0, .5).setDepth(1);
+        } else {
+          let thrownSpear = thrownSpears[playerID][spearID];
+          thrownSpear.x = curSpearData.pos.x;
+          thrownSpear.y = curSpearData.pos.y;
+          thrownSpear.angle = curSpearData.angle;
+
+        }
+      }
+
     });
   }
 

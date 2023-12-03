@@ -13,6 +13,8 @@ type Player = {
   id: number;
 }
 
+let spearReadySpeed = 2;
+
 export default class ProjectileController {
   line: Phaser.GameObjects.Graphics;
   projectileObj: {[id: number]: Phaser.GameObjects.Ellipse} = {};
@@ -20,8 +22,9 @@ export default class ProjectileController {
   playerGroup: Phaser.GameObjects.Group;
   game: Game;
   spear?: Phaser.GameObjects.Rectangle;
-  thrownSpearsData: {[id: number]: {pos: GameObject, angle: number}} = {}
-  thrownSpears: {[id: number]: {spear: Phaser.GameObjects.Rectangle, vel: GameObject}} = {};
+  curSpearData: {[id: number]: {pos: GameObject, angle: number}} = {}
+  curThrownSpears: {[id: number]: {spear: Phaser.GameObjects.Rectangle, vel: GameObject}} = {};
+  otherThrownSpears: {[playerID: number]: {[spearID: number]: Phaser.GameObjects.Rectangle}} = {};
   // @ts-ignore
   spaceKey: Phaser.Input.Keyboard.KeyCodes;
   curSpearId = 0;
@@ -116,43 +119,40 @@ handleSpearThrow(player: Player) {
 
   if (this.spaceKey.isDown && this.spear) { //Ready spear
     if (Math.abs(this.spear.x - player.pos.x) < 50) {
-      this.spear.x += player.direction === 'left' ? 2 : -2;
+      this.spear.x += (player.direction === 'left' ? spearReadySpeed : -spearReadySpeed) * this.game.deltaTime;
     } else {
-      this.spear.y += this.spear.y < player.pos.y ? 2 : -2;
+      this.spear.y += (this.spear.y < player.pos.y ? spearReadySpeed : -spearReadySpeed) * this.game.deltaTime;
     }
   } else if (this.spear && this.spear.x !== player.pos.x) { //Throw spear
     const launchAngleInRadians = Phaser.Math.DegToRad(this.spear.angle);
 
-    this.thrownSpears[this.curSpearId] = {spear: this.spear, vel: {x: 0, y: 0}};
-    this.thrownSpearsData[this.curSpearId] = {pos: {x: this.spear.x, y: this.spear.y}, angle: this.spear.angle};
+    this.curThrownSpears[this.curSpearId] = {spear: this.spear, vel: {x: 0, y: 0}};
+    this.curSpearData[this.curSpearId] = {pos: {x: this.spear.x, y: this.spear.y}, angle: this.spear.angle};
 
     this.spear = undefined;
-    this.thrownSpears[this.curSpearId].vel.x = Math.floor((player.pos.x - this.thrownSpears[this.curSpearId].spear.x)/2);
+    this.curThrownSpears[this.curSpearId].vel.x = Math.floor((player.pos.x - this.curThrownSpears[this.curSpearId].spear.x)/2);
 
-    const verticalVelocity = Math.abs(this.thrownSpears[this.curSpearId].vel.x) * Math.sin(launchAngleInRadians);
-    this.thrownSpears[this.curSpearId].vel.y = verticalVelocity;
+    const verticalVelocity = Math.abs(this.curThrownSpears[this.curSpearId].vel.x) * Math.sin(launchAngleInRadians);
+    this.curThrownSpears[this.curSpearId].vel.y = verticalVelocity;
     this.curSpearId++;
   }
-
-  for (let id in this.thrownSpears) {
-    let spearObj = this.thrownSpears[id];
-    spearObj.spear.x += spearObj.vel.x;
-    spearObj.spear.y += spearObj.vel.y;
-    if (Math.abs(spearObj.vel.x) > 0) {
-      spearObj.vel.x -= .05;
+  for (let id in this.curThrownSpears) {
+    let spearObj = this.curThrownSpears[id];
+      spearObj.spear.x += spearObj.vel.x * this.game.deltaTime;
+      spearObj.spear.y += spearObj.vel.y * this.game.deltaTime;
+      if (Math.abs(spearObj.vel.x) > 0) {
+        spearObj.vel.x -= .05;
+      }
+      if (spearObj.vel.x < 0 && Math.abs(spearObj.spear.angle) > 100) {
+        spearObj.spear.angle -= (8 / Math.sqrt(spearObj.vel.x * -1)) * this.game.deltaTime;
+      } else if (spearObj.spear.angle < 90) {
+        spearObj.spear.angle += (8 / Math.sqrt(spearObj.vel.x)) * this.game.deltaTime;
+      } else {
+        spearObj.spear.angle += (spearObj.vel.x < 0 ? -.5 : .5) * this.game.deltaTime;
+      }
+      spearObj.vel.y += .5 * this.game.deltaTime;
+      this.curSpearData[id].pos = {x: spearObj.spear.x, y: spearObj.spear.y};
+      this.curSpearData[id].angle = spearObj.spear.angle;
     }
-    if (spearObj.vel.x < 0 && Math.abs(spearObj.spear.angle) > 100) {
-      spearObj.spear.angle -= 8 / Math.sqrt(spearObj.vel.x * -1);
-    } else if (spearObj.spear.angle < 90) {
-      spearObj.spear.angle += 8 / Math.sqrt(spearObj.vel.x);
-    } else {
-      spearObj.spear.angle += spearObj.vel.x < 0 ? -.5 : .5;
-    }
-    spearObj.vel.y += .5;
-    this.thrownSpearsData[id].pos = {x: spearObj.spear.x, y: spearObj.spear.y};
-    this.thrownSpearsData[id].angle = spearObj.spear.angle;
   }
-
-}
-
 };
