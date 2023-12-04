@@ -8,7 +8,7 @@ export default class ProjectileController {
   line: Phaser.GameObjects.Graphics;
   projectileObj: {[id: number]: Phaser.GameObjects.Ellipse} = {};
   socket: Socket;
-  playerGroup: Phaser.GameObjects.Group;
+  playerGroup!: Phaser.GameObjects.Group;
   game: Game;
 
   constructor(game: Game, socket: Socket, playerGroup: Phaser.GameObjects.Group) {
@@ -16,7 +16,7 @@ export default class ProjectileController {
     this.game = game;
     this.socket = socket;
     this.line = this.game.add.graphics();
-    playerGroup = playerGroup;
+    this.playerGroup = playerGroup;
   }
 
 
@@ -34,7 +34,7 @@ export default class ProjectileController {
 
   handleTrace(start: GameObject, end: GameObject, playerId: number) {
     const line = new Phaser.Geom.Line(start.x, start.y, end.x, end.y);
-    playerGroup.getChildren().forEach((player: any) => {
+    this.playerGroup.getChildren().forEach((player: any) => {
       if (player.name != playerId) {
         if (Phaser.Geom.Intersects.LineToRectangle(line, player.getBounds())) {
           this.socket.emit('playerHit', player.name);

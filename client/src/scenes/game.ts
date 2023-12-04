@@ -18,13 +18,13 @@ window.addEventListener('unload', () => {
 
 
 export default class Game extends Phaser.Scene {
-  PlayerController?: PlayerController;
-  ProjectileController?: ProjectileController;
-  ThrowWEPC?: ThrowWEPC;
   deltaTime: number = 0;
   gameWidth = window.innerWidth
   gameHeight: any
   backgrounds: { ratioX: number; sprite: GameObjects.TileSprite;}[] = [];
+  PlayerController!: PlayerController;
+  ProjectileController!: ProjectileController;
+  ThrowWEPC!: ThrowWEPC;
 
 
 
@@ -53,12 +53,12 @@ export default class Game extends Phaser.Scene {
 
 
     socket.on('deleteProjectile', (id) => {
-      this.ProjectileController?.deleteProjectile(id);
+      this.ProjectileController.deleteProjectile(id);
     });
 
 
     socket.on('projectileData', (projectiles: {[id: number]: {direction: string, pos: GameObject, startPos: GameObject, playerId: number}}) => { //Handle all projectiles
-      this.ProjectileController?.handleProjectiles(projectiles);
+      this.ProjectileController.handleProjectiles(projectiles);
     });
   }
 

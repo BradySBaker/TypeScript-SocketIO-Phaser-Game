@@ -5,7 +5,7 @@ import global from '../global.js';
 let spearReadySpeed = 2;
 
 export default class ThrowWEPC {
-  playerGroup: Phaser.GameObjects.Group;
+  playerGroup!: Phaser.GameObjects.Group;
   game: Game;
   spear?: Phaser.GameObjects.Sprite;
   curSpearData: {[id: number]: {pos: GameObject, angle: number}} = {}
@@ -16,7 +16,7 @@ export default class ThrowWEPC {
 
   constructor(game: Game, playerGroup: Phaser.GameObjects.Group) {
     this.game = game;
-    playerGroup = playerGroup;
+    this.playerGroup = playerGroup;
   }
 
   handleSpearRotation(player: Player) {

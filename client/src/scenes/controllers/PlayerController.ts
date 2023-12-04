@@ -12,7 +12,7 @@ export class PlayerController {
   socket: Socket;
   cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
   player: Player;
-  playerGroup?: Phaser.GameObjects.Group;
+  playerGroup!: Phaser.GameObjects.Group;
   id: number = NaN;
   ground = false;
   vy = 1.1;
