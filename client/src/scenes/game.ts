@@ -1,6 +1,7 @@
 import Phaser, { GameObjects } from "phaser";
 import ProjectileController from './controllers/ProjectileController.js';
 import {PlayerController, playerRectangles} from './controllers/PlayerController.js';
+import ThrowWEPC from "./controllers/ThrowWEPC.js";
 
 import * as socketClient from 'socket.io-client';
 let socket: socketClient.Socket;
@@ -19,6 +20,7 @@ window.addEventListener('unload', () => {
 export default class Game extends Phaser.Scene {
   PlayerController?: PlayerController;
   ProjectileController?: ProjectileController;
+  ThrowWEPC?: ThrowWEPC;
   deltaTime: number = 0;
   gameWidth = window.innerWidth
   gameHeight: any
@@ -43,6 +45,7 @@ export default class Game extends Phaser.Scene {
 
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
+    this.ThrowWEPC = new ThrowWEPC(this, this.PlayerController.playerGroup);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
 
 

@@ -25,6 +25,7 @@ export class PlayerController {
 
   // @ts-ignore
   constructor(game: Game, socket: Socket) {
+    console.log(game);
     this.game = game;
     this.socket = socket;
     this.player = {direction: 'right', pos: {x: 0, y: 0}, id: this.id};
@@ -84,8 +85,8 @@ export class PlayerController {
   handleMovement() {
     this.interpolatePlayerPositions();
     this.handleGround();
-    this.game.ProjectileController?.handleSpearRotation(this.player);
-    this.game.ProjectileController?.handleSpearThrow(this.player);
+    this.game.ThrowWEPC?.handleSpearRotation(this.player);
+    this.game.ThrowWEPC?.handleSpearThrow(this.player);
     let move: GameObject = {x: 0, y: 0};
 
     // const timeNow = this.game.time.now;
@@ -95,17 +96,17 @@ export class PlayerController {
       move.y += this.vy;
     }
     if (this.cursors?.right.isDown ) {
-      if (this.player.direction === 'left' && this.game.ProjectileController?.spear) { //cancel spear
-        this.game.ProjectileController.spear.destroy();
-        this.game.ProjectileController.spear = undefined
+      if (this.player.direction === 'left' && this.game.ThrowWEPC?.spear) { //cancel spear
+        this.game.ThrowWEPC.spear.destroy();
+        this.game.ThrowWEPC.spear = undefined
       }
       this.player.direction = 'right';
       move.x = 4 * this.game.deltaTime;
     }
     if (this.cursors?.left.isDown) {
-      if (this.player.direction === 'right' && this.game.ProjectileController?.spear) { //cancel spear
-        this.game.ProjectileController.spear.destroy();
-        this.game.ProjectileController.spear = undefined;
+      if (this.player.direction === 'right' && this.game.ThrowWEPC?.spear) { //cancel spear
+        this.game.ThrowWEPC.spear.destroy();
+        this.game.ThrowWEPC.spear = undefined;
       }
       this.player.direction = 'left';
       move.x = -4 * this.game.deltaTime;
@@ -127,9 +128,9 @@ export class PlayerController {
     }
     playerRectangles[this.id].x = this.player.pos.x;
     playerRectangles[this.id].y = this.player.pos.y;
-    if (this.game.ProjectileController?.spear) {
-      this.game.ProjectileController.spear.x += move.x;
-      this.game.ProjectileController.spear.y = this.player.pos.y;
+    if (this.game.ThrowWEPC?.spear) {
+      this.game.ThrowWEPC.spear.x += move.x;
+      this.game.ThrowWEPC.spear.y = this.player.pos.y;
     }
   }
 
@@ -177,8 +178,8 @@ export class PlayerController {
 
   retrievePlayerData() {
     setInterval(() => {
-      if (this.game.ProjectileController?.curSpearId !== 0) {
-        this.socket.emit('updateSpearPositions', this.id, this.game.ProjectileController?.curSpearData);
+      if (this.game.ThrowWEPC?.curSpearId !== 0) {
+        this.socket.emit('updateSpearPositions', this.id, this.game.ThrowWEPC?.curSpearData);
       }
 
       if (this.id !== undefined && (this.player.pos.x !== this.sentPos.x || this.player.pos.y !== this.sentPos.y)) {
@@ -221,12 +222,12 @@ export class PlayerController {
         this.player.pos.x = data[playerId].x;
         this.player.pos.y = data[playerId].y;
       }
-      let thrownSpears = this.game.ProjectileController?.otherThrownSpears;
+      let thrownSpears = this.game.ThrowWEPC?.otherThrownSpears;
       for (let playerID in spearPositions) {
         for (let spearID in spearPositions[playerID]) {
           let curSpearData = spearPositions[playerID][spearID];
           thrownSpears[playerID] = {};
-          thrownSpears[playerID][spearID] = this.game.add.rectangle(curSpearData.pos.x, curSpearData.pos.y, 100, 10, 0xff0000).setOrigin(0, .5).setDepth(1);
+          thrownSpears[playerID][spearID] = this.game.add.sprite(curSpearData.pos.x, curSpearData.pos.y, 'spear').setOrigin(0, .5).setDepth(1);
           thrownSpears[playerID][spearID].angle = curSpearData.angle;
         }
       }
@@ -236,12 +237,12 @@ export class PlayerController {
     });
 
     this.socket.on('updateSpearPositions', (playerID: number, thrownSpearsData: {[id: number]: {pos: GameObject, angle: number}}) => {
-      if (!this.game.ProjectileController) {
+      if (!this.game.ThrowWEPC) {
         return;
       }
       for (let spearID in thrownSpearsData) {
         let curSpearData = thrownSpearsData[spearID];
-        let thrownSpears = this.game.ProjectileController?.otherThrownSpears;
+        let thrownSpears = this.game.ThrowWEPC?.otherThrownSpears;
         if (!thrownSpears[playerID]) {
           thrownSpears[playerID] = {};
         }
