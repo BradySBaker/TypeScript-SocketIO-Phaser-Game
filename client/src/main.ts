@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import Game from "./scenes/game.js";
 
+
 const config = {
 	backgroundColor: '2c003e',
 	type: Phaser.AUTO,
@@ -12,7 +13,11 @@ const config = {
 			gravity: { y: 0 },
 			debug: true
 		}
-	}
+	},
+  input: {
+    activePointers: 1,
+    target: 'canvas'
+  }
 }
 
 const game = new Phaser.Game(config);

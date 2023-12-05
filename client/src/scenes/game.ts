@@ -1,6 +1,7 @@
 import Phaser, { GameObjects } from "phaser";
 import ProjectileController from './controllers/ProjectileController.js';
-import {PlayerController, playerRectangles} from './controllers/PlayerController.js';
+import PlayerController from './controllers/PlayerController.js';
+import ThrowWEPC from "./controllers/ThrowWEPC.js";
 
 import * as socketClient from 'socket.io-client';
 let socket: socketClient.Socket;
@@ -16,19 +17,14 @@ window.addEventListener('unload', () => {
 });
 
 
-type GameObject = {
-  x: number,
-  y: number
-}
-
-
 export default class Game extends Phaser.Scene {
-  PlayerController?: PlayerController;
-  ProjectileController?: ProjectileController;
   deltaTime: number = 0;
   gameWidth = window.innerWidth
   gameHeight: any
   backgrounds: { ratioX: number; sprite: GameObjects.TileSprite;}[] = [];
+  PlayerController!: PlayerController;
+  ProjectileController!: ProjectileController;
+  ThrowWEPC!: ThrowWEPC;
 
 
 
@@ -37,6 +33,7 @@ export default class Game extends Phaser.Scene {
     this.load.image('ground', './assets/ground2.png');
     this.load.image('mountains1', './assets/mountains1.png');
     this.load.image('mountains2', './assets/mountains2.png');
+    this.load.image('spear', './assets/spear.png');
     this.load.on('complete', () => {
       socket = socketClient.io('http://localhost:3000');
     });
@@ -48,6 +45,7 @@ export default class Game extends Phaser.Scene {
 
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
+    this.ThrowWEPC = new ThrowWEPC(this, this.PlayerController.playerGroup);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
 
 
@@ -55,12 +53,12 @@ export default class Game extends Phaser.Scene {
 
 
     socket.on('deleteProjectile', (id) => {
-      this.ProjectileController?.deleteProjectile(id);
+      this.ProjectileController.deleteProjectile(id);
     });
 
 
     socket.on('projectileData', (projectiles: {[id: number]: {direction: string, pos: GameObject, startPos: GameObject, playerId: number}}) => { //Handle all projectiles
-      this.ProjectileController?.handleProjectiles(projectiles);
+      this.ProjectileController.handleProjectiles(projectiles);
     });
   }
 
