@@ -9,14 +9,22 @@ export default class ThrowWEPC {
   game: Game;
   spear?: Phaser.GameObjects.Sprite;
   curSpearData: {[id: number]: {pos: GameObject, angle: number}} = {}
-  curThrownSpears: {[id: number]: {spear: Phaser.GameObjects.Sprite, vel: GameObject}} = {};
+  curThrownSpears: {[id: number]: {spear: Phaser.GameObjects.Sprite, vel: GameObject, collidedPlayerID: number, stuckPos: GameObject}} = {};
   otherThrownSpears: {[playerID: number]: {[spearID: number]: Phaser.GameObjects.Sprite}} = {};
   curSpearId = 0;
+  spearGroup!: Phaser.GameObjects.Group;
 
 
   constructor(game: Game, playerGroup: Phaser.GameObjects.Group) {
     this.game = game;
     this.playerGroup = playerGroup;
+    this.spearGroup = game.physics.add.group({
+      classType: Phaser.GameObjects.Sprite,
+      createCallback: ((spear) => {
+        spear.body.setSize(10, 10);
+      })
+    });
+    game.physics.add.overlap(this.spearGroup, this.playerGroup, this.handleSpearCollide, null, this);
   }
 
   handleSpearRotation(player: Player) {
@@ -54,6 +62,7 @@ export default class ThrowWEPC {
   handleSpearThrow(player: Player) {
     if (!this.spear && this.game.input.activePointer.isDown) {
       this.spear = this.game.add.sprite(player.pos.x, player.pos.y, 'spear').setOrigin(0, .5).setDepth(1);
+      this.spear.name = this.curSpearId.toString();
     }
 
 
@@ -67,6 +76,8 @@ export default class ThrowWEPC {
       const launchAngleInRadians = Phaser.Math.DegToRad(this.spear.angle);
 
       this.curThrownSpears[this.curSpearId] = {spear: this.spear, vel: {x: 0, y: 0}};
+      this.spearGroup.add(this.curThrownSpears[this.curSpearId].spear);
+
       this.curSpearData[this.curSpearId] = {pos: {x: this.spear.x, y: this.spear.y}, angle: this.spear.angle};
 
       this.spear = undefined;
@@ -76,10 +87,18 @@ export default class ThrowWEPC {
       this.curThrownSpears[this.curSpearId].vel.y = verticalVelocity;
       this.curSpearId++;
     }
+
+
+
     for (let id in this.curThrownSpears) {
       let spearObj = this.curThrownSpears[id];
-      if (spearObj.spear.y - spearObj.spear.height >= global.ground) {
-        spearObj.spear.y = global.ground + spearObj.spear.height;
+      if (spearObj.spear.body.y - 50 >= global.ground) { //If spear touches ground
+        continue;
+      }
+      if (spearObj.collidedPlayerID) {
+        spearObj.spear.x = global.playerRectangles[spearObj.collidedPlayerID].x - spearObj.stuckPos.x;
+        spearObj.spear.y = global.playerRectangles[spearObj.collidedPlayerID].y - spearObj.stuckPos.y;
+        this.curSpearData[id].pos = {x: spearObj.spear.x, y: spearObj.spear.y};
         continue;
       }
       spearObj.spear.x += spearObj.vel.x * this.game.deltaTime;
@@ -87,16 +106,31 @@ export default class ThrowWEPC {
       if (Math.abs(spearObj.vel.x) > 0) {
         spearObj.vel.x -= .05;
       }
+      let newAngle: number;
       if (spearObj.vel.x < 0 && Math.abs(spearObj.spear.angle) > 100) {
-        spearObj.spear.angle -= (8 / Math.sqrt(spearObj.vel.x * -1)) * this.game.deltaTime;
+        newAngle = -(8 / Math.sqrt(spearObj.vel.x * -1)) * this.game.deltaTime;
       } else if (spearObj.spear.angle < 90) {
-        spearObj.spear.angle += (8 / Math.sqrt(spearObj.vel.x)) * this.game.deltaTime;
+        newAngle = (8 / Math.sqrt(spearObj.vel.x)) * this.game.deltaTime;
       } else {
-        spearObj.spear.angle += (spearObj.vel.x < 0 ? -.5 : .5) * this.game.deltaTime;
+        newAngle = (spearObj.vel.x < 0 ? -.5 : .5) * this.game.deltaTime;
       }
+      spearObj.spear.angle += newAngle;
+
+      let newAngleRad = Phaser.Math.DegToRad(spearObj.spear.angle);
+
+      const spearWidth = spearObj.spear.width;       // Set the offset for the spear body
+      const offsetX = spearWidth * Math.cos(newAngleRad);
+      const offsetY = spearWidth * Math.sin(newAngleRad);
+      spearObj.spear.body.setOffset(offsetX, offsetY); //
+
       spearObj.vel.y += .5 * this.game.deltaTime;
       this.curSpearData[id].pos = {x: spearObj.spear.x, y: spearObj.spear.y};
       this.curSpearData[id].angle = spearObj.spear.angle;
     }
+  }
+
+  handleSpearCollide(spear: Phaser.GameObjects.Sprite, player: Phaser.GameObjects.Rectangle) {
+    this.curThrownSpears[spear.name].stuckPos = {x: player.x - spear.x, y: player.y - spear.y}
+    this.curThrownSpears[spear.name].collidedPlayerID = player.name;
   }
 }

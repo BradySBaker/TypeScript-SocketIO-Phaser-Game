@@ -1,6 +1,6 @@
 import Phaser, { GameObjects } from "phaser";
 import ProjectileController from './controllers/ProjectileController.js';
-import {PlayerController, playerRectangles} from './controllers/PlayerController.js';
+import PlayerController from './controllers/PlayerController.js';
 import ThrowWEPC from "./controllers/ThrowWEPC.js";
 
 import * as socketClient from 'socket.io-client';

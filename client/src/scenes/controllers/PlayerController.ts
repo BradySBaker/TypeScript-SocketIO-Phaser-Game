@@ -3,10 +3,7 @@ import { Socket } from "socket.io-client";
 
 import global from '../global.js';
 
-export const playerRectangles: { [id: number]: Phaser.GameObjects.Rectangle } = {};
-
-
-export class PlayerController {
+export default class PlayerController {
   shootTimer = 0;
   playersToMove: {[id: number]: GameObject} = {};
   socket: Socket;
@@ -45,12 +42,8 @@ export class PlayerController {
 
 
     this.game.cameras.main.zoom = .6;
-    this.playerGroup = this.game.add.group({
-
+    this.playerGroup = this.game.physics.add.group({
       classType: Phaser.GameObjects.Rectangle,
-      createCallback: (player) => {
-        this.game.physics.world.enable(player);
-      }
     });
 
     this.retrievePlayerData();
@@ -58,7 +51,7 @@ export class PlayerController {
     this.game.physics.add.collider(this.playerGroup, this.playerGroup, (object1, object2) => {
       let curPlayer;
       let otherPlayer;
-      if (playerRectangles[this.id] === object1) {
+      if (global.playerRectangles[this.id] === object1) {
         curPlayer = object1 as Phaser.GameObjects.Rectangle;
         otherPlayer = object2 as Phaser.GameObjects.Rectangle;
       } else {
@@ -123,11 +116,11 @@ export class PlayerController {
     }
     this.player.pos.x += move.x;
     this.player.pos.y += move.y;
-    if (!playerRectangles[this.id]) {
+    if (!global.playerRectangles[this.id]) {
       return;
     }
-    playerRectangles[this.id].x = this.player.pos.x;
-    playerRectangles[this.id].y = this.player.pos.y;
+    global.playerRectangles[this.id].x = this.player.pos.x;
+    global.playerRectangles[this.id].y = this.player.pos.y;
     if (this.game.ThrowWEPC?.spear) {
       this.game.ThrowWEPC.spear.x += move.x;
       this.game.ThrowWEPC.spear.y = this.player.pos.y;
@@ -138,12 +131,12 @@ export class PlayerController {
 
 
   handleGround() {
-    if (!playerRectangles[this.id]) {
+    if (!global.playerRectangles[this.id]) {
       return;
     }
     if (this.player.pos.y > global.ground) {
       this.ground = true;
-      playerRectangles[this.id].y = global.ground;
+      global.playerRectangles[this.id].y = global.ground;
       this.player.pos.y = global.ground;
     }
   }
@@ -156,17 +149,17 @@ export class PlayerController {
 
   interpolatePlayerPositions() {
     for (let id in this.playersToMove) {
-      if (!playerRectangles[id]) {
+      if (!global.playerRectangles[id]) {
         return;
       }
       let newPos = this.playersToMove[id];
-      let curPos = playerRectangles[id];
+      let curPos = global.playerRectangles[id];
       if (Math.abs((newPos.x - curPos.x)) < .1 && Math.abs((newPos.y - curPos.y)) < .1) {
         delete this.playersToMove[id];
         return;
       }
-      playerRectangles[id].x = curPos.x + (newPos.x - curPos.x) * .5;
-      playerRectangles[id].y = curPos.y + (newPos.y - curPos.y) * .5;
+      global.playerRectangles[id].x = curPos.x + (newPos.x - curPos.x) * .5;
+      global.playerRectangles[id].y = curPos.y + (newPos.y - curPos.y) * .5;
     }
   }
 
@@ -178,7 +171,7 @@ export class PlayerController {
 
   retrievePlayerData() {
     setInterval(() => {
-      if (this.game.ThrowWEPC?.curSpearId !== 0) {
+      if (this.game.ThrowWEPC.curSpearId !== 0) {
         this.socket.emit('updateSpearPositions', this.id, this.game.ThrowWEPC?.curSpearData);
       }
 
@@ -193,22 +186,23 @@ export class PlayerController {
       if (id !== this.id) {
         this.playersToMove[id] = pos;
       } else {
-        playerRectangles[id].x = pos.x;
-        playerRectangles[id].y = pos.y;
+        global.playerRectangles[id].x = pos.x;
+        global.playerRectangles[id].y = pos.y;
       }
     });
 
     this.socket.on('deletePlayer', (id) => { //Player left
-      playerRectangles[id].destroy();
-      delete playerRectangles[id];
+      global.playerRectangles[id].destroy();
+      delete global.playerRectangles[id];
     });
 
     this.socket.on('newPlayer', (pos, id) => { //New player joined
       if (id === this.id) {
         return;
       }
-      playerRectangles[id] = this.game.add.rectangle(pos.x, pos.y, 50, 100, 0xfffff);
-      this.playerGroup?.add(playerRectangles[id]);
+      global.playerRectangles[id] = this.game.add.rectangle(pos.x, pos.y, 50, 100, 0xfffff);
+      global.playerRectangles[id].name = id;
+      this.playerGroup?.add(global.playerRectangles[id]);
     });
 
 
@@ -216,9 +210,9 @@ export class PlayerController {
       this.id = id;
       this.player.id = id;
       for (let playerId in data) {
-        playerRectangles[playerId] = this.game.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
-        playerRectangles[playerId].name = playerId
-        this.playerGroup?.add(playerRectangles[playerId]);
+        global.playerRectangles[playerId] = this.game.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
+        global.playerRectangles[playerId].name = playerId
+        this.playerGroup?.add(global.playerRectangles[playerId]);
         this.player.pos.x = data[playerId].x;
         this.player.pos.y = data[playerId].y;
       }
@@ -231,7 +225,7 @@ export class PlayerController {
           thrownSpears[playerID][spearID].angle = curSpearData.angle;
         }
       }
-      this.game.cameras.main.startFollow(playerRectangles[this.id]);
+      this.game.cameras.main.startFollow(global.playerRectangles[this.id]);
       this.game.cameras.main.followOffset.set(-100, 350);
 
     });
