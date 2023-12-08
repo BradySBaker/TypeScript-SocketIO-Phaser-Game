@@ -153,4 +153,38 @@ export default class ThrowWEPC {
       }
     }
   }
+
+  handleSpearData() {
+    this.socket.on('updateSpearPositions', (playerID: number, thrownSpearsData: {[id: number]: {pos: GameObject, angle: number}}) => {
+      for (let spearID in thrownSpearsData) {
+        let curSpearData = thrownSpearsData[spearID];
+        let thrownSpears = this.otherThrownSpears;
+        if (!thrownSpears[playerID]) {
+          thrownSpears[playerID] = {};
+        }
+        if (!thrownSpears[playerID][spearID]) {
+          thrownSpears[playerID][spearID] = this.game.add.sprite(curSpearData.pos.x, curSpearData.pos.y, 'spear').setOrigin(0, .5).setDepth(1);
+          thrownSpears[playerID][spearID].angle = curSpearData.angle;
+        } else {
+          let thrownSpear = thrownSpears[playerID][spearID];
+            thrownSpear.x = curSpearData.pos.x;
+            thrownSpear.y = curSpearData.pos.y;
+            thrownSpear.angle = curSpearData.angle;
+        }
+      }
+    });
+
+    this.socket.on('updateCollidedSpear', (playerID: number, spearData: {id: number, stuckPos: GameObject, angle: number, collidedPlayerID: number}) => {
+      if (!this.otherCollidedSpears[playerID]) {
+        this.otherCollidedSpears[playerID] = {};
+      }
+      if (this.otherThrownSpears[playerID][spearData.id]) {
+        this.otherThrownSpears[playerID][spearData.id].destroy();
+        delete this.otherThrownSpears[playerID][spearData.id];
+      }
+      this.otherCollidedSpears[playerID][spearData.id] = {...spearData, spear: this.game.add.sprite(0, 3000, 'spear')};
+      this.otherCollidedSpears[playerID][spearData.id].spear.angle = spearData.angle;
+    });
+  }
+
 }

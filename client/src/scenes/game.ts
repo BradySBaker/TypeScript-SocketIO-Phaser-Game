@@ -47,7 +47,7 @@ export default class Game extends Phaser.Scene {
     this.PlayerController.setupPlayer();
     this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
-
+    this.ThrowWEPC.handleSpearData();
 
     this.physics.world.setBoundsCollision(true);
 

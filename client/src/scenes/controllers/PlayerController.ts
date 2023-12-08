@@ -228,36 +228,6 @@ export default class PlayerController {
 
     });
 
-    this.socket.on('updateSpearPositions', (playerID: number, thrownSpearsData: {[id: number]: {pos: GameObject, angle: number}}) => {
-      for (let spearID in thrownSpearsData) {
-        let curSpearData = thrownSpearsData[spearID];
-        let thrownSpears = this.game.ThrowWEPC?.otherThrownSpears;
-        if (!thrownSpears[playerID]) {
-          thrownSpears[playerID] = {};
-        }
-        if (!thrownSpears[playerID][spearID]) {
-          thrownSpears[playerID][spearID] = this.game.add.sprite(curSpearData.pos.x, curSpearData.pos.y, 'spear').setOrigin(0, .5).setDepth(1);
-          thrownSpears[playerID][spearID].angle = curSpearData.angle;
-        } else {
-          let thrownSpear = thrownSpears[playerID][spearID];
-            thrownSpear.x = curSpearData.pos.x;
-            thrownSpear.y = curSpearData.pos.y;
-            thrownSpear.angle = curSpearData.angle;
-        }
-      }
-    });
-
-    this.socket.on('updateCollidedSpear', (playerID: number, spearData: {id: number, stuckPos: GameObject, angle: number, collidedPlayerID: number}) => {
-      if (!this.game.ThrowWEPC.otherCollidedSpears[playerID]) {
-        this.game.ThrowWEPC.otherCollidedSpears[playerID] = {};
-      }
-      if (this.game.ThrowWEPC.otherThrownSpears[playerID][spearData.id]) {
-        this.game.ThrowWEPC.otherThrownSpears[playerID][spearData.id].destroy();
-        delete this.game.ThrowWEPC.otherThrownSpears[playerID][spearData.id];
-      }
-      this.game.ThrowWEPC.otherCollidedSpears[playerID][spearData.id] = {...spearData, spear: this.game.add.sprite(0, 3000, 'spear')};
-      this.game.ThrowWEPC.otherCollidedSpears[playerID][spearData.id].spear.angle = spearData.angle;
-    });
   }
 
 };
