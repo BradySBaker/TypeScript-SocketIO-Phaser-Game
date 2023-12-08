@@ -45,7 +45,7 @@ export default class Game extends Phaser.Scene {
 
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
-    this.ThrowWEPC = new ThrowWEPC(this, this.PlayerController.playerGroup);
+    this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
 
 
@@ -67,6 +67,7 @@ export default class Game extends Phaser.Scene {
     this.deltaTime = delta / (1000 / 60);
     this.PlayerController?.handleMovement();
     this.handleBackgrounds();
+    this.ThrowWEPC.handleOtherCollidedSpears();
   }
 
 
