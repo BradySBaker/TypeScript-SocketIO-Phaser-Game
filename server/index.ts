@@ -11,6 +11,7 @@ let projectileCount: number = 0;
 let playerPositions: {[playerId: number]: GameObject} = {};
 let projectilePositions: {[playerId: number]: {direction: string, pos: GameObject, startPos: GameObject, playerId: number}} = {};
 let spearPositions: {[playerId: number]: {[spearID: number]: {pos: GameObject, angle: number}}} = {};
+let collidedSpearPositions: {[playerId: number]: {[spearID: number]: {stuckPos: GameObject, angle: number, collidedPlayerID: number}}} = {};
 
 const io = new Server(3000, {
   cors: {
@@ -73,7 +74,13 @@ io.on('connection', (socket: Socket) => {
     socket.broadcast.emit('updateSpearPositions', playerId, spearData);
   });
 
-
+  socket.on('updateCollidedSpear', (playerId: number, spearData: {id: number, stuckPos: GameObject, angle: number, collidedPlayerID: number}) => {
+    if (!collidedSpearPositions[playerId]) {
+      collidedSpearPositions[playerId] = {};
+    }
+    collidedSpearPositions[playerId][spearData.id] = spearData;
+    socket.broadcast.emit('updateCollidedSpear', playerId, spearData);
+  });
 
 
 });

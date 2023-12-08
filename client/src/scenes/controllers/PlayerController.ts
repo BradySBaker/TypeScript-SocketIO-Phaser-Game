@@ -22,7 +22,6 @@ export default class PlayerController {
 
   // @ts-ignore
   constructor(game: Game, socket: Socket) {
-    console.log(game);
     this.game = game;
     this.socket = socket;
     this.player = {direction: 'right', pos: {x: 0, y: 0}, id: this.id};
@@ -225,34 +224,10 @@ export default class PlayerController {
           thrownSpears[playerID][spearID].angle = curSpearData.angle;
         }
       }
-      this.game.cameras.main.startFollow(global.playerRectangles[this.id]);
-      this.game.cameras.main.followOffset.set(-100, 350);
+      this.game.cameras.main.startFollow(global.playerRectangles[this.id], true, 0.5, 0.5, -100, 350);
 
     });
 
-    this.socket.on('updateSpearPositions', (playerID: number, thrownSpearsData: {[id: number]: {pos: GameObject, angle: number}}) => {
-      if (!this.game.ThrowWEPC) {
-        return;
-      }
-      for (let spearID in thrownSpearsData) {
-        let curSpearData = thrownSpearsData[spearID];
-        let thrownSpears = this.game.ThrowWEPC?.otherThrownSpears;
-        if (!thrownSpears[playerID]) {
-          thrownSpears[playerID] = {};
-        }
-        if (!thrownSpears[playerID][spearID]) {
-          thrownSpears[playerID][spearID] = this.game.add.sprite(curSpearData.pos.x, curSpearData.pos.y, 'spear').setOrigin(0, .5).setDepth(1);
-          thrownSpears[playerID][spearID].angle = curSpearData.angle;
-        } else {
-          let thrownSpear = thrownSpears[playerID][spearID];
-          thrownSpear.x = curSpearData.pos.x;
-          thrownSpear.y = curSpearData.pos.y;
-          thrownSpear.angle = curSpearData.angle;
-
-        }
-      }
-
-    });
   }
 
 };
