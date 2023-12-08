@@ -35,7 +35,7 @@ export default class Game extends Phaser.Scene {
     this.load.image('mountains2', './assets/mountains2.png');
     this.load.image('spear', './assets/spear.png');
     this.load.on('complete', () => {
-      socket = socketClient.io('http://localhost:3000');
+      socket = socketClient.io('https://checkered-crystal-fear.glitch.me');
     });
   }
 

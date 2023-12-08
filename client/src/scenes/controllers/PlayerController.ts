@@ -157,8 +157,12 @@ export default class PlayerController {
         delete this.playersToMove[id];
         return;
       }
-      global.playerRectangles[id].x = curPos.x + (newPos.x - curPos.x) * .5;
-      global.playerRectangles[id].y = curPos.y + (newPos.y - curPos.y) * .5;
+      let speed = .5;
+      if (Number(id) === this.id) { //Current player
+        speed = .05;
+      }
+      global.playerRectangles[id].x = curPos.x + (newPos.x - curPos.x) * speed;
+      global.playerRectangles[id].y = curPos.y + (newPos.y - curPos.y) * speed;
     }
   }
 
@@ -179,15 +183,10 @@ export default class PlayerController {
         this.sentPos.x = this.player.pos.x;
         this.sentPos.y = this.player.pos.y;
       }
-    }, 50);
+    }, 10);
 
     this.socket.on('updatePosition', (pos: GameObject, id: number) => { //Handle player update
-      if (id !== this.id) {
         this.playersToMove[id] = pos;
-      } else {
-        global.playerRectangles[id].x = pos.x;
-        global.playerRectangles[id].y = pos.y;
-      }
     });
 
     this.socket.on('deletePlayer', (id) => { //Player left
