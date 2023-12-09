@@ -3,6 +3,9 @@ import ProjectileController from './controllers/ProjectileController.js';
 import PlayerController from './controllers/PlayerController.js';
 import ThrowWEPC from "./controllers/ThrowWEPC.js";
 
+import global from './global.ts';
+
+
 import * as socketClient from 'socket.io-client';
 let socket: socketClient.Socket;
 
@@ -66,8 +69,8 @@ export default class Game extends Phaser.Scene {
   update(time, delta: number) {
     this.deltaTime = delta / (1000 / 60);
     this.PlayerController?.handleMovement();
-    this.handleBackgrounds();
     this.ThrowWEPC.handleOtherCollidedSpears();
+    this.handleBackgrounds();
   }
 
 
@@ -110,9 +113,12 @@ export default class Game extends Phaser.Scene {
 	}
 
 	handleBackgrounds() {
+    if (!global.playerRectangles[this.PlayerController.id]) {
+      return;
+    }
 		for (let i =0 ; i< this.backgrounds.length; i++) {
 			const bg = this.backgrounds[i];
-			bg.sprite.tilePositionX = this.PlayerController?.player.pos.x * bg.ratioX/1.4;
+			bg.sprite.tilePositionX = global.playerRectangles[this.PlayerController.id].x * bg.ratioX/1.4;
 		}
 	}
 
