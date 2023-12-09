@@ -204,7 +204,7 @@ export default class PlayerController {
     });
 
 
-    this.socket.on('playerData', (data: {[id: number]: GameObject}, id: number, spearPositions: {[playerId: number]: {[spearID: number]: {pos: GameObject, angle: number}}}) => { //Recieved personal player data
+    this.socket.on('playerData', (data: {[id: number]: GameObject}, id: number, collidedSpearPositions: {[playerId: number]: {[spearID: number]: {stuckPos: GameObject, angle: number, collidedPlayerID: number}}}) => { //Recieved personal player data
       this.id = id;
       this.player.id = id;
       for (let playerId in data) {
@@ -214,13 +214,11 @@ export default class PlayerController {
         this.player.pos.x = data[playerId].x;
         this.player.pos.y = data[playerId].y;
       }
-      let thrownSpears = this.game.ThrowWEPC?.otherThrownSpears;
-      for (let playerID in spearPositions) {
-        for (let spearID in spearPositions[playerID]) {
-          let curSpearData = spearPositions[playerID][spearID];
-          thrownSpears[playerID] = {};
-          thrownSpears[playerID][spearID] = this.game.add.sprite(curSpearData.pos.x, curSpearData.pos.y, 'spear').setOrigin(0, .5).setDepth(1);
-          thrownSpears[playerID][spearID].angle = curSpearData.angle;
+      let collidedSpears = this.game.ThrowWEPC.otherCollidedSpears; //Handle spears that have collided with something
+      for (let playerID in collidedSpearPositions) {
+        for (let spearID in collidedSpearPositions[playerID]) {
+          let spearData = collidedSpearPositions[playerID][spearID];
+          this.game.ThrowWEPC.handleCollidedSpearData(Number(playerID), {...spearData, id: Number(spearID)});
         }
       }
       this.game.cameras.main.startFollow(global.playerRectangles[this.id], true, 0.5, 0.5, -100, 350);
