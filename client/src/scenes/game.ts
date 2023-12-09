@@ -35,7 +35,7 @@ export default class Game extends Phaser.Scene {
     this.load.image('mountains2', './assets/mountains2.png');
     this.load.image('spear', './assets/spear.png');
     this.load.on('complete', () => {
-      socket = socketClient.io('https://checkered-crystal-fear.glitch.me');
+      socket = socketClient.io('http://localhost:3000');
     });
   }
 
@@ -47,7 +47,7 @@ export default class Game extends Phaser.Scene {
     this.PlayerController.setupPlayer();
     this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
-    this.ThrowWEPC.handleSpearData();
+    this.ThrowWEPC.handleIncomingSpearData();
 
     this.physics.world.setBoundsCollision(true);
 

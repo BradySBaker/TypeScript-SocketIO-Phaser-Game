@@ -41,7 +41,7 @@ io.on('connection', (socket: Socket) => {
   console.log(socket.id + 'connected');
   let playerId = playerCount;
   playerPositions[playerId] = {x: 500, y: 500 };
-  io.to(socket.id).emit('playerData', playerPositions, playerId, spearPositions);
+  io.to(socket.id).emit('playerData', playerPositions, playerId, collidedSpearPositions);
   io.emit('newPlayer', playerPositions[playerId], playerId);
   playerCount++;
 
