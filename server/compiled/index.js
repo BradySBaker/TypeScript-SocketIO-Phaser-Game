@@ -33,7 +33,7 @@ io.on('connection', function (socket) {
     console.log(socket.id + 'connected');
     var playerId = playerCount;
     playerPositions[playerId] = { x: 500, y: 500 };
-    io.to(socket.id).emit('playerData', playerPositions, playerId, spearPositions);
+    io.to(socket.id).emit('playerData', playerPositions, playerId, collidedSpearPositions);
     io.emit('newPlayer', playerPositions[playerId], playerId);
     playerCount++;
     socket.on('updatePosition', function (pos) {

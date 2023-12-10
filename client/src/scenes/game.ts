@@ -2,6 +2,8 @@ import Phaser, { GameObjects } from "phaser";
 import ProjectileController from './controllers/ProjectileController.js';
 import PlayerController from './controllers/PlayerController.js';
 import ThrowWEPC from "./controllers/ThrowWEPC.js";
+import PlatformHandler from "./objects/PlatformHandler.js";
+import UIHandler from "./objects/UIHandler.js";
 
 import global from './global.ts';
 
@@ -28,6 +30,8 @@ export default class Game extends Phaser.Scene {
   PlayerController!: PlayerController;
   ProjectileController!: ProjectileController;
   ThrowWEPC!: ThrowWEPC;
+  PlatformHandler!: PlatformHandler;
+  UIHandler!: UIHandler;
 
 
 
@@ -51,6 +55,11 @@ export default class Game extends Phaser.Scene {
     this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
     this.ThrowWEPC.handleIncomingSpearData();
+    this.PlatformHandler = new PlatformHandler(this);
+    this.UIHandler = new UIHandler(this);
+
+    this.UIHandler.draw();
+    this.PlatformHandler.spawnPlatforms();
 
     this.physics.world.setBoundsCollision(true);
 
@@ -83,14 +92,14 @@ export default class Game extends Phaser.Scene {
 		}
 		this.add.image(skyOffset, -800, 'sky')
 		.setOrigin(0, 0)
-		.setScrollFactor(0, .3)
+		.setScrollFactor(0, .05)
 		.setScale(1.6);
 
     this.backgrounds.push({
       ratioX: 0.05,
       sprite: this.add.tileSprite(-this.scale.width/3, 100, this.scale.width * 1.6, 450, 'mountains2')
           .setOrigin(0, 0)
-          .setScrollFactor(0, .6)
+          .setScrollFactor(0, .1)
           .setScale(2)
     });
 
@@ -98,7 +107,7 @@ export default class Game extends Phaser.Scene {
         ratioX: 0.1,
         sprite: this.add.tileSprite(-this.scale.width/3, 200, this.scale.width * 1.6, 450, 'mountains1')
             .setOrigin(0, 0)
-            .setScrollFactor(0, .8)
+            .setScrollFactor(0, .2)
             .setScale(2)
     });
 
