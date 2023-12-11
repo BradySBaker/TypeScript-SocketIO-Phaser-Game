@@ -77,12 +77,16 @@ export default class PlayerController {
   handleMovement() {
     this.interpolatePlayerPositions();
     this.handleGround();
-    this.game.ThrowWEPC?.handleSpearRotation(this.player);
-    this.game.ThrowWEPC?.handleSpearThrow(this.player);
+    if (this.game.ThrowWEPC.spear && global.equiped === 'spear') {
+      this.game.ThrowWEPC.handleWeaponRotation(this.game.ThrowWEPC.spear, this.player, 'spear');
+    } else if (global.equiped === 'grapple') {
+      this.game.GrappleHandler.handlePosition(this.player);
+      this.game.ThrowWEPC.handleWeaponRotation(this.game.GrappleHandler.grappleHook, this.player, 'grapple');
+      this.game.GrappleHandler.handleGrapple();
+    }
+    this.game.ThrowWEPC.handleSpearThrow(this.player);
     let move: GameObject = {x: 0, y: 0};
 
-    // const timeNow = this.game.time.now;
-    // const timeSinceJump = timeNow - this.prevJump;
     if (!this.ground) {
       this.vy += .5 * this.game.deltaTime
       move.y += this.vy;

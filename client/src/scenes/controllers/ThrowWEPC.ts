@@ -32,46 +32,54 @@ export default class ThrowWEPC {
     game.physics.add.overlap(this.spearGroup, this.playerGroup, this.handleSpearCollide, null, this);
   }
 
-  handleSpearRotation(player: Player) {
-    if (!this.spear) {
-      return;
-    }
+  handleWeaponRotation(weapon: Phaser.GameObjects.Sprite, player: Player, type: string) {
     let mouseWorldX = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).x;
     let mouseWorldY = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).y;
-    let targetSpearRad = Phaser.Math.Angle.Between(
-      this.spear.x, this.spear.y,
+    let targetWeaponRad = Phaser.Math.Angle.Between(
+      weapon.x, weapon.y,
       mouseWorldX, mouseWorldY
     );
 
-    let spearMouseAngle = Phaser.Math.RadToDeg(targetSpearRad);
+    let weaponMouseAngle = Phaser.Math.RadToDeg(targetWeaponRad);
     if (player.direction === 'left') {
-      if (spearMouseAngle > -120 && spearMouseAngle < 120) {
-        if (spearMouseAngle > 0) {
-          spearMouseAngle = 120;
+      if (!weapon.flipY) {
+        weapon.setFlipY(true);
+      }
+      if (weaponMouseAngle > -120 && weaponMouseAngle < 120) { //Handle weapon backwards
+        weapon.name = 'badAngle';
+        if (weaponMouseAngle > 0) {
+          weaponMouseAngle = 120;
         } else {
-          spearMouseAngle = -120;
+          weaponMouseAngle = -120;
         }
+      } else if (weapon.name === 'badAngle') { //reset weapon name
+        weapon.name = '';
       }
     } else {
-      if (spearMouseAngle < -64 || spearMouseAngle > 64) {
-        if (spearMouseAngle > 0) {
-          spearMouseAngle = 64;
+      if (weapon.flipY) {
+        weapon.setFlipY(false);
+      }
+      if (weaponMouseAngle < -64 || weaponMouseAngle > 64) { //Handle weapon backwards
+        weapon.name = 'badAngle';
+        if (weaponMouseAngle > 0) {
+          weaponMouseAngle = 64;
         } else {
-          spearMouseAngle = -64;
+          weaponMouseAngle = -64;
         }
+      } else if (weapon.name === 'badAngle') { //reset weapon name
+        weapon.name = '';
       }
     }
-    this.spear.angle = spearMouseAngle;
+    weapon.angle = weaponMouseAngle;
   }
 
   handleSpearThrow(player: Player) {
-    if (!this.spear && this.game.input.activePointer.isDown) {
+    if (!this.spear && this.game.input.activePointer.isDown && global.equiped === 'spear') {
       this.spear = this.game.add.sprite(player.pos.x, player.pos.y, 'spear').setOrigin(0, .5).setDepth(1);
       this.spear.name = this.curSpearId.toString();
     }
 
-
-    if (this.game.input.activePointer.isDown && this.spear) { //Ready spear
+    if (this.game.input.activePointer.isDown && this.spear && global.equiped === 'spear') { //Ready spear
       if (Math.abs(this.spear.x - player.pos.x) < 50) {
         this.spear.x += (player.direction === 'left' ? spearReadySpeed : -spearReadySpeed) * this.game.deltaTime;
       } else {
@@ -159,7 +167,6 @@ export default class ThrowWEPC {
         let spearData = this.otherCollidedSpears[playerID][spearID];
         let spearOffset = 1.8;
         if (spearData.collidedPlayerID === undefined) { //handle ground spear
-          console.log('groundSpear')
           continue;
         }
         if (!global.playerRectangles[spearData.collidedPlayerID]) { //Handle left player

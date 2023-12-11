@@ -29,6 +29,10 @@ export default class UIHandler {
       if (global.equiped !== 'spear') {
         this.draw('spear');
         global.equiped = 'spear';
+        if (this.game.GrappleHandler.grappleHook) {
+          this.game.GrappleHandler.grappleHook.destroy();
+          this.game.GrappleHandler.grappleHook = undefined;
+        }
       }
     } else if (this.selectButtons.grapple.isDown) {
       if (global.equiped !== 'grapple') {

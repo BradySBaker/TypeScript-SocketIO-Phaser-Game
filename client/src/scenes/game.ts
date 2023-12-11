@@ -2,6 +2,7 @@ import Phaser, { GameObjects } from "phaser";
 import ProjectileController from './controllers/ProjectileController.js';
 import PlayerController from './controllers/PlayerController.js';
 import ThrowWEPC from "./controllers/ThrowWEPC.js";
+import GrappleHandler from "./controllers/GrappleHandler.js";
 import PlatformHandler from "./objects/PlatformHandler.js";
 import UIHandler from "./objects/UIHandler.js";
 
@@ -30,6 +31,7 @@ export default class Game extends Phaser.Scene {
   PlayerController!: PlayerController;
   ProjectileController!: ProjectileController;
   ThrowWEPC!: ThrowWEPC;
+  GrappleHandler!: GrappleHandler;
   PlatformHandler!: PlatformHandler;
   UIHandler!: UIHandler;
 
@@ -54,6 +56,7 @@ export default class Game extends Phaser.Scene {
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
     this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
+    this.GrappleHandler = new GrappleHandler(this);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
     this.ThrowWEPC.handleIncomingSpearData();
     this.PlatformHandler = new PlatformHandler(this);
