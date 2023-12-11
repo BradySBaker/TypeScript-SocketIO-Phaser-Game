@@ -7,7 +7,7 @@ export default class PlayerController {
   shootTimer = 0;
   playersToMove: {[id: number]: GameObject} = {};
   socket: Socket;
-  cursors: Phaser.Types.Input.Keyboard.CursorKeys | null = null;
+  cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   player: Player;
   playerGroup!: Phaser.GameObjects.Group;
   id: number = NaN;
@@ -18,7 +18,7 @@ export default class PlayerController {
   prevJump = 0;
   isMouseHeld = false;
   // @ts-ignore
-  spaceKey: Phaser.Input.Keyboard.KeyCodes;
+  spaceKey!: Phaser.Input.Keyboard.KeyCodes;
 
   // @ts-ignore
   constructor(game: Game, socket: Socket) {
@@ -87,7 +87,7 @@ export default class PlayerController {
       this.vy += .5 * this.game.deltaTime
       move.y += this.vy;
     }
-    if (this.cursors?.right.isDown ) {
+    if (this.cursors.right.isDown ) {
       if (this.player.direction === 'left' && this.game.ThrowWEPC?.spear) { //cancel spear
         this.game.ThrowWEPC.spear.destroy();
         this.game.ThrowWEPC.spear = undefined
@@ -95,7 +95,7 @@ export default class PlayerController {
       this.player.direction = 'right';
       move.x = 4 * this.game.deltaTime;
     }
-    if (this.cursors?.left.isDown) {
+    if (this.cursors.left.isDown) {
       if (this.player.direction === 'right' && this.game.ThrowWEPC?.spear) { //cancel spear
         this.game.ThrowWEPC.spear.destroy();
         this.game.ThrowWEPC.spear = undefined;

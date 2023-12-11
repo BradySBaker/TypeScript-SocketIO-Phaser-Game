@@ -41,6 +41,7 @@ export default class Game extends Phaser.Scene {
     this.load.image('mountains1', './assets/mountains1.png');
     this.load.image('mountains2', './assets/mountains2.png');
     this.load.image('spear', './assets/spear.png');
+    this.load.image('grapple', './assets/grapple.png');
     this.load.on('complete', () => {
       socket = socketClient.io('http://localhost:3000');
     });
@@ -80,6 +81,7 @@ export default class Game extends Phaser.Scene {
     this.PlayerController?.handleMovement();
     this.ThrowWEPC.handleOtherCollidedSpears();
     this.handleBackgrounds();
+    this.UIHandler.handleSelectButton();
   }
 
 
