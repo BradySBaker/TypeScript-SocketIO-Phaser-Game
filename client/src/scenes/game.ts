@@ -2,6 +2,9 @@ import Phaser, { GameObjects } from "phaser";
 import ProjectileController from './controllers/ProjectileController.js';
 import PlayerController from './controllers/PlayerController.js';
 import ThrowWEPC from "./controllers/ThrowWEPC.js";
+import GrappleHandler from "./controllers/GrappleHandler.js";
+import PlatformHandler from "./objects/PlatformHandler.js";
+import UIHandler from "./objects/UIHandler.js";
 
 import global from './global.ts';
 
@@ -28,6 +31,9 @@ export default class Game extends Phaser.Scene {
   PlayerController!: PlayerController;
   ProjectileController!: ProjectileController;
   ThrowWEPC!: ThrowWEPC;
+  GrappleHandler!: GrappleHandler;
+  PlatformHandler!: PlatformHandler;
+  UIHandler!: UIHandler;
 
 
 
@@ -37,6 +43,7 @@ export default class Game extends Phaser.Scene {
     this.load.image('mountains1', './assets/mountains1.png');
     this.load.image('mountains2', './assets/mountains2.png');
     this.load.image('spear', './assets/spear.png');
+    this.load.image('grapple', './assets/grapple.png');
     this.load.on('complete', () => {
       socket = socketClient.io('http://localhost:3000');
     });
@@ -49,8 +56,14 @@ export default class Game extends Phaser.Scene {
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
     this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
+    this.GrappleHandler = new GrappleHandler(this);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
     this.ThrowWEPC.handleIncomingSpearData();
+    this.PlatformHandler = new PlatformHandler(this);
+    this.UIHandler = new UIHandler(this);
+
+    this.UIHandler.draw();
+    this.PlatformHandler.spawnPlatforms();
 
     this.physics.world.setBoundsCollision(true);
 
@@ -68,9 +81,11 @@ export default class Game extends Phaser.Scene {
 
   update(time, delta: number) {
     this.deltaTime = delta / (1000 / 60);
-    this.PlayerController?.handleMovement();
+    this.PlayerController.handleMovement();
+    this.PlayerController.interpolatePlayerPositions();
     this.ThrowWEPC.handleOtherCollidedSpears();
     this.handleBackgrounds();
+    this.UIHandler.handleSelectButton();
   }
 
 
@@ -83,14 +98,14 @@ export default class Game extends Phaser.Scene {
 		}
 		this.add.image(skyOffset, -800, 'sky')
 		.setOrigin(0, 0)
-		.setScrollFactor(0, .3)
+		.setScrollFactor(0, .05)
 		.setScale(1.6);
 
     this.backgrounds.push({
       ratioX: 0.05,
       sprite: this.add.tileSprite(-this.scale.width/3, 100, this.scale.width * 1.6, 450, 'mountains2')
           .setOrigin(0, 0)
-          .setScrollFactor(0, .6)
+          .setScrollFactor(0, .1)
           .setScale(2)
     });
 
@@ -98,7 +113,7 @@ export default class Game extends Phaser.Scene {
         ratioX: 0.1,
         sprite: this.add.tileSprite(-this.scale.width/3, 200, this.scale.width * 1.6, 450, 'mountains1')
             .setOrigin(0, 0)
-            .setScrollFactor(0, .8)
+            .setScrollFactor(0, .2)
             .setScale(2)
     });
 
