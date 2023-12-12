@@ -75,22 +75,22 @@ export default class PlayerController {
 
 
   handleMovement() {
-    this.interpolatePlayerPositions();
-    this.handleGround();
     if (this.game.ThrowWEPC.spear && global.equiped === 'spear') {
       this.game.ThrowWEPC.handleWeaponRotation(this.game.ThrowWEPC.spear, this.player, 'spear');
     } else if (global.equiped === 'grapple') {
       this.game.GrappleHandler.handlePosition(this.player);
       this.game.ThrowWEPC.handleWeaponRotation(this.game.GrappleHandler.grappleHook, this.player, 'grapple');
-      this.game.GrappleHandler.handleGrapple();
+      this.game.GrappleHandler.handleGrapple(this.player);
     }
+    this.handleGround();
     this.game.ThrowWEPC.handleSpearThrow(this.player);
     let move: GameObject = {x: 0, y: 0};
 
-    if (!this.ground) {
+    if (!this.ground && !this.game.GrappleHandler.grappling) {
       this.vy += .5 * this.game.deltaTime
       move.y += this.vy;
     }
+
     if (this.cursors.right.isDown ) {
       if (this.player.direction === 'left' && this.game.ThrowWEPC?.spear) { //cancel spear
         this.game.ThrowWEPC.spear.destroy();
@@ -111,7 +111,6 @@ export default class PlayerController {
 			this.prevJump = this.game.time.now;
       this.vy = -10;
       move.y += this.vy;
-      this.ground = false;
     }
 
     if (move.x === 0 && move.y === 0) {
@@ -124,6 +123,7 @@ export default class PlayerController {
     }
     global.playerRectangles[this.id].x = this.player.pos.x;
     global.playerRectangles[this.id].y = this.player.pos.y;
+
     if (this.game.ThrowWEPC?.spear) {
       this.game.ThrowWEPC.spear.x += move.x;
       this.game.ThrowWEPC.spear.y = this.player.pos.y;
@@ -134,13 +134,17 @@ export default class PlayerController {
 
 
   handleGround() {
+
     if (!global.playerRectangles[this.id]) {
       return;
     }
-    if (this.player.pos.y > global.ground) {
+    if (this.player.pos.y >= global.ground) {
       this.ground = true;
       global.playerRectangles[this.id].y = global.ground;
       this.player.pos.y = global.ground;
+    } else {
+      this.ground = false;
+      console.log('occured')
     }
   }
 
