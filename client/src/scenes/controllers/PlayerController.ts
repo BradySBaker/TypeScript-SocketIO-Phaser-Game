@@ -4,19 +4,23 @@ import { Socket } from "socket.io-client";
 import global from '../global.js';
 
 export default class PlayerController {
+  move = {vy: 0, vx: 0, g: .9};
+  prevJump = 0;
+
+  ground = false;
+
   shootTimer = 0;
   playersToMove: {[id: number]: GameObject} = {};
-  socket: Socket;
-  cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   player: Player;
   playerGroup!: Phaser.GameObjects.Group;
+
   id: number = NaN;
-  ground = false;
-  vy = 1.1;
+  socket: Socket;
   sentPos: GameObject= {x: 0, y: 0};
   game: Game;
-  prevJump = 0;
+
   isMouseHeld = false;
+  cursors!: Phaser.Types.Input.Keyboard.CursorKeys;
   // @ts-ignore
   spaceKey!: Phaser.Input.Keyboard.KeyCodes;
 
@@ -75,6 +79,9 @@ export default class PlayerController {
 
 
   handleMovement() {
+    this.move.vx = 0;
+
+    //Handle equips ==
     if (this.game.ThrowWEPC.spear && global.equiped === 'spear') {
       this.game.ThrowWEPC.handleWeaponRotation(this.game.ThrowWEPC.spear, this.player, 'spear');
     } else if (global.equiped === 'grapple') {
@@ -82,42 +89,49 @@ export default class PlayerController {
       this.game.ThrowWEPC.handleWeaponRotation(this.game.GrappleHandler.grappleHook, this.player, 'grapple');
       this.game.GrappleHandler.handleGrapple(this.player);
     }
-    this.handleGround();
     this.game.ThrowWEPC.handleSpearThrow(this.player);
-    let move: GameObject = {x: 0, y: 0};
+    // ==
 
-    if (!this.ground && !this.game.GrappleHandler.grappling) {
-      this.vy += .5 * this.game.deltaTime
-      move.y += this.vy;
-    }
+    this.handleGround();
+
+    if (!this.ground && !this.game.GrappleHandler.grappling) { //Handle fall ==
+      if (this.move.vy < -1) { //going up
+        this.move.vy *= Math.pow(this.move.g, this.game.deltaTime);
+      } else { //going down
+        if (this.move.vy === 0) {
+          this.move.vy = 1;
+        }
+        if (this.move.vy >= -25) {
+          this.move.vy = Math.abs(this.move.vy /= Math.pow(this.move.g, this.game.deltaTime));
+        }
+      }
+    } // ==
 
     if (this.cursors.right.isDown ) {
-      if (this.player.direction === 'left' && this.game.ThrowWEPC?.spear) { //cancel spear
+      if (this.player.direction === 'left' && this.game.ThrowWEPC.spear) { //cancel spear
         this.game.ThrowWEPC.spear.destroy();
         this.game.ThrowWEPC.spear = undefined
       }
       this.player.direction = 'right';
-      move.x = 4 * this.game.deltaTime;
+      this.move.vx = 4;
     }
     if (this.cursors.left.isDown) {
-      if (this.player.direction === 'right' && this.game.ThrowWEPC?.spear) { //cancel spear
+      if (this.player.direction === 'right' && this.game.ThrowWEPC.spear) { //cancel spear
         this.game.ThrowWEPC.spear.destroy();
         this.game.ThrowWEPC.spear = undefined;
       }
       this.player.direction = 'left';
-      move.x = -4 * this.game.deltaTime;
+      this.move.vx = -4;
     }
     if (this.spaceKey.isDown && this.ground) {
 			this.prevJump = this.game.time.now;
-      this.vy = -10;
-      move.y += this.vy;
+      this.move.vy = -20;
     }
-
-    if (move.x === 0 && move.y === 0) {
+    if (this.move.vx === 0 && this.move.vy === 0) {
       return;
     }
-    this.player.pos.x += move.x;
-    this.player.pos.y += move.y;
+    this.player.pos.x += this.move.vx * this.game.deltaTime;
+    this.player.pos.y += this.move.vy * this.game.deltaTime;
     if (!global.playerRectangles[this.id]) {
       return;
     }
@@ -125,7 +139,7 @@ export default class PlayerController {
     global.playerRectangles[this.id].y = this.player.pos.y;
 
     if (this.game.ThrowWEPC?.spear) {
-      this.game.ThrowWEPC.spear.x += move.x;
+      this.game.ThrowWEPC.spear.x += this.move.vx * this.game.deltaTime;
       this.game.ThrowWEPC.spear.y = this.player.pos.y;
     }
   }
@@ -140,11 +154,10 @@ export default class PlayerController {
     }
     if (this.player.pos.y >= global.ground) {
       this.ground = true;
-      global.playerRectangles[this.id].y = global.ground;
       this.player.pos.y = global.ground;
+      this.move.vy = 0;
     } else {
       this.ground = false;
-      console.log('occured')
     }
   }
 
