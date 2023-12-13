@@ -14,7 +14,8 @@ export default class GrappleHandler {
   initialPos!: {x: number, y: number};
   startSide!: number;
   speed = 0;
-  prevDirection!: number;
+  prevSide!: number;
+  dampening!: number;
 
   constructor(game: Game) {
     this.game = game;
@@ -41,7 +42,7 @@ export default class GrappleHandler {
     this.graphics.clear();
 
     if (this.grappling) {
-      if (this.game.input.activePointer.isDown && this.grappleTime > 10) {
+      if (this.game.input.activePointer.isDown && this.grappleTime > 0.2) {
         let mousePos = this.getMouseWorld();
         this.grappleCheckCircle.setPosition(mousePos.x, mousePos.y);
         this.grappling = false;
@@ -50,22 +51,31 @@ export default class GrappleHandler {
 
       const playerC = this.game.PlayerController;
       const xDistance = this.grappleCheckCircle.x - playerC.player.pos.x;
+      let curSide = xDistance/Math.abs(xDistance);
       if (this.grappleTime === 0) { //Start
         const yDistance = this.grappleCheckCircle.y - playerC.player.pos.y;
         const distanceToGrapple = Math.sqrt(xDistance ** 2 + yDistance ** 2);
         this.ropeLength = distanceToGrapple;
         this.angle = Math.atan2(yDistance, xDistance);
-        this.startSide = xDistance/Math.abs(xDistance);
+        this.startSide = curSide;
         playerC.move.vy = 0;
         this.speed = 0;
+        this.prevSide = this.startSide;
+        this.dampening = 0.99;
+      }
+      if (curSide === this.startSide && this.dampening > .1) {
+        this.speed -= .002 * this.startSide * this.game.deltaTime;
+      } else if (this.dampening > .1) {
+        this.speed += .002 * this.startSide * this.game.deltaTime;
       }
 
-      if (xDistance/Math.abs(xDistance) === this.startSide) {
-        this.speed -= .002 * this.startSide * this.game.deltaTime;
-      } else {
-        let dampening = 0.99;
-        this.speed += .002 * this.startSide * this.game.deltaTime;
-        this.speed *= dampening;
+      if (this.prevSide !== curSide) {
+        this.dampening -= .02 * this.game.deltaTime;
+        this.speed *= this.dampening * this.game.deltaTime;
+        this.prevSide = curSide;
+        if (this.dampening < .1) {
+          this.speed = 0;
+        }
       }
 
       this.angle += this.speed * this.game.deltaTime;
@@ -75,14 +85,15 @@ export default class GrappleHandler {
 
       playerC.move.vy = Math.sin(this.angle) * this.ropeLength/50;
 
-      let direction = this.speed/Math.abs(this.speed);
-      if (offsetAngleX !== 0) {
-        let vx = -direction * (Math.abs(xDistance)/50)/Math.abs(offsetAngleX);
-        console.log((Math.abs(xDistance)/100)/Math.abs(offsetAngleX));
-        if (Math.abs(vx) < 30) {
-          playerC.move.vx = vx;
-        }
+      let curSpeed = ((newX -playerC.player.pos.x)/this.grappleTime)/2;
+
+      if (Math.abs(curSpeed) < 30) {
+        playerC.move.vx = curSpeed;
+      } else {
+        playerC.move.vx = 30;
       }
+
+
       playerC.setPosition(newX, newY);
 
       this.graphics.beginPath();
@@ -99,7 +110,7 @@ export default class GrappleHandler {
 
       this.grappleHook.angle = grapplePivotAngle;
 
-      this.grappleTime += this.game.deltaTime;
+      this.grappleTime += this.game.deltaTime/60;
       return;
     }
 
