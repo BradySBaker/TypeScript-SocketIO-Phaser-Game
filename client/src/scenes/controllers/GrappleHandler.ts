@@ -68,10 +68,14 @@ export default class GrappleHandler {
 
       this.angle += this.speed * this.game.deltaTime;
       let newX = this.grappleCheckCircle.x - Math.cos(this.angle) * this.ropeLength;
-      let newY =  this.grappleCheckCircle.y - Math.sin(this.angle) * this.ropeLength
-      global.playerRectangles[playerC.id].setPosition(newX, newY);
-      playerC.player.pos.x = newX;
-      playerC.player.pos.y = newY;
+      let newY =  this.grappleCheckCircle.y - Math.sin(this.angle) * this.ropeLength;
+
+      let direction = this.speed/Math.abs(this.speed);
+
+      playerC.move.vx = -direction * Math.abs(Math.cos(this.angle)) * this.ropeLength/20;
+      playerC.move.vy = Math.sin(this.angle) * this.ropeLength/50;
+
+      playerC.setPosition(newX, newY);
 
       this.graphics.beginPath();
       this.graphics.moveTo(playerC.player.pos.x, playerC.player.pos.y);

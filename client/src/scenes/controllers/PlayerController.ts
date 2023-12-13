@@ -76,15 +76,25 @@ export default class PlayerController {
   });
   }
 
+  setPosition(x: number, y: number, velocity = false) {
+    if (velocity) {
+      this.player.pos.x += x * this.game.deltaTime;
+      this.player.pos.y += y * this.game.deltaTime;
+    } else {
+      this.player.pos.x = x;
+      this.player.pos.y = y;
+    }
+    if (!global.playerRectangles[this.id]) {
+      return;
+    }
+    global.playerRectangles[this.player.id].setPosition(this.player.pos.x, this.player.pos.y);
+  }
+
   calculateGravity() {
     return Math.abs(this.move.vy /= Math.pow(this.move.g, this.game.deltaTime));
   }
 
   handleMovement() {
-    if (!this.game.GrappleHandler.grappling) {
-      this.move.vx = 0;
-    }
-
     //Handle equips ==
     if (this.game.ThrowWEPC.spear && global.equiped === 'spear') {
       this.game.ThrowWEPC.handleWeaponRotation(this.game.ThrowWEPC.spear, this.player, 'spear');
@@ -102,8 +112,11 @@ export default class PlayerController {
     // ==
 
     this.handleGround();
+    if (this.game.GrappleHandler.grappling) {
+      return;
+    }
 
-    if (!this.ground && !this.game.GrappleHandler.grappling) { //Handle fall ==
+    if (!this.ground) { //Handle fall ==
       if (this.move.vy < -1) { //going up
         this.move.vy *= Math.pow(this.move.g, this.game.deltaTime);
       } else { //going down
@@ -123,14 +136,17 @@ export default class PlayerController {
       }
       this.player.direction = 'right';
       this.move.vx = 4;
-    }
-    if (this.cursors.left.isDown) {
+    } else if (this.cursors.left.isDown) {
       if (this.player.direction === 'right' && this.game.ThrowWEPC.spear) { //cancel spear
         this.game.ThrowWEPC.spear.destroy();
         this.game.ThrowWEPC.spear = undefined;
       }
       this.player.direction = 'left';
       this.move.vx = -4;
+    } else if (!this.ground) {
+      this.move.vx *= .99;
+    } else {
+      this.move.vx = 0;
     }
     if (this.spaceKey.isDown && this.ground) {
 			this.prevJump = this.game.time.now;
@@ -139,13 +155,7 @@ export default class PlayerController {
     if (this.move.vx === 0 && this.move.vy === 0) {
       return;
     }
-    this.player.pos.x += this.move.vx * this.game.deltaTime;
-    this.player.pos.y += this.move.vy * this.game.deltaTime;
-    if (!global.playerRectangles[this.id]) {
-      return;
-    }
-    global.playerRectangles[this.id].x = this.player.pos.x;
-    global.playerRectangles[this.id].y = this.player.pos.y;
+    this.setPosition(this.move.vx, this.move.vy, true)
 
     if (this.game.ThrowWEPC?.spear) {
       this.game.ThrowWEPC.spear.x += this.move.vx * this.game.deltaTime;
