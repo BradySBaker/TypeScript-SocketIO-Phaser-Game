@@ -46,7 +46,7 @@ export default class ThrowWEPC {
         weapon.setFlipY(true);
       }
       if (weaponMouseAngle > -120 && weaponMouseAngle < 120) { //Handle weapon backwards
-        weapon.name = 'badAngle';
+        // weapon.name = 'badAngle';
         if (weaponMouseAngle > 0) {
           weaponMouseAngle = 120;
         } else {
@@ -60,7 +60,7 @@ export default class ThrowWEPC {
         weapon.setFlipY(false);
       }
       if (weaponMouseAngle < -64 || weaponMouseAngle > 64) { //Handle weapon backwards
-        weapon.name = 'badAngle';
+        // weapon.name = 'badAngle';
         if (weaponMouseAngle > 0) {
           weaponMouseAngle = 64;
         } else {

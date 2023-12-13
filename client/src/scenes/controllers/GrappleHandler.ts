@@ -36,6 +36,7 @@ export default class GrappleHandler {
   }
 
   handleGrapple() {
+
     this.graphics.clear();
 
     if (this.grappling) {
@@ -58,9 +59,11 @@ export default class GrappleHandler {
         this.speed = 0;
       }
       if (xDistance/Math.abs(xDistance) === this.startSide) {
-        this.speed -= .001 * this.startSide;
+        this.speed -= .002 * this.startSide * this.game.deltaTime;
       } else {
-        this.speed += .001 * this.startSide;
+        let dampening = 0.99;
+        this.speed += .002 * this.startSide * this.game.deltaTime;
+        this.speed *= dampening;
       }
 
       this.angle += this.speed * this.game.deltaTime;
@@ -70,11 +73,19 @@ export default class GrappleHandler {
       playerC.player.pos.x = newX;
       playerC.player.pos.y = newY;
 
-
       this.graphics.beginPath();
-      this.graphics.moveTo(this.grappleHook.x, this.grappleHook.y);
+      this.graphics.moveTo(playerC.player.pos.x, playerC.player.pos.y);
       this.graphics.lineTo(this.grappleCheckCircle.x, this.grappleCheckCircle.y);
       this.graphics.strokePath();
+
+      let targetGrappleRad = Phaser.Math.Angle.Between(
+        this.grappleHook.x, this.grappleHook.y,
+        this.grappleCheckCircle.x, this.grappleCheckCircle.y
+      );
+
+      let grapplePivotAngle = Phaser.Math.RadToDeg(targetGrappleRad);
+
+      this.grappleHook.angle = grapplePivotAngle;
 
       this.grappleTime += this.game.deltaTime;
       return;

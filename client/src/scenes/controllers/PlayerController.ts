@@ -89,9 +89,14 @@ export default class PlayerController {
     if (this.game.ThrowWEPC.spear && global.equiped === 'spear') {
       this.game.ThrowWEPC.handleWeaponRotation(this.game.ThrowWEPC.spear, this.player, 'spear');
     } else if (global.equiped === 'grapple') {
+      if (this.game.GrappleHandler.grappleHook) {
+        this.game.GrappleHandler.handleGrapple(this.player);
+      }
       this.game.GrappleHandler.handlePosition(this.player);
-      this.game.ThrowWEPC.handleWeaponRotation(this.game.GrappleHandler.grappleHook, this.player, 'grapple');
-      this.game.GrappleHandler.handleGrapple(this.player);
+      if (!this.game.GrappleHandler.grappling) {
+        this.game.ThrowWEPC.handleWeaponRotation(this.game.GrappleHandler.grappleHook, this.player, 'grapple');
+      }
+
     }
     this.game.ThrowWEPC.handleSpearThrow(this.player);
     // ==

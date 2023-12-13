@@ -8,7 +8,9 @@ export default class PlatformHandler {
     this.platformGroup = game.physics.add.group({classType: Phaser.GameObjects.Rectangle});
   }
   spawnPlatforms() {
-    let platform = this.game.add.rectangle(100, 500, 3000, 30, 0xfffff);
-    this.platformGroup.add(platform);
+    for (let i = 0; i <= 10; i++) {
+      let platform = this.game.add.rectangle(100 + (i * 200), 500 - (i*100), 300, 30, 0xfffff);
+      this.platformGroup.add(platform);
+    }
   }
 }
