@@ -6,6 +6,7 @@ export default class GrappleHandler {
   grappleHook!: Phaser.GameObjects.Sprite;
   graphics: Phaser.GameObjects.Graphics;
   grappleCheckCircle!: Phaser.GameObjects.Ellipse;
+  grapplePoint: {x: number, y: number} = {x: 0, y: 0};
   collision = false;
   grappling = false;
   grappleTime = 0;
@@ -43,17 +44,14 @@ export default class GrappleHandler {
 
     if (this.grappling) {
       if (this.game.input.activePointer.isDown && this.grappleTime > 0.2) {
-        let mousePos = this.getMouseWorld();
-        this.grappleCheckCircle.setPosition(mousePos.x, mousePos.y);
         this.grappling = false;
         return;
       }
-
       const playerC = this.game.PlayerController;
-      const xDistance = this.grappleCheckCircle.x - playerC.player.pos.x;
+      const xDistance = this.grapplePoint.x - playerC.player.pos.x;
       let curSide = xDistance/Math.abs(xDistance);
       if (this.grappleTime === 0) { //Start
-        const yDistance = this.grappleCheckCircle.y - playerC.player.pos.y;
+        const yDistance = this.grapplePoint.y - playerC.player.pos.y;
         const distanceToGrapple = Math.sqrt(xDistance ** 2 + yDistance ** 2);
         this.ropeLength = distanceToGrapple;
         this.angle = Math.atan2(yDistance, xDistance);
@@ -80,8 +78,8 @@ export default class GrappleHandler {
 
       this.angle += this.speed * this.game.deltaTime;
       let offsetAngleX = Math.cos(this.angle);
-      let newX = this.grappleCheckCircle.x - offsetAngleX * this.ropeLength;
-      let newY =  this.grappleCheckCircle.y - Math.sin(this.angle) * this.ropeLength;
+      let newX = this.grapplePoint.x - offsetAngleX * this.ropeLength;
+      let newY =  this.grapplePoint.y - Math.sin(this.angle) * this.ropeLength;
 
       playerC.move.vy = Math.sin(this.angle) * this.ropeLength/50;
 
@@ -100,12 +98,12 @@ export default class GrappleHandler {
 
       this.graphics.beginPath();
       this.graphics.moveTo(playerC.player.pos.x, playerC.player.pos.y);
-      this.graphics.lineTo(this.grappleCheckCircle.x, this.grappleCheckCircle.y);
+      this.graphics.lineTo(this.grapplePoint.x, this.grapplePoint.y);
       this.graphics.strokePath();
 
       let targetGrappleRad = Phaser.Math.Angle.Between(
         this.grappleHook.x, this.grappleHook.y,
-        this.grappleCheckCircle.x, this.grappleCheckCircle.y
+        this.grapplePoint.x, this.grapplePoint.y
       );
 
       let grapplePivotAngle = Phaser.Math.RadToDeg(targetGrappleRad);
@@ -113,11 +111,6 @@ export default class GrappleHandler {
       this.grappleHook.angle = grapplePivotAngle;
 
       this.grappleTime += this.game.deltaTime/60;
-      return;
-    }
-
-    if (this.grappleHook.name === 'badAngle') {
-      return;
     }
 
     let mousePos = this.getMouseWorld();
@@ -137,6 +130,8 @@ export default class GrappleHandler {
     if (this.game.input.activePointer.isDown && this.grappleHook && this.grappleCheckCircle.alpha === 1) {
       this.grappling = true;
       this.grappleTime = 0;
+      this.grapplePoint.x = this.grappleCheckCircle.x;
+      this.grapplePoint.y = this.grappleCheckCircle.y;
     }
   }
 }
