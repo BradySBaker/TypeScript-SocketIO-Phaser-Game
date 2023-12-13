@@ -85,12 +85,14 @@ export default class GrappleHandler {
 
       playerC.move.vy = Math.sin(this.angle) * this.ropeLength/50;
 
-      let curSpeed = ((newX -playerC.player.pos.x)/this.grappleTime)/2;
+      let direction = -this.speed/Math.abs(this.speed);
 
-      if (Math.abs(curSpeed) < 30) {
-        playerC.move.vx = curSpeed;
+      let curSpeed = Math.abs(((newX - playerC.player.pos.x)/this.grappleTime)/2);
+
+      if (curSpeed < 30) {
+        playerC.move.vx = direction * curSpeed;
       } else {
-        playerC.move.vx = 30;
+        playerC.move.vx = direction * 30;
       }
 
 
