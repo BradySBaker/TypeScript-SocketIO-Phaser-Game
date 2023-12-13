@@ -130,17 +130,9 @@ export default class PlayerController {
     } // ==
 
     if (this.cursors.right.isDown ) {
-      if (this.player.direction === 'left' && this.game.ThrowWEPC.spear) { //cancel spear
-        this.game.ThrowWEPC.spear.destroy();
-        this.game.ThrowWEPC.spear = undefined
-      }
       this.player.direction = 'right';
       this.move.vx = 4;
     } else if (this.cursors.left.isDown) {
-      if (this.player.direction === 'right' && this.game.ThrowWEPC.spear) { //cancel spear
-        this.game.ThrowWEPC.spear.destroy();
-        this.game.ThrowWEPC.spear = undefined;
-      }
       this.player.direction = 'left';
       this.move.vx = -4;
     } else if (!this.ground) {

@@ -41,33 +41,26 @@ export default class ThrowWEPC {
     );
 
     let weaponMouseAngle = Phaser.Math.RadToDeg(targetWeaponRad);
-    if (player.direction === 'left') {
-      if (!weapon.flipY) {
-        weapon.setFlipY(true);
-      }
-      if (weaponMouseAngle > -120 && weaponMouseAngle < 120) { //Handle weapon backwards
-        // weapon.name = 'badAngle';
-        if (weaponMouseAngle > 0) {
-          weaponMouseAngle = 120;
+    let isMouseOnRight = (mouseWorldX > weapon.x);
+    if (isMouseOnRight) {
+      if (weapon.flipY) {
+        if (this.spear) {
+          this.spear.destroy();
+          this.spear = undefined;
         } else {
-          weaponMouseAngle = -120;
+          weapon.setFlipY(false);
         }
-      } else if (weapon.name === 'badAngle') { //reset weapon name
-        weapon.name = '';
+        player.direction = 'right';
       }
     } else {
-      if (weapon.flipY) {
-        weapon.setFlipY(false);
-      }
-      if (weaponMouseAngle < -64 || weaponMouseAngle > 64) { //Handle weapon backwards
-        // weapon.name = 'badAngle';
-        if (weaponMouseAngle > 0) {
-          weaponMouseAngle = 64;
+      if (!weapon.flipY) {
+        if (this.spear) {
+          this.spear.destroy();
+          this.spear = undefined;
         } else {
-          weaponMouseAngle = -64;
+          weapon.setFlipY(true);
         }
-      } else if (weapon.name === 'badAngle') { //reset weapon name
-        weapon.name = '';
+        player.direction = 'left';
       }
     }
     weapon.angle = weaponMouseAngle;
@@ -77,6 +70,9 @@ export default class ThrowWEPC {
     if (!this.spear && this.game.input.activePointer.isDown && global.equiped === 'spear') {
       this.spear = this.game.add.sprite(player.pos.x, player.pos.y, 'spear').setOrigin(0, .5).setDepth(1);
       this.spear.name = this.curSpearId.toString();
+      if (player.direction === 'left') {
+        this.spear.setFlipY(true);
+      }
     }
 
     if (this.game.input.activePointer.isDown && this.spear && global.equiped === 'spear') { //Ready spear
