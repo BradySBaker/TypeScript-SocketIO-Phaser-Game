@@ -76,10 +76,14 @@ export default class PlayerController {
   });
   }
 
-
+  calculateGravity() {
+    return Math.abs(this.move.vy /= Math.pow(this.move.g, this.game.deltaTime));
+  }
 
   handleMovement() {
-    this.move.vx = 0;
+    if (!this.game.GrappleHandler.grappling) {
+      this.move.vx = 0;
+    }
 
     //Handle equips ==
     if (this.game.ThrowWEPC.spear && global.equiped === 'spear') {
@@ -102,7 +106,7 @@ export default class PlayerController {
           this.move.vy = 1;
         }
         if (this.move.vy >= -25) {
-          this.move.vy = Math.abs(this.move.vy /= Math.pow(this.move.g, this.game.deltaTime));
+          this.move.vy = this.calculateGravity();
         }
       }
     } // ==
@@ -154,8 +158,11 @@ export default class PlayerController {
     }
     if (this.player.pos.y >= global.ground) {
       this.ground = true;
-      this.player.pos.y = global.ground;
-      this.move.vy = 0;
+        this.player.pos.y = global.ground;
+        this.move.vy = 0;
+        if (this.game.GrappleHandler.grappling) { //Cancel grapple
+          this.game.GrappleHandler.grappling = false;
+        }
     } else {
       this.ground = false;
     }

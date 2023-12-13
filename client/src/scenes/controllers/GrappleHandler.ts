@@ -9,8 +9,11 @@ export default class GrappleHandler {
   collision = false;
   grappling = false;
   grappleTime = 0;
-  vy = 0;
-  startDirection: number = 0;
+  ropeLength!: number;
+  angle!: number;
+  initialPos!: {x: number, y: number};
+  startSide!: number;
+  speed = 0;
 
   constructor(game: Game) {
     this.game = game;
@@ -26,56 +29,67 @@ export default class GrappleHandler {
     this.grappleHook.setPosition(global.playerRectangles[player.id].x, global.playerRectangles[player.id].y);
   }
 
-  handleGrapple(player: Player) {
-    this.graphics.clear();
+  getMouseWorld() {
+    const mouseWorldX = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).x;
+    const mouseWorldY = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).y;
+    return ({x: mouseWorldX, y: mouseWorldY})
+  }
 
-    let mouseWorldX = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).x;
-    let mouseWorldY = this.game.cameras.main.getWorldPoint(this.game.input.x, this.game.input.y).y;
+  handleGrapple() {
+    this.graphics.clear();
 
     if (this.grappling) {
       if (this.game.input.activePointer.isDown && this.grappleTime > 10) {
-        this.grappleCheckCircle.setPosition(mouseWorldX, mouseWorldY);
+        let mousePos = this.getMouseWorld();
+        this.grappleCheckCircle.setPosition(mousePos.x, mousePos.y);
         this.grappling = false;
         return;
       }
 
-      const xDistance = this.grappleCheckCircle.x - this.grappleHook.x;
-      const xDirection = Math.abs(xDistance)/xDistance;
-
-      const vx = xDistance * .1;
-
-      if (!this.startDirection) {
-        this.startDirection = xDirection;
-      } else if (xDirection !== this.startDirection) {
-        this.vy = -2;
-      } else {
-        this.vy = 2;
+      const playerC = this.game.PlayerController;
+      const xDistance = this.grappleCheckCircle.x - playerC.player.pos.x;
+      if (this.grappleTime === 0) { //Start
+        const yDistance = this.grappleCheckCircle.y - playerC.player.pos.y;
+        const distanceToGrapple = Math.sqrt(xDistance ** 2 + yDistance ** 2);
+        this.ropeLength = distanceToGrapple;
+        this.angle = Math.atan2(yDistance, xDistance);
+        this.startSide = xDistance/Math.abs(xDistance);
+        playerC.move.vy = 0;
+        this.speed = 0;
       }
-      console.log(this.vy);
+      if (xDistance/Math.abs(xDistance) === this.startSide) {
+        this.speed -= .001 * this.startSide;
+      } else {
+        this.speed += .001 * this.startSide;
+      }
+
+      this.angle += this.speed * this.game.deltaTime;
+      let newX = this.grappleCheckCircle.x - Math.cos(this.angle) * this.ropeLength;
+      let newY =  this.grappleCheckCircle.y - Math.sin(this.angle) * this.ropeLength
+      global.playerRectangles[playerC.id].setPosition(newX, newY);
+      playerC.player.pos.x = newX;
+      playerC.player.pos.y = newY;
+
 
       this.graphics.beginPath();
       this.graphics.moveTo(this.grappleHook.x, this.grappleHook.y);
       this.graphics.lineTo(this.grappleCheckCircle.x, this.grappleCheckCircle.y);
       this.graphics.strokePath();
-      player.pos.x += vx;
-      player.pos.y += this.vy;
 
-      this.grappleTime++;
+      this.grappleTime += this.game.deltaTime;
       return;
-    }
-
-    if (this.startDirection) {
-      this.startDirection = 0;
     }
 
     if (this.grappleHook.name === 'badAngle') {
       return;
     }
 
-    this.grappleCheckCircle.setPosition(mouseWorldX, mouseWorldY)
+    let mousePos = this.getMouseWorld();
+    this.grappleCheckCircle.setPosition(mousePos.x, mousePos.y)
+
     let collision;
     collision = this.game.physics.overlap(this.grappleCheckCircle, this.game.PlatformHandler.platformGroup, (circle, platform: Phaser.GameObjects.Rectangle) => {
-      if (Math.abs(mouseWorldY - platform.y) <= 50) {
+      if (Math.abs(mousePos.y - platform.y) <= 50) {
         this.grappleCheckCircle.alpha = 1;
         this.grappleCheckCircle.y = platform.y + this.grappleCheckCircle.width/2;
       }
@@ -85,10 +99,6 @@ export default class GrappleHandler {
     }
 
     if (this.game.input.activePointer.isDown && this.grappleHook && this.grappleCheckCircle.alpha === 1) {
-      this.graphics.beginPath();
-      this.graphics.moveTo(this.grappleHook.x, this.grappleHook.y);
-      this.graphics.lineTo(mouseWorldX, mouseWorldY);
-      this.graphics.strokePath();
       this.grappling = true;
       this.grappleTime = 0;
     }
