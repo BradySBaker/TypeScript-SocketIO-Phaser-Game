@@ -14,6 +14,7 @@ export default class GrappleHandler {
   initialPos!: {x: number, y: number};
   startSide!: number;
   speed = 0;
+  prevDirection!: number;
 
   constructor(game: Game) {
     this.game = game;
@@ -58,6 +59,7 @@ export default class GrappleHandler {
         playerC.move.vy = 0;
         this.speed = 0;
       }
+
       if (xDistance/Math.abs(xDistance) === this.startSide) {
         this.speed -= .002 * this.startSide * this.game.deltaTime;
       } else {
@@ -67,14 +69,20 @@ export default class GrappleHandler {
       }
 
       this.angle += this.speed * this.game.deltaTime;
-      let newX = this.grappleCheckCircle.x - Math.cos(this.angle) * this.ropeLength;
+      let offsetAngleX = Math.cos(this.angle);
+      let newX = this.grappleCheckCircle.x - offsetAngleX * this.ropeLength;
       let newY =  this.grappleCheckCircle.y - Math.sin(this.angle) * this.ropeLength;
 
-      let direction = this.speed/Math.abs(this.speed);
-
-      playerC.move.vx = -direction * Math.abs(Math.cos(this.angle)) * this.ropeLength/20;
       playerC.move.vy = Math.sin(this.angle) * this.ropeLength/50;
 
+      let direction = this.speed/Math.abs(this.speed);
+      if (offsetAngleX !== 0) {
+        let vx = -direction * (Math.abs(xDistance)/50)/Math.abs(offsetAngleX);
+        console.log((Math.abs(xDistance)/100)/Math.abs(offsetAngleX));
+        if (Math.abs(vx) < 30) {
+          playerC.move.vx = vx;
+        }
+      }
       playerC.setPosition(newX, newY);
 
       this.graphics.beginPath();
