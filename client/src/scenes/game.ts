@@ -84,6 +84,7 @@ export default class Game extends Phaser.Scene {
     this.PlayerController.handleMovement();
     this.PlayerController.interpolatePlayerPositions();
     this.ThrowWEPC.handleOtherCollidedSpears();
+    this.GrappleHandler.drawRopes();
     this.handleBackgrounds();
     this.UIHandler.handleSelectButton();
   }
@@ -128,12 +129,12 @@ export default class Game extends Phaser.Scene {
 	}
 
 	handleBackgrounds() {
-    if (!global.playerRectangles[this.PlayerController.id]) {
+    if (!global.playersData[this.PlayerController.id] || !global.playersData[this.PlayerController.id].body) {
       return;
     }
 		for (let i =0 ; i< this.backgrounds.length; i++) {
 			const bg = this.backgrounds[i];
-			bg.sprite.tilePositionX = global.playerRectangles[this.PlayerController.id].x * bg.ratioX/1.4;
+			bg.sprite.tilePositionX = global.playersData[this.PlayerController.id].body.x * bg.ratioX/1.4;
 		}
 	}
 
