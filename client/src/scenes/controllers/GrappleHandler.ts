@@ -1,10 +1,12 @@
 import global from "../global";
 import Game from "../game";
+import { FacebookInstantGamesLeaderboard } from "phaser";
 
 export default class GrappleHandler {
   game: Game;
   grappleHook!: Phaser.GameObjects.Sprite;
   graphics: Phaser.GameObjects.Graphics;
+  graphicsClear = true;
   grappleCheckCircle!: Phaser.GameObjects.Ellipse;
   grapplePoint: {x: number, y: number} = {x: 0, y: 0};
   collision = false;
@@ -29,7 +31,7 @@ export default class GrappleHandler {
     if (!this.grappleHook) {
       this.grappleHook = this.game.add.sprite(0, 0, 'grapple').setOrigin(0, 0.5).setDepth(1);
     }
-    this.grappleHook.setPosition(global.playerRectangles[player.id].x, global.playerRectangles[player.id].y);
+    this.grappleHook.setPosition(global.playersData[player.id].body.x, global.playersData[player.id].body.y);
   }
 
   getMouseWorld() {
@@ -38,10 +40,16 @@ export default class GrappleHandler {
     return ({x: mouseWorldX, y: mouseWorldY})
   }
 
-  handleGrapple() {
-
+  drawRope(playerPos: GameObject, grapplePoint: GameObject) {
     this.graphics.clear();
+    this.graphics.beginPath();
+    this.graphics.moveTo(playerPos.x, playerPos.y);
+    this.graphics.lineTo(grapplePoint.x, grapplePoint.y);
+    this.graphics.strokePath();
+    this.graphicsClear = false;
+  }
 
+  handleGrapple() {
     if (this.grappling) {
       if (this.game.input.activePointer.isDown && this.grappleTime > 0.2) {
         this.grappling = false;
@@ -96,10 +104,7 @@ export default class GrappleHandler {
 
       playerC.setPosition(newX, newY);
 
-      this.graphics.beginPath();
-      this.graphics.moveTo(playerC.player.pos.x, playerC.player.pos.y);
-      this.graphics.lineTo(this.grapplePoint.x, this.grapplePoint.y);
-      this.graphics.strokePath();
+      this.drawRope(playerC.player.pos, this.grapplePoint);
 
       let targetGrappleRad = Phaser.Math.Angle.Between(
         this.grappleHook.x, this.grappleHook.y,

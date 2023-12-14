@@ -30,6 +30,7 @@ export default class UIHandler {
         this.draw('spear');
         global.equiped = 'spear';
         if (this.game.GrappleHandler.grappleHook) {
+          this.game.GrappleHandler.grappling = false;
           this.game.GrappleHandler.grappleHook.destroy();
           this.game.GrappleHandler.grappleHook = undefined;
         }

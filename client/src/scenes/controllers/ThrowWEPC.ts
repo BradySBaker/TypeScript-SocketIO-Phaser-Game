@@ -110,13 +110,13 @@ export default class ThrowWEPC {
         continue;
       }
       if (spearObj.collidedPlayerID) { //If spear collided with player
-        if (!global.playerRectangles[spearObj.collidedPlayerID]) {
+        if (!global.playersData[spearObj.collidedPlayerID]) {
           spearObj.spear.destroy();
           delete this.curThrownSpears[id];
           continue;
         }
-        spearObj.spear.x = global.playerRectangles[spearObj.collidedPlayerID].x - spearObj.stuckPos.x;
-        spearObj.spear.y = global.playerRectangles[spearObj.collidedPlayerID].y - spearObj.stuckPos.y;
+        spearObj.spear.x = global.playersData[spearObj.collidedPlayerID].body.x - spearObj.stuckPos.x;
+        spearObj.spear.y = global.playersData[spearObj.collidedPlayerID].body.y - spearObj.stuckPos.y;
         if (this.curSpearData[id]) {
           delete this.curSpearData[id];
           spearObj.spear.body.destroy();
@@ -165,14 +165,14 @@ export default class ThrowWEPC {
         if (spearData.collidedPlayerID === undefined) { //handle ground spear
           continue;
         }
-        if (!global.playerRectangles[spearData.collidedPlayerID]) { //Handle left player
+        if (!global.playersData[spearData.collidedPlayerID].body) { //Handle left player
           spearData.spear.destroy();
           delete this.otherCollidedSpears[playerID][spearID];
           continue;
         }
         console.log(spearData.collidedPlayerID);
-        spearData.spear.x = global.playerRectangles[spearData.collidedPlayerID].x - spearData.stuckPos.x/spearOffset;
-        spearData.spear.y = global.playerRectangles[spearData.collidedPlayerID].y - spearData.stuckPos.y;
+        spearData.spear.x = global.playersData[spearData.collidedPlayerID].body.x - spearData.stuckPos.x/spearOffset;
+        spearData.spear.y = global.playersData[spearData.collidedPlayerID].body.y - spearData.stuckPos.y;
       }
     }
   }

@@ -14,7 +14,7 @@ export default class PlayerController {
   player: Player;
   playerGroup!: Phaser.GameObjects.Group;
 
-  id: number = NaN;
+  id: number | string = NaN;
   socket: Socket;
   sentPos: GameObject= {x: 0, y: 0};
   game: Game;
@@ -54,7 +54,7 @@ export default class PlayerController {
     this.game.physics.add.collider(this.playerGroup, this.playerGroup, (object1, object2) => {
       let curPlayer;
       let otherPlayer;
-      if (global.playerRectangles[this.id] === object1) {
+      if (global.playersData[this.id].body === object1) {
         curPlayer = object1 as Phaser.GameObjects.Rectangle;
         otherPlayer = object2 as Phaser.GameObjects.Rectangle;
       } else {
@@ -84,10 +84,10 @@ export default class PlayerController {
       this.player.pos.x = x;
       this.player.pos.y = y;
     }
-    if (!global.playerRectangles[this.id]) {
+    if (!global.playersData[this.id]) {
       return;
     }
-    global.playerRectangles[this.player.id].setPosition(this.player.pos.x, this.player.pos.y);
+    global.playersData[this.player.id].body.setPosition(this.player.pos.x, this.player.pos.y);
   }
 
   calculateGravity() {
@@ -160,7 +160,7 @@ export default class PlayerController {
 
   handleGround() {
 
-    if (!global.playerRectangles[this.id]) {
+    if (!global.playersData[this.id]) {
       return;
     }
     if (this.player.pos.y >= global.ground) {
@@ -183,11 +183,11 @@ export default class PlayerController {
 
   interpolatePlayerPositions() {
     for (let id in this.playersToMove) {
-      if (!global.playerRectangles[id]) {
+      if (!global.playersData[id]) {
         return;
       }
       let newPos = this.playersToMove[id];
-      let curPos = global.playerRectangles[id];
+      let curPos = global.playersData[id].body;
       if (Math.abs((newPos.x - curPos.x)) < .1 && Math.abs((newPos.y - curPos.y)) < .1) {
         delete this.playersToMove[id];
         return;
@@ -196,8 +196,8 @@ export default class PlayerController {
       if (Number(id) === this.id) { //Current player
         speed = .05;
       }
-      global.playerRectangles[id].x = curPos.x + (newPos.x - curPos.x) * speed;
-      global.playerRectangles[id].y = curPos.y + (newPos.y - curPos.y) * speed;
+      global.playersData[id].body.x = curPos.x + (newPos.x - curPos.x) * speed;
+      global.playersData[id].body.y = curPos.y + (newPos.y - curPos.y) * speed;
     }
   }
 
@@ -214,40 +214,47 @@ export default class PlayerController {
       }
 
       if (this.id !== undefined && (this.player.pos.x !== this.sentPos.x || this.player.pos.y !== this.sentPos.y)) {
-        this.socket.emit('updatePosition', this.player.pos);
+        let grapplingPont = this.game.GrappleHandler.grappling ? this.game.GrappleHandler.grapplePoint : undefined;
+        this.socket.emit('updatePosition', {pos: this.player.pos, grapplePos: grapplingPont});
         this.sentPos.x = this.player.pos.x;
         this.sentPos.y = this.player.pos.y;
       }
     }, 10);
 
-    this.socket.on('updatePosition', (pos: GameObject, id: number) => { //Handle player update
-        this.playersToMove[id] = pos;
+    this.socket.on('updatePosition', (data: {pos: GameObject, grapplePos: GameObject | undefined}, id: number) => { //Handle player update
+        this.playersToMove[id] = data.pos;
+        if (data.grapplePos) {
+          this.game.GrappleHandler.drawRope(data.pos, data.grapplePos);
+        } else if (!this.game.GrappleHandler.graphicsClear) {
+          this.game.GrappleHandler.graphics.clear();
+          this.game.GrappleHandler.graphicsClear = true;
+        }
     });
 
     this.socket.on('deletePlayer', (id) => { //Player left
-      global.playerRectangles[id].destroy();
-      delete global.playerRectangles[id];
+      global.playersData[id].body.destroy();
+      delete global.playersData[id];
     });
 
-    this.socket.on('newPlayer', (pos, id) => { //New player joined
+    this.socket.on('newPlayer', (id: string, data: {pos: GameObject, grapplingPos: GameObject | undefined}) => { //New player joined
       if (id === this.id) {
         return;
       }
-      global.playerRectangles[id] = this.game.add.rectangle(pos.x, pos.y, 50, 100, 0xfffff);
-      global.playerRectangles[id].name = id;
-      this.playerGroup?.add(global.playerRectangles[id]);
+      global.playersData[id] = {body: this.game.add.rectangle(data.pos.x, data.pos.y, 50, 100, 0xfffff), grapplingPos: data.grapplingPos}
+      global.playersData[id].body.name = id;
+      this.playerGroup?.add(global.playersData[id].body);
     });
 
 
-    this.socket.on('playerData', (data: {[id: number]: GameObject}, id: number, collidedSpearPositions: {[playerId: number]: {[spearID: number]: {stuckPos: GameObject, angle: number, collidedPlayerID: number}}}) => { //Recieved personal player data
+    this.socket.on('playerData', (data: {[id: number]: {pos: GameObject, grapplingPos: GameObject | undefined}}, id: number, collidedSpearPositions: {[playerId: number]: {[spearID: number]: {stuckPos: GameObject, angle: number, collidedPlayerID: number}}}) => { //Recieved personal player data
       this.id = id;
       this.player.id = id;
       for (let playerId in data) {
-        global.playerRectangles[playerId] = this.game.add.rectangle(data[playerId].x, data[playerId].y, 50, 100, 0xfffff);
-        global.playerRectangles[playerId].name = playerId
-        this.playerGroup?.add(global.playerRectangles[playerId]);
-        this.player.pos.x = data[playerId].x;
-        this.player.pos.y = data[playerId].y;
+        global.playersData[playerId] = {body: this.game.add.rectangle(data[playerId].pos.x, data[playerId].pos.y, 50, 100, 0xfffff), grapplingPos: data[playerId].grapplingPos};
+        global.playersData[playerId].body.name = playerId
+        this.playerGroup.add(global.playersData[playerId].body);
+        this.player.pos.x = data[playerId].pos.x;
+        this.player.pos.y = data[playerId].pos.y;
       }
       let collidedSpears = this.game.ThrowWEPC.otherCollidedSpears; //Handle spears that have collided with something
       for (let playerID in collidedSpearPositions) {
@@ -256,7 +263,7 @@ export default class PlayerController {
           this.game.ThrowWEPC.handleCollidedSpearData(Number(playerID), {...spearData, id: Number(spearID)});
         }
       }
-      this.game.cameras.main.startFollow(global.playerRectangles[this.id], true, 0.5, 0.5, -100, 350);
+      this.game.cameras.main.startFollow(global.playersData[this.id].body, true, 0.5, 0.5, -100, 350);
 
     });
 

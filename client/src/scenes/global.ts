@@ -1,5 +1,5 @@
 export default {
   ground: 900,
-  playerRectangles: {} as { [id: number]: Phaser.GameObjects.Rectangle },
+  playersData: {} as { [id: number | string]: {body: Phaser.GameObjects.Rectangle, grapplingPos: GameObject | undefined} },
   equiped: 'spear',
 }

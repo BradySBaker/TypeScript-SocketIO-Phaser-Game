@@ -8,7 +8,7 @@ type GameObject = {
 let playerCount: number = 0;
 let projectileCount: number = 0;
 
-let playerPositions: {[playerId: number]: GameObject} = {};
+let playerData: {[playerId: number]: {pos: GameObject, grapplePos: GameObject | undefined}} = {};
 let projectilePositions: {[playerId: number]: {direction: string, pos: GameObject, startPos: GameObject, playerId: number}} = {};
 let spearPositions: {[playerId: number]: {[spearID: number]: {pos: GameObject, angle: number}}} = {};
 let collidedSpearPositions: {[playerId: number]: {[spearID: number]: {stuckPos: GameObject, angle: number, collidedPlayerID: number}}} = {};
@@ -40,20 +40,20 @@ setInterval(() => {
 io.on('connection', (socket: Socket) => {
   console.log(socket.id + 'connected');
   let playerId = playerCount;
-  playerPositions[playerId] = {x: 500, y: 500 };
-  io.to(socket.id).emit('playerData', playerPositions, playerId, collidedSpearPositions);
-  io.emit('newPlayer', playerPositions[playerId], playerId);
+  playerData[playerId] = {pos: {x: 500, y: 500}, grapplePos: undefined };
+  io.to(socket.id).emit('playerData', playerData, playerId, collidedSpearPositions);
+  io.emit('newPlayer', playerId, playerData[playerId]);
   playerCount++;
 
-  socket.on('updatePosition', (pos: GameObject) => { //recieved Game Object position and sends it to all clients
-    playerPositions[playerId] = pos;
-    io.emit('updatePosition', pos, playerId);
+  socket.on('updatePosition', (data: {pos: GameObject, grapplePos: GameObject | undefined}) => { //recieved Game Object position and sends it to all clients
+    playerData[playerId] = data;
+    io.emit('updatePosition', data, playerId);
   })
 
   socket.on('disconnect', () => {
     console.log(`Game Object ${playerId} disconnected`);
     socket.disconnect(true);
-    delete playerPositions[playerId];
+    delete playerData[playerId];
     io.emit('deletePlayer', playerId);
   });
 
@@ -63,8 +63,8 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('playerHit', (id) => {
-    if (playerPositions[id]) {
-      delete (playerPositions[id]);
+    if (playerData[id]) {
+      delete (playerData[id]);
       io.emit('deletePlayer', id);
     }
   });
