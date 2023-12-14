@@ -6,7 +6,6 @@ export default class GrappleHandler {
   game: Game;
   grappleHook!: Phaser.GameObjects.Sprite;
   graphics: Phaser.GameObjects.Graphics;
-  graphicsClear = true;
   grappleCheckCircle!: Phaser.GameObjects.Ellipse;
   grapplePoint: {x: number, y: number} = {x: 0, y: 0};
   collision = false;
@@ -19,6 +18,7 @@ export default class GrappleHandler {
   speed = 0;
   prevSide!: number;
   dampening!: number;
+  ropes: {[id: number | string]: {pos: GameObject, grapplePos: GameObject}} = {};
 
   constructor(game: Game) {
     this.game = game;
@@ -40,13 +40,15 @@ export default class GrappleHandler {
     return ({x: mouseWorldX, y: mouseWorldY})
   }
 
-  drawRope(playerPos: GameObject, grapplePoint: GameObject) {
+  drawRopes() {
     this.graphics.clear();
-    this.graphics.beginPath();
-    this.graphics.moveTo(playerPos.x, playerPos.y);
-    this.graphics.lineTo(grapplePoint.x, grapplePoint.y);
-    this.graphics.strokePath();
-    this.graphicsClear = false;
+    for (let id in this.ropes) {
+      this.graphics.beginPath();
+      this.graphics.moveTo(this.ropes[id].pos.x, this.ropes[id].pos.y);
+      this.graphics.lineTo(this.ropes[id].grapplePos.x, this.ropes[id].grapplePos.y);
+      this.graphics.strokePath();
+    }
+
   }
 
   handleGrapple() {
@@ -104,7 +106,7 @@ export default class GrappleHandler {
 
       playerC.setPosition(newX, newY);
 
-      this.drawRope(playerC.player.pos, this.grapplePoint);
+      this.ropes[playerC.id] = {pos: {x: newX, y: newY}, grapplePos: this.grapplePoint};
 
       let targetGrappleRad = Phaser.Math.Angle.Between(
         this.grappleHook.x, this.grappleHook.y,

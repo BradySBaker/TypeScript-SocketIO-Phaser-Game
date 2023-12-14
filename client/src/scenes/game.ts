@@ -84,6 +84,7 @@ export default class Game extends Phaser.Scene {
     this.PlayerController.handleMovement();
     this.PlayerController.interpolatePlayerPositions();
     this.ThrowWEPC.handleOtherCollidedSpears();
+    this.GrappleHandler.drawRopes();
     this.handleBackgrounds();
     this.UIHandler.handleSelectButton();
   }

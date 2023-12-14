@@ -170,7 +170,6 @@ export default class ThrowWEPC {
           delete this.otherCollidedSpears[playerID][spearID];
           continue;
         }
-        console.log(spearData.collidedPlayerID);
         spearData.spear.x = global.playersData[spearData.collidedPlayerID].body.x - spearData.stuckPos.x/spearOffset;
         spearData.spear.y = global.playersData[spearData.collidedPlayerID].body.y - spearData.stuckPos.y;
       }

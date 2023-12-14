@@ -224,10 +224,7 @@ export default class PlayerController {
     this.socket.on('updatePosition', (data: {pos: GameObject, grapplePos: GameObject | undefined}, id: number) => { //Handle player update
         this.playersToMove[id] = data.pos;
         if (data.grapplePos) {
-          this.game.GrappleHandler.drawRope(data.pos, data.grapplePos);
-        } else if (!this.game.GrappleHandler.graphicsClear) {
-          this.game.GrappleHandler.graphics.clear();
-          this.game.GrappleHandler.graphicsClear = true;
+          this.game.GrappleHandler.ropes[id] = {pos: data.pos, grapplePos: data.grapplePos};
         }
     });
 
