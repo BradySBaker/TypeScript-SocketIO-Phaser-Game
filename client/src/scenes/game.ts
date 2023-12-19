@@ -3,7 +3,7 @@ import ProjectileController from './controllers/ProjectileController.js';
 import PlayerController from './controllers/PlayerController.js';
 import ThrowWEPC from "./controllers/ThrowWEPC.js";
 import GrappleHandler from "./controllers/GrappleHandler.js";
-import PlatformHandler from "./objects/PlatformHandler.js";
+import TerrainHandler from "./objects/TerrainHandler.js";
 import UIHandler from "./objects/UIHandler.js";
 
 import global from './global.ts';
@@ -32,7 +32,7 @@ export default class Game extends Phaser.Scene {
   ProjectileController!: ProjectileController;
   ThrowWEPC!: ThrowWEPC;
   GrappleHandler!: GrappleHandler;
-  PlatformHandler!: PlatformHandler;
+  TerrainHandler!: TerrainHandler;
   UIHandler!: UIHandler;
 
 
@@ -59,11 +59,10 @@ export default class Game extends Phaser.Scene {
     this.GrappleHandler = new GrappleHandler(this);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
     this.ThrowWEPC.handleIncomingSpearData();
-    this.PlatformHandler = new PlatformHandler(this);
+    this.TerrainHandler = new TerrainHandler(this);
     this.UIHandler = new UIHandler(this);
 
     this.UIHandler.draw();
-    this.PlatformHandler.spawnPlatforms();
 
     this.physics.world.setBoundsCollision(true);
 
@@ -87,6 +86,7 @@ export default class Game extends Phaser.Scene {
     this.GrappleHandler.drawRopes();
     this.handleBackgrounds();
     this.UIHandler.handleSelectButton();
+    this.TerrainHandler.spawnPlatforms();
   }
 
 
@@ -129,12 +129,12 @@ export default class Game extends Phaser.Scene {
 	}
 
 	handleBackgrounds() {
-    if (!global.playersData[this.PlayerController.id] || !global.playersData[this.PlayerController.id].body) {
+    if (!global.curPlayerData.body) {
       return;
     }
 		for (let i =0 ; i< this.backgrounds.length; i++) {
 			const bg = this.backgrounds[i];
-			bg.sprite.tilePositionX = global.playersData[this.PlayerController.id].body.x * bg.ratioX/1.4;
+			bg.sprite.tilePositionX = global.curPlayerData.body.x * bg.ratioX/1.4;
 		}
 	}
 
