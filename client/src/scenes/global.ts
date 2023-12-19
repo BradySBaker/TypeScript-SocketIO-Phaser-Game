@@ -1,6 +1,6 @@
 export default {
   ground: 900,
-  playersData: {} as { [id: number | string]: {body: Phaser.GameObjects.Rectangle, grapplingPos: GameObject | undefined} },
+  playersData: {} as { [id: number | string]: {body: MatterJS.BodyType, grapplingPos: GameObject | undefined} },
   equiped: 'spear',
-  curPlayerData: {} as {body: Phaser.GameObjects.Rectangle, grapplingPos: GameObject | undefined, id: number | string},
+  curPlayerData: {} as {body: MatterJS.BodyType, grapplingPos: GameObject | undefined, id: number | string},
 }

@@ -23,14 +23,14 @@ export default class GrappleHandler {
     this.game = game;
     this.graphics = game.add.graphics();
     this.grappleCheckCircle = game.add.ellipse(0, 0, 50, 50, 0xFFFFFF, 1).setDepth(1).setAlpha(0);
-    game.physics.add.existing(this.grappleCheckCircle);
+    // game.physics.add.existing(this.grappleCheckCircle);
   }
 
   handlePosition(id: number | string) {
     if (!this.grappleHook) {
       this.grappleHook = this.game.add.sprite(0, 0, 'grapple').setOrigin(0, 0.5).setDepth(1);
     }
-    this.grappleHook.setPosition(global.playersData[id].body.x, global.playersData[id].body.y);
+    this.grappleHook.setPosition(global.playersData[id].body.position.x, global.playersData[id].body.position.y);
   }
 
   getMouseWorld() {
@@ -105,7 +105,7 @@ export default class GrappleHandler {
 
       playerC.setPosition(newX, newY);
 
-      this.ropes[playerC.id] = {pos: {x: newX, y: newY}, grapplePos: this.grapplePoint};
+      this.ropes[global.curPlayerData.id] = {pos: {x: newX, y: newY}, grapplePos: this.grapplePoint};
 
       let targetGrappleRad = Phaser.Math.Angle.Between(
         this.grappleHook.x, this.grappleHook.y,
@@ -123,12 +123,12 @@ export default class GrappleHandler {
     this.grappleCheckCircle.setPosition(mousePos.x, mousePos.y)
 
     let collision;
-    collision = this.game.physics.overlap(this.grappleCheckCircle, this.game.TerrainHandler.platformGroup, (circle, platform: Phaser.GameObjects.Rectangle) => {
-      if (Math.abs(mousePos.y - platform.y) <= 50) {
-        this.grappleCheckCircle.alpha = 1;
-        this.grappleCheckCircle.y = platform.y + this.grappleCheckCircle.width/2;
-      }
-    });
+    // collision = this.game.physics.overlap(this.grappleCheckCircle, this.game.TerrainHandler.platformGroup, (circle, platform: Phaser.GameObjects.Rectangle) => {
+    //   if (Math.abs(mousePos.y - platform.y) <= 50) {
+    //     this.grappleCheckCircle.alpha = 1;
+    //     this.grappleCheckCircle.y = platform.y + this.grappleCheckCircle.width/2;
+    //   }
+    // });
     if (!collision) {
       this.grappleCheckCircle.alpha = 0;
     }

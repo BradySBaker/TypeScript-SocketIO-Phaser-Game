@@ -14,7 +14,7 @@ export default class TerrainHandler {
   max = 1000;
   constructor(game: Game) {
     this.game = game;
-    this.platformGroup = game.physics.add.group({classType: Phaser.GameObjects.Rectangle});
+    // this.platformGroup = game.physics.add.group({classType: Phaser.GameObjects.Rectangle});
   }
 
   calculateCorner() {
@@ -29,7 +29,7 @@ export default class TerrainHandler {
     if (!player) {
       return;
     }
-    if (this.prevCorner && this.prevCorner.x - player.x >= 40) {
+    if (this.prevCorner && this.prevCorner.x - player.position.x >= 40) {
       return;
     }
 

@@ -64,7 +64,7 @@ export default class Game extends Phaser.Scene {
 
     this.UIHandler.draw();
 
-    this.physics.world.setBoundsCollision(true);
+    // this.physics.world.setBoundsCollision(true);
 
 
     socket.on('deleteProjectile', (id) => {
@@ -134,7 +134,7 @@ export default class Game extends Phaser.Scene {
     }
 		for (let i =0 ; i< this.backgrounds.length; i++) {
 			const bg = this.backgrounds[i];
-			bg.sprite.tilePositionX = global.curPlayerData.body.x * bg.ratioX/1.4;
+			bg.sprite.tilePositionX = global.curPlayerData.body.position.x * bg.ratioX/1.4;
 		}
 	}
 
