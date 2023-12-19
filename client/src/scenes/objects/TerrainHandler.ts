@@ -36,38 +36,31 @@ export default class TerrainHandler {
   //   });
   // }
 
-  generateChunk(player: Phaser.GameObjects.Rectangle, xDir: number) {
+  generateChunk(player: Phaser.GameObjects.Rectangle) {
     this.deleteChunk();
 
     let random = this.rng();
-    this.prevRandoms[this.curChunk] = [];
+    this.prevRandoms[this.curChunk] = []
 
     let yDir = random > .5 ? 1 : -1;
-    let prevBlock = xDir > 0 ? this.prevBlock ? this.prevBlock : {x: player.x, y: global.ground} : this.firstBlock;
+    let prevY = this.prevBlock ? this.prevBlock.y : global.ground;
     for (let i = 0; i < this.chunkLength; i++) {
       this.prevRandoms[this.curChunk].push(random);
       let moveY = random < .5 ? 0 : 1;
-      let yOffset = moveY * yDir * 50;
-      let curRect = this.game.add.rectangle(prevBlock.x + 50 * xDir, prevBlock.y + yOffset, 50, 50, 0xfffff);
+      prevY += moveY * yDir * 50;
+      let curRect = this.game.add.rectangle(player.x + (i * 51), prevY, 50, 50, 0xfffff);
       this.prevChunk.push(curRect);
-      prevBlock = curRect;
+      prevY = curRect.y;
       if (i === this.chunkLength - 1) {
-        if (xDir > 0) {
-          this.prevBlock = curRect;
-        } else {
-          this.firstBlock = curRect;
-        }
-        this.curChunk += xDir > 1 ? 1 : -1;
+        this.prevBlock = curRect;
+        return;
       }
       if (i === 0) {
-        if (xDir > 0) {
-          this.firstBlock = curRect;
-        } else {
-          this.prevBlock = curRect;
-        }
+        this.firstBlock = curRect;
       }
       random = this.rng();
     }
+    this.curChunk++;
   }
 
   spawnChunk() {
@@ -76,14 +69,13 @@ export default class TerrainHandler {
       return;
     }
     if (!this.prevBlock) {
-      this.generateChunk(player, 1);
+      this.generateChunk(player);
       return;
     }
-    console.log(player.x - this.firstBlock.x);
     if (this.prevBlock.x - player.x < 10) { //Forwards generate
-      this.generateChunk(player, 1);
-    } else if (player.x - this.firstBlock.x < -80) { //Backward Generate
-      this.generateChunk(player, -1);
+      this.generateChunk(player);
+    } else if (player.x - this.prevBlock.x < 10) { //Backward Generate
+      // this.generatePrevChunck(player);
     }
   }
 }
