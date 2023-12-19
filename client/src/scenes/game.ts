@@ -86,7 +86,7 @@ export default class Game extends Phaser.Scene {
     this.GrappleHandler.drawRopes();
     this.handleBackgrounds();
     this.UIHandler.handleSelectButton();
-    this.TerrainHandler.spawnPlatforms();
+    this.TerrainHandler.spawnChunk();
   }
 
 

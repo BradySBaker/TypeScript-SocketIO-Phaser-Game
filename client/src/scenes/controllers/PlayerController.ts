@@ -131,7 +131,7 @@ export default class PlayerController {
     } // ==
 
     if (!this.ground) {
-      this.move.vx *= .99 ** this.game.deltaTime;
+      this.move.vx *= .9 ** this.game.deltaTime;
     } else if (this.sliding) {
       this.move.vx *= .95 ** this.game.deltaTime;
     } else {
