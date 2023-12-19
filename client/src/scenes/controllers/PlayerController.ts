@@ -24,6 +24,8 @@ export default class PlayerController {
   // @ts-ignore
   spaceKey!: Phaser.Input.Keyboard.KeyCodes;
 
+  sliding = false;
+
   // @ts-ignore
   constructor(game: Game, socket: Socket) {
     this.game = game;
@@ -129,17 +131,24 @@ export default class PlayerController {
       }
     } // ==
 
-    if (this.cursors.right.isDown ) {
-      this.player.direction = 'right';
-      this.move.vx = 4;
-    } else if (this.cursors.left.isDown) {
-      this.player.direction = 'left';
-      this.move.vx = -4;
-    } else if (!this.ground) {
-      this.move.vx *= .99;
+    if (!this.ground) {
+      this.move.vx *= .99 ** this.game.deltaTime;
+    } else if (this.sliding) {
+      this.move.vx *= .95 ** this.game.deltaTime;
     } else {
       this.move.vx = 0;
     }
+
+    if (this.cursors.right.isDown ) {
+      this.player.direction = 'right';
+      this.move.vx = 7;
+      this.sliding = false;
+    } else if (this.cursors.left.isDown) {
+      this.player.direction = 'left';
+      this.move.vx = -7;
+      this.sliding = false;
+    }
+
     if (this.spaceKey.isDown && this.ground) {
 			this.prevJump = this.game.time.now;
       this.move.vy = -20;
@@ -223,8 +232,11 @@ export default class PlayerController {
 
     this.socket.on('updatePosition', (data: {pos: GameObject, grapplePos: GameObject | undefined}, id: number) => { //Handle player update
         this.playersToMove[id] = data.pos;
+        let ropes = this.game.GrappleHandler.ropes;
         if (data.grapplePos) {
-          this.game.GrappleHandler.ropes[id] = {pos: data.pos, grapplePos: data.grapplePos};
+          ropes[id] = {pos: data.pos, grapplePos: data.grapplePos};
+        } else if (ropes[id]) {
+          delete ropes[id];
         }
     });
 
