@@ -58,6 +58,7 @@ export default class GrappleHandler {
         return;
       }
       const playerC = this.game.PlayerController;
+      playerC.sliding = true;
       const xDistance = this.grapplePoint.x - playerC.player.pos.x;
       let curSide = xDistance/Math.abs(xDistance);
       if (this.grappleTime === 0) { //Start
@@ -69,17 +70,17 @@ export default class GrappleHandler {
         playerC.move.vy = 0;
         this.speed = 0;
         this.prevSide = this.startSide;
-        this.dampening = 0.99;
+        this.dampening = 0.95;
       }
       if (curSide === this.startSide && this.dampening > .1) {
-        this.speed -= .002 * this.startSide * this.game.deltaTime;
+        this.speed -= .003 * this.startSide * this.game.deltaTime;
       } else if (this.dampening > .1) {
-        this.speed += .002 * this.startSide * this.game.deltaTime;
+        this.speed += .003 * this.startSide * this.game.deltaTime;
       }
 
       if (this.prevSide !== curSide) {
         this.dampening -= .02 * this.game.deltaTime;
-        this.speed *= this.dampening * this.game.deltaTime;
+        this.speed *= this.dampening ** this.game.deltaTime;
         this.prevSide = curSide;
         if (this.dampening < .1) {
           this.speed = 0;
@@ -91,12 +92,11 @@ export default class GrappleHandler {
       let newX = this.grapplePoint.x - offsetAngleX * this.ropeLength;
       let newY =  this.grapplePoint.y - Math.sin(this.angle) * this.ropeLength;
 
-      playerC.move.vy = Math.sin(this.angle) * this.ropeLength/50;
+      playerC.move.vy = Math.sin(this.angle) * this.ropeLength/40;
 
       let direction = -this.speed/Math.abs(this.speed);
 
-      let curSpeed = Math.abs(((newX - playerC.player.pos.x)/this.grappleTime)/2);
-
+      let curSpeed = Math.abs(((newX - playerC.player.pos.x)/this.grappleTime));
       if (curSpeed < 30) {
         playerC.move.vx = direction * curSpeed;
       } else {
