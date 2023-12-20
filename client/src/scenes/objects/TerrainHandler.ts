@@ -8,11 +8,10 @@ export default class TerrainHandler {
   blockGroup!: Phaser.GameObjects.Group;
   rng = seedrandom('random');
   prevBlock!: Phaser.GameObjects.Rectangle;
-  firstBlock!: Phaser.GameObjects.Rectangle;
   mountain = {up: false, down: false};
-  chunkLength = 10;
+  chunkLength = 4;
   prevChunks: {'prev': Phaser.GameObjects.Rectangle[], 'cur': Phaser.GameObjects.Rectangle[]} = {'prev': [], 'cur': []};
-  prevRandoms: {[chunk: number]: {x: number, y: number}} = {};
+  prevBlockPos: {[chunk: number]: {x: number, y: number}[]} = {};
   curChunk = 0;
 
   constructor(game: Game) {
@@ -20,21 +19,23 @@ export default class TerrainHandler {
     this.blockGroup = game.physics.add.group({classType: Phaser.GameObjects.Rectangle});
   }
 
-  deleteChunk() {
-    for (let i = 0; i < this.prevChunks['prev'].length; i++) {
-      let curBlock = this.prevChunks['prev'][i];
-      curBlock.destroy();
+  deleteChunk(type: 'prev' | 'cur' = 'prev') {
+    for (let i = 0; i < this.prevChunks[type].length; i++) {
+      this.prevChunks[type][i].destroy();
     }
-    this.prevChunks['prev'] = [];
-    this.prevChunks['prev'].concat(this.prevChunks['cur']);
+    this.prevChunks[type] = [];
+    let other: 'prev' | 'cur' = type === 'prev' ? 'cur' : 'prev';
+    this.prevChunks[type] = this.prevChunks[type].concat(this.prevChunks[other]);
+    this.prevChunks[other] = [];
   }
 
   generateBlock(random: number, yDir: number, prevBlock: GameObject): Phaser.GameObjects.Rectangle {
     let moveY = random < .5 ? 0 : 1;
     prevBlock.y += moveY * yDir * 50;
     let curRect = this.game.add.rectangle(prevBlock.x + 50, prevBlock.y, 50, 50, 0xfffff);
+    this.prevBlockPos[this.curChunk].push({x: prevBlock.x + 50, y: prevBlock.y});
     let index = 'prev';
-    if (this.prevChunks['prev'].length > 9) {
+    if (this.prevChunks['prev'].length > this.chunkLength - 1) {
       index = 'cur';
     }
     this.prevChunks[index].push(curRect); //fix me
@@ -44,11 +45,26 @@ export default class TerrainHandler {
   generateChunks() {
     this.deleteChunk();
     for (let i = 0; i < 2; i++) {
-      this.generateChunk(); //Fix me
+      this.generateChunk();
     }
   }
 
+  generatePrevChunck() {
+    if (!this.prevBlockPos[this.curChunk - 1]) {
+      return;
+    }
+    this.curChunk--;
+    this.prevBlockPos[this.curChunk].forEach((curPos,idx) => {
+      let curRect = this.game.add.rectangle(curPos.x, curPos.y, 50, 50, 0xfffff);
+      this.prevChunks['prev'][idx] = curRect;
+      // if (idx === 0) {
+      //   this.prevBlock = curRect;
+      // }
+    })
+  }
+
   generateChunk() {
+    this.prevBlockPos[this.curChunk] = [];
     let random = this.rng();
 
     let yDir = random > .5 ? 1 : -1;
@@ -60,9 +76,6 @@ export default class TerrainHandler {
         this.prevBlock = curRect;
         this.curChunk++;
         return;
-      }
-      if (i === 0) {
-        this.firstBlock = curRect;
       }
       random = this.rng();
     }
@@ -79,8 +92,9 @@ export default class TerrainHandler {
     }
     if (this.prevBlock.x - player.x < 0) { //Forwards generate
       this.generateChunks();
-    } else if (player.x - this.firstBlock.x < -50) { //Backward Generate
-      // this.generateChunks();
+    } else if (player.x - this.prevChunks['prev'][0].x < -50) { //Backward Generate
+      this.deleteChunk('cur');
+      this.generatePrevChunck();
     }
   }
 }
