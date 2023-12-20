@@ -165,7 +165,7 @@ export default class ThrowWEPC {
         if (spearData.collidedPlayerID === undefined) { //handle ground spear
           continue;
         }
-        if (!global.playersData[spearData.collidedPlayerID].body) { //Handle left player
+        if (!global.playersData[spearData.collidedPlayerID]) { //Handle left player
           spearData.spear.destroy();
           delete this.otherCollidedSpears[playerID][spearID];
           continue;

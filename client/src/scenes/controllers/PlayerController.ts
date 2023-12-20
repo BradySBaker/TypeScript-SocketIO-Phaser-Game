@@ -29,7 +29,7 @@ export default class PlayerController {
   constructor(game: Game, socket: Socket) {
     this.game = game;
     this.socket = socket;
-    this.player = {direction: 'right', pos: {x: 0, y: 0}};
+    this.player = {direction: 'right', pos: {x: 500, y: 0}};
     // @ts-ignore
     this.spaceKey = game.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
   }
@@ -269,6 +269,7 @@ export default class PlayerController {
           this.game.ThrowWEPC.handleCollidedSpearData(Number(playerID), {...spearData, id: Number(spearID)});
         }
       }
+      this.sentPos = {x: data[id].pos.x, y: data[id].pos.y};
       global.curPlayerData = {...global.playersData[id], id};
       this.game.cameras.main.startFollow(global.curPlayerData.body, true, 0.5, 0.5, -100, 350);
 
