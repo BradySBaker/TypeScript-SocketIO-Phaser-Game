@@ -7,7 +7,7 @@ export default class PlayerController {
   move = {vy: 0, vx: 0, g: .9};
   prevJump = 0;
 
-  ground = false;
+  ground = true;
 
   shootTimer = 0;
   playersToMove: {[id: number]: GameObject} = {};
@@ -73,9 +73,9 @@ export default class PlayerController {
       } else {
         this.player.pos.y += curPlayer.y > otherPlayer.y ? separationY : -separationY;
       }
-
-  });
+    });
   }
+
 
   setPosition(x: number, y: number, velocity = false) {
     if (velocity) {
@@ -95,6 +95,7 @@ export default class PlayerController {
     return Math.abs(this.move.vy /= Math.pow(this.move.g, this.game.deltaTime));
   }
 
+
   handleMovement() {
     //Handle equips ==
     if (this.game.ThrowWEPC.spear && global.equiped === 'spear') {
@@ -113,6 +114,7 @@ export default class PlayerController {
     // ==
 
     this.handleGround();
+
     if (this.game.GrappleHandler.grappling) {
       return;
     }
@@ -165,23 +167,31 @@ export default class PlayerController {
 
 
 
-
   handleGround() {
-
     if (!global.curPlayerData.body) {
       return;
     }
-    if (this.player.pos.y >= global.ground) {
+    let blockY: number;
+    let groundCollision = this.game.physics.overlap(global.curPlayerData.body, this.game.TerrainHandler.blockGroup, (player, block) => {
+      if (!blockY) {
+        blockY = block.y - block.height/2 - global.curPlayerData.body.height/2;
+      }
+    });
+
+    if (groundCollision) {
       this.ground = true;
-        this.player.pos.y = global.ground;
-        this.move.vy = 0;
-        if (this.game.GrappleHandler.grappling) { //Cancel grapple
-          this.game.GrappleHandler.grappling = false;
-        }
+      global.curPlayerData.body.y = blockY;
+      this.player.pos.y = blockY;
+      this.move.vy = 0;
+      if (this.game.GrappleHandler.grappling) { //Cancel grapple
+        this.game.GrappleHandler.grappling = false;
+      }
     } else {
       this.ground = false;
     }
   }
+
+
 
 
 
@@ -208,6 +218,8 @@ export default class PlayerController {
       global.playersData[id].body.y = curPos.y + (newPos.y - curPos.y) * speed;
     }
   }
+
+
 
 
 
@@ -271,6 +283,7 @@ export default class PlayerController {
       }
       this.sentPos = {x: data[id].pos.x, y: data[id].pos.y};
       global.curPlayerData = {...global.playersData[id], id};
+
       this.game.cameras.main.startFollow(global.curPlayerData.body, true, 0.5, 0.5, -100, 350);
 
     });

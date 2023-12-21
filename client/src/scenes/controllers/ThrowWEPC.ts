@@ -100,12 +100,17 @@ export default class ThrowWEPC {
 
 
     for (let id in this.curThrownSpears) {
+      if (!this.curSpearData[id]) {
+        delete this.curThrownSpears[id];
+        return;
+      }
       let spearObj = this.curThrownSpears[id];
-      if (spearObj.spear.body.y - 50 >= global.ground) { //If spear touches ground
+      let groundCollision = this.game.physics.overlap(spearObj.spear.body, this.game.TerrainHandler.blockGroup);
+      if (groundCollision) { //If spear touches ground
         if (this.curSpearData[id]) {
           delete this.curSpearData[id];
           spearObj.spear.body.destroy();
-          this.socket.emit('updateCollidedSpear', player.id, {id: id, stuckPos: {x: spearObj.spear.x, y: spearObj.spear.y}, angle: spearObj.spear.angle, collidedPlayerID: undefined});
+          this.socket.emit('updateCollidedSpear', global.curPlayerData.id, {id: id, stuckPos: {x: spearObj.spear.x, y: spearObj.spear.y}, angle: spearObj.spear.angle, collidedPlayerID: undefined});
         }
         continue;
       }
@@ -120,7 +125,7 @@ export default class ThrowWEPC {
         if (this.curSpearData[id]) {
           delete this.curSpearData[id];
           spearObj.spear.body.destroy();
-          this.socket.emit('updateCollidedSpear', player.id, {id: id, stuckPos: {x: spearObj.stuckPos.x, y: spearObj.stuckPos.y}, angle: spearObj.spear.angle, collidedPlayerID: spearObj.collidedPlayerID});
+          this.socket.emit('updateCollidedSpear', global.curPlayerData.id, {id: id, stuckPos: {x: spearObj.stuckPos.x, y: spearObj.stuckPos.y}, angle: spearObj.spear.angle, collidedPlayerID: spearObj.collidedPlayerID});
         }
         continue;
       }
