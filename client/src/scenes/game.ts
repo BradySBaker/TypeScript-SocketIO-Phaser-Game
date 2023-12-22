@@ -107,7 +107,7 @@ export default class Game extends Phaser.Scene {
       ratioX: 0.05,
       sprite: this.add.tileSprite(-this.scale.width/3, 100, this.scale.width * 1.6, 450, 'mountains2')
           .setOrigin(0, 0)
-          .setScrollFactor(0, .1)
+          .setScrollFactor(0, .05)
           .setScale(2)
     });
 
@@ -115,16 +115,8 @@ export default class Game extends Phaser.Scene {
         ratioX: 0.1,
         sprite: this.add.tileSprite(-this.scale.width/3, 200, this.scale.width * 1.6, 450, 'mountains1')
             .setOrigin(0, 0)
-            .setScrollFactor(0, .2)
+            .setScrollFactor(0, .1)
             .setScale(2)
-    });
-
-    this.backgrounds.push({
-        ratioX: 1,
-        sprite: this.add.tileSprite(-this.scale.width/3, 400, this.scale.width * 1.6, 600, 'ground')
-            .setOrigin(0, 0)
-            .setScrollFactor(0, 1)
-            .setScale(1.4)
     });
 
 	}

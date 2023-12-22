@@ -10,7 +10,7 @@ export default class TerrainHandler {
   prevBlock!: GameObject;
   prevChunks: {[chunk: number]: Phaser.GameObjects.TileSprite[]} = {};
   prevChunkData: {[chunk: number]: GameObject[]} = {};
-  chunkDetails = {curChunk: 0, lastChunk: 0, chunkAmount: 2, chunkLength: 6};
+  chunkDetails = {curChunk: 0, lastChunk: 0, chunkAmount: 5, chunkLength: 10};
   blockDetails = {height: 500, width: 50};
 
   constructor(game: Game) {
@@ -95,11 +95,12 @@ export default class TerrainHandler {
     if (!player) {
       return;
     }
-    if (!this.prevBlock || this.prevBlock.x - player.x < 0) { //Forwards generate
+    let chunkWidth =  this.chunkDetails.chunkLength * this.blockDetails.width * this.chunkDetails.chunkAmount;
+    if (!this.prevBlock || this.prevBlock.x - player.x < chunkWidth/2) { //Forwards generate
       for (let i = 0; i < this.chunkDetails.chunkAmount; i++) {
         this.generateChunk();
       }
-    } else if  (this.prevChunks[this.chunkDetails.lastChunk] && player.x - this.prevChunks[this.chunkDetails.lastChunk][0].x  < 0) { //Backward Generate
+    } else if  (this.prevChunks[this.chunkDetails.lastChunk] && player.x - this.prevChunks[this.chunkDetails.lastChunk][0].x  < chunkWidth/3) { //Backward Generate
       for (let i = 0; i < this.chunkDetails.chunkAmount; i++) {
         this.generatePrevChunk();
       }

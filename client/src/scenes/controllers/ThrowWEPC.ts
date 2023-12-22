@@ -100,24 +100,19 @@ export default class ThrowWEPC {
 
 
     for (let id in this.curThrownSpears) {
-      if (!this.curSpearData[id]) {
-        delete this.curThrownSpears[id];
-        return;
-      }
       let spearObj = this.curThrownSpears[id];
       let groundCollision = this.game.physics.overlap(spearObj.spear.body, this.game.TerrainHandler.blockGroup);
       if (groundCollision) { //If spear touches ground
-        if (this.curSpearData[id]) {
-          delete this.curSpearData[id];
-          spearObj.spear.body.destroy();
-          this.socket.emit('updateCollidedSpear', global.curPlayerData.id, {id: id, stuckPos: {x: spearObj.spear.x, y: spearObj.spear.y}, angle: spearObj.spear.angle, collidedPlayerID: undefined});
-        }
+        delete this.curSpearData[id];
+        delete this.curThrownSpears[id];
+        spearObj.spear.body.destroy();
+        this.socket.emit('updateCollidedSpear', global.curPlayerData.id, {id: id, stuckPos: {x: spearObj.spear.x, y: spearObj.spear.y}, angle: spearObj.spear.angle, collidedPlayerID: undefined});
         continue;
       }
       if (spearObj.collidedPlayerID) { //If spear collided with player
         if (!global.playersData[spearObj.collidedPlayerID]) {
           spearObj.spear.destroy();
-          delete this.curThrownSpears[id];
+          delete this.curSpearData[id];
           continue;
         }
         spearObj.spear.x = global.playersData[spearObj.collidedPlayerID].body.x - spearObj.stuckPos.x;
