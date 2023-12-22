@@ -65,8 +65,6 @@ export default class Game extends Phaser.Scene {
 
     this.UIHandler.draw();
 
-    this.physics.world.setBoundsCollision(true);
-
 
     socket.on('deleteProjectile', (id) => {
       this.ProjectileController.deleteProjectile(id);

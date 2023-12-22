@@ -97,6 +97,7 @@ export default class PlayerController {
 
 
   handleMovement() {
+    this.handleGround();
     //Handle equips ==
     if (this.game.ThrowWEPC.spear && global.equiped === 'spear') {
       this.game.ThrowWEPC.handleWeaponRotation(this.game.ThrowWEPC.spear, this.player, 'spear');
@@ -112,8 +113,6 @@ export default class PlayerController {
     }
     this.game.ThrowWEPC.handleSpearThrow(this.player);
     // ==
-
-    this.handleGround();
 
     if (this.game.GrappleHandler.grappling) {
       return;
@@ -177,11 +176,10 @@ export default class PlayerController {
         blockY = block.y - block.height/2 - global.curPlayerData.body.height/2;
       }
     });
-
     if (groundCollision) {
       this.ground = true;
-      global.curPlayerData.body.y = blockY;
-      this.player.pos.y = blockY;
+      global.curPlayerData.body.y = blockY+5;
+      this.player.pos.y = blockY+5;
       this.move.vy = 0;
       if (this.game.GrappleHandler.grappling) { //Cancel grapple
         this.game.GrappleHandler.grappling = false;
@@ -242,7 +240,6 @@ export default class PlayerController {
     }, 10);
 
     this.socket.on('updatePosition', (data: {pos: GameObject, grapplePos: GameObject | undefined}, id: number) => { //Handle player update
-      console.log(this.playersToMove[id]);
         this.playersToMove[id] = data.pos;
         let ropes = this.game.GrappleHandler.ropes;
         if (data.grapplePos) {
@@ -261,7 +258,6 @@ export default class PlayerController {
       if (id === global.curPlayerData.id) {
         return;
       }
-      console.log('newPlayer')
       global.playersData[id] = {body: this.game.add.rectangle(data.pos.x, data.pos.y, 50, 100, 0xfffff), grapplingPos: data.grapplingPos}
       global.playersData[id].body.name = id;
       this.playerGroup.add(global.playersData[id].body);
