@@ -12,9 +12,11 @@
   "dependencies": {
     "parcel": "^2.9.3",
     "phaser": "^3.60.0",
+    "seedrandom": "^3.0.5",
     "socket.io-client": "^4.7.2"
   },
   "devDependencies": {
+    "@types/seedrandom": "^3.0.8",
     "@types/socket.io": "^3.0.2",
     "browserify-zlib": "^0.2.0",
     "buffer": "^6.0.3",

@@ -1,6 +1,5 @@
 import global from "../global";
 import Game from "../game";
-import { FacebookInstantGamesLeaderboard } from "phaser";
 
 export default class GrappleHandler {
   game: Game;
@@ -27,11 +26,11 @@ export default class GrappleHandler {
     game.physics.add.existing(this.grappleCheckCircle);
   }
 
-  handlePosition(player: Player) {
+  handlePosition(id: number | string) {
     if (!this.grappleHook) {
       this.grappleHook = this.game.add.sprite(0, 0, 'grapple').setOrigin(0, 0.5).setDepth(1);
     }
-    this.grappleHook.setPosition(global.playersData[player.id].body.x, global.playersData[player.id].body.y);
+    this.grappleHook.setPosition(global.playersData[id].body.x, global.playersData[id].body.y);
   }
 
   getMouseWorld() {
@@ -124,7 +123,7 @@ export default class GrappleHandler {
     this.grappleCheckCircle.setPosition(mousePos.x, mousePos.y)
 
     let collision;
-    collision = this.game.physics.overlap(this.grappleCheckCircle, this.game.PlatformHandler.platformGroup, (circle, platform: Phaser.GameObjects.Rectangle) => {
+    collision = this.game.physics.overlap(this.grappleCheckCircle, this.game.TerrainHandler.blockGroup, (circle, platform: Phaser.GameObjects.Rectangle) => {
       if (Math.abs(mousePos.y - platform.y) <= 50) {
         this.grappleCheckCircle.alpha = 1;
         this.grappleCheckCircle.y = platform.y + this.grappleCheckCircle.width/2;

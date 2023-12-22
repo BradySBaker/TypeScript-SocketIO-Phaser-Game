@@ -84,9 +84,9 @@ export default class ThrowWEPC {
     } else if (this.spear && this.spear.x !== player.pos.x) { //Throw spear
       const launchAngleInRadians = Phaser.Math.DegToRad(this.spear.angle);
 
-      this.curThrownSpears[this.curSpearId] = {spear: this.spear, vel: {x: 0, y: 0}};
-      this.spearGroup.add(this.curThrownSpears[this.curSpearId].spear);
+      this.spearGroup.add(this.spear);
 
+      this.curThrownSpears[this.curSpearId] = {spear: this.spear, vel: {x: 0, y: 0}};
       this.curSpearData[this.curSpearId] = {pos: {x: this.spear.x, y: this.spear.y}, angle: this.spear.angle};
 
       this.spear = undefined;
@@ -96,33 +96,39 @@ export default class ThrowWEPC {
       this.curThrownSpears[this.curSpearId].vel.y = verticalVelocity;
       this.curSpearId++;
     }
+    this.handleThrownSpears();
+  }
 
 
-
+  handleThrownSpears() {
     for (let id in this.curThrownSpears) {
       let spearObj = this.curThrownSpears[id];
-      if (spearObj.spear.body.y - 50 >= global.ground) { //If spear touches ground
-        if (this.curSpearData[id]) {
+      let blockY;
+      if (spearObj.spear.body) {
+        let groundCollision = this.game.physics.overlap(spearObj.spear.body, this.game.TerrainHandler.blockGroup);
+        if (groundCollision) { //If spear touches ground
           delete this.curSpearData[id];
-          spearObj.spear.body.destroy();
-          this.socket.emit('updateCollidedSpear', player.id, {id: id, stuckPos: {x: spearObj.spear.x, y: spearObj.spear.y}, angle: spearObj.spear.angle, collidedPlayerID: undefined});
-        }
-        continue;
-      }
-      if (spearObj.collidedPlayerID) { //If spear collided with player
-        if (!global.playersData[spearObj.collidedPlayerID]) {
-          spearObj.spear.destroy();
           delete this.curThrownSpears[id];
+          spearObj.spear.body.destroy();
+          this.socket.emit('updateCollidedSpear', global.curPlayerData.id, {id: id, stuckPos: {x: spearObj.spear.x, y: blockY }, angle: spearObj.spear.angle, collidedPlayerID: undefined});
           continue;
         }
-        spearObj.spear.x = global.playersData[spearObj.collidedPlayerID].body.x - spearObj.stuckPos.x;
-        spearObj.spear.y = global.playersData[spearObj.collidedPlayerID].body.y - spearObj.stuckPos.y;
-        if (this.curSpearData[id]) {
-          delete this.curSpearData[id];
-          spearObj.spear.body.destroy();
-          this.socket.emit('updateCollidedSpear', player.id, {id: id, stuckPos: {x: spearObj.stuckPos.x, y: spearObj.stuckPos.y}, angle: spearObj.spear.angle, collidedPlayerID: spearObj.collidedPlayerID});
+        if (spearObj.collidedPlayerID) { //If spear collided with player
+
+          if (!global.playersData[spearObj.collidedPlayerID]) {
+            spearObj.spear.destroy();
+            delete this.curSpearData[id];
+            continue;
+          }
+          spearObj.spear.x = global.playersData[spearObj.collidedPlayerID].body.x - spearObj.stuckPos.x;
+          spearObj.spear.y = global.playersData[spearObj.collidedPlayerID].body.y - spearObj.stuckPos.y;
+          if (this.curSpearData[id]) {
+            delete this.curSpearData[id];
+            spearObj.spear.body.destroy();
+            this.socket.emit('updateCollidedSpear', global.curPlayerData.id, {id: id, stuckPos: {x: spearObj.stuckPos.x, y: spearObj.stuckPos.y}, angle: spearObj.spear.angle, collidedPlayerID: spearObj.collidedPlayerID});
+          }
+          continue;
         }
-        continue;
       }
       spearObj.spear.x += spearObj.vel.x * this.game.deltaTime;
       spearObj.spear.y += spearObj.vel.y * this.game.deltaTime;
@@ -136,6 +142,9 @@ export default class ThrowWEPC {
         newAngle = (8 / Math.sqrt(spearObj.vel.x)) * this.game.deltaTime;
       } else {
         newAngle = (spearObj.vel.x < 0 ? -.5 : .5) * this.game.deltaTime;
+      }
+      if (isNaN(newAngle)) {
+        continue;
       }
       spearObj.spear.angle += newAngle;
 
@@ -165,7 +174,7 @@ export default class ThrowWEPC {
         if (spearData.collidedPlayerID === undefined) { //handle ground spear
           continue;
         }
-        if (!global.playersData[spearData.collidedPlayerID].body) { //Handle left player
+        if (!global.playersData[spearData.collidedPlayerID]) { //Handle left player
           spearData.spear.destroy();
           delete this.otherCollidedSpears[playerID][spearID];
           continue;

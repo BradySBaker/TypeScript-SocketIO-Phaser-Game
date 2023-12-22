@@ -6,5 +6,4 @@ declare type GameObject = {
 type Player = {
   pos: PlayerPos;
   direction: string;
-  id: number;
 }
