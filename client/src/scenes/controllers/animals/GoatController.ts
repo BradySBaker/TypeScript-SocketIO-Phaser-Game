@@ -1,7 +1,7 @@
 import { Socket } from "socket.io-client";
 import Game from "../../game";
 
-type goat = {container: Phaser.GameObjects.Container, right: boolean, vx: number, randomTimer: number, frontLegForward: true}
+type goat = {container: Phaser.GameObjects.Container, right: boolean, vx: number, randomTimer: number, frontLegForward: boolean}
 
 export default class GoatController {
   game: Game;

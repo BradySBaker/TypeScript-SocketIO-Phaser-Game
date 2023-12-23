@@ -40,7 +40,7 @@ setInterval(() => {
 io.on('connection', (socket: Socket) => {
   console.log(socket.id + 'connected');
   let playerId = playerCount;
-  playerData[playerId] = {pos: {x: 500, y: 500}, grapplePos: undefined };
+  playerData[playerId] = {pos: {x: 500, y: 100}, grapplePos: undefined };
   io.to(socket.id).emit('playerData', playerData, playerId, collidedSpearPositions);
   io.emit('newPlayer', playerId, playerData[playerId]);
   playerCount++;
