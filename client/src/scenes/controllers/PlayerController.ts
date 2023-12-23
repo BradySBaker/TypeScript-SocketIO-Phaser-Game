@@ -52,28 +52,28 @@ export default class PlayerController {
 
     this.retrievePlayerData();
 
-    this.game.physics.add.collider(this.playerGroup, this.playerGroup, (object1, object2) => {
-      let curPlayer;
-      let otherPlayer;
-      if (global.curPlayerData.body === object1) {
-        curPlayer = object1 as Phaser.GameObjects.Rectangle;
-        otherPlayer = object2 as Phaser.GameObjects.Rectangle;
-      } else {
-        curPlayer = object2 as Phaser.GameObjects.Rectangle;
-        otherPlayer = object1 as Phaser.GameObjects.Rectangle;
-      }
+    // this.game.physics.add.collider(this.playerGroup, this.playerGroup, (object1, object2) => {
+    //   let curPlayer;
+    //   let otherPlayer;
+    //   if (global.curPlayerData.body === object1) {
+    //     curPlayer = object1 as Phaser.GameObjects.Rectangle;
+    //     otherPlayer = object2 as Phaser.GameObjects.Rectangle;
+    //   } else {
+    //     curPlayer = object2 as Phaser.GameObjects.Rectangle;
+    //     otherPlayer = object1 as Phaser.GameObjects.Rectangle;
+    //   }
 
-      const overlapRect = Phaser.Geom.Rectangle.Intersection(curPlayer.getBounds(), otherPlayer.getBounds());
+    //   const overlapRect = Phaser.Geom.Rectangle.Intersection(curPlayer.getBounds(), otherPlayer.getBounds());
 
-      let separationX = overlapRect.width / 2;
-      let separationY = overlapRect.height / 2;
+    //   let separationX = overlapRect.width / 2;
+    //   let separationY = overlapRect.height / 2;
 
-      if (overlapRect.width < overlapRect.height) {
-        this.player.pos.x += curPlayer.x > otherPlayer.x ? separationX : -separationX;
-      } else {
-        this.player.pos.y += curPlayer.y > otherPlayer.y ? separationY : -separationY;
-      }
-    });
+    //   if (overlapRect.width < overlapRect.height) {
+    //     this.player.pos.x += curPlayer.x > otherPlayer.x ? separationX : -separationX;
+    //   } else {
+    //     this.player.pos.y += curPlayer.y > otherPlayer.y ? separationY : -separationY;
+    //   }
+    // });
   }
 
 
@@ -140,11 +140,10 @@ export default class PlayerController {
     }
 
     if (this.cursors.right.isDown ) {
-      this.player.direction = 'right';
       this.move.vx = 7;
       this.sliding = false;
     } else if (this.cursors.left.isDown) {
-      this.player.direction = 'left';
+
       this.move.vx = -7;
       this.sliding = false;
     }
