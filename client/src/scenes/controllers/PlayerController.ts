@@ -56,11 +56,11 @@ export default class PlayerController {
       let curPlayer;
       let otherPlayer;
       if (global.curPlayerData.body === object1) {
-        curPlayer = object1 as Phaser.GameObjects.Rectangle;
-        otherPlayer = object2 as Phaser.GameObjects.Rectangle;
+        curPlayer = object1 as Rect;
+        otherPlayer = object2 as Rect;
       } else {
-        curPlayer = object2 as Phaser.GameObjects.Rectangle;
-        otherPlayer = object1 as Phaser.GameObjects.Rectangle;
+        curPlayer = object2 as Rect;
+        otherPlayer = object1 as Rect;
       }
 
       const overlapRect = Phaser.Geom.Rectangle.Intersection(curPlayer.getBounds(), otherPlayer.getBounds());
@@ -171,9 +171,15 @@ export default class PlayerController {
       return;
     }
     let blockY: number;
-    let groundCollision = this.game.physics.overlap(global.curPlayerData.body, this.game.TerrainHandler.blockGroup, (player, block) => {
-      if (!blockY) {
-        blockY = block.y - block.height/2 - global.curPlayerData.body.height/2;
+    const groundCollision = this.game.physics.overlap(global.curPlayerData.body, this.game.TerrainHandler.blockGroup, (player, block) => {
+      const curBlockY = block.y - block.height/2 - global.curPlayerData.body.height/2;
+
+      if (this.player.direction === 'right' && block.x > player.x) { //Fix setting wrong block
+        blockY = curBlockY;
+      } else if (this.player.direction === 'left' && block.x < player.x) {
+        blockY = curBlockY;
+      } else if (!blockY) {
+        blockY = curBlockY
       }
     });
     if (groundCollision) {

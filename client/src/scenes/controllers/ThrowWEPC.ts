@@ -26,7 +26,7 @@ export default class ThrowWEPC {
     this.spearGroup = game.physics.add.group({
       classType: Phaser.GameObjects.Sprite,
       createCallback: ((spear) => {
-        spear.body.setSize(10, 10);
+        spear.body!.setSize(10, 10);
       })
     });
     game.physics.add.overlap(this.spearGroup, this.playerGroup, this.handleSpearCollide, null, this);
@@ -161,7 +161,7 @@ export default class ThrowWEPC {
     }
   }
 
-  handleSpearCollide(spear: Phaser.GameObjects.Sprite, player: Phaser.GameObjects.Rectangle) {
+  handleSpearCollide(spear: Phaser.GameObjects.Sprite, player: Rect) {
     this.curThrownSpears[spear.name].stuckPos = {x: player.x - spear.x, y: player.y - spear.y}
     this.curThrownSpears[spear.name].collidedPlayerID = player.name;
   }

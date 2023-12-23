@@ -4,6 +4,9 @@ import PlayerController from './controllers/PlayerController.js';
 import ThrowWEPC from "./controllers/ThrowWEPC.js";
 import GrappleHandler from "./controllers/GrappleHandler.js";
 import TerrainHandler from "./objects/TerrainHandler.js";
+
+import GoatController from "./controllers/animals/GoatController.js";
+
 import UIHandler from "./objects/UIHandler.js";
 
 import global from './global.ts';
@@ -35,6 +38,8 @@ export default class Game extends Phaser.Scene {
   TerrainHandler!: TerrainHandler;
   UIHandler!: UIHandler;
 
+  GoatController!: GoatController;
+
 
 
   preload() {
@@ -63,6 +68,10 @@ export default class Game extends Phaser.Scene {
     this.TerrainHandler = new TerrainHandler(this);
     this.UIHandler = new UIHandler(this);
 
+    this.GoatController = new GoatController(this, socket);
+
+    this.GoatController.spawn({x: 800, y: 200});
+
     this.UIHandler.draw();
 
 
@@ -86,6 +95,7 @@ export default class Game extends Phaser.Scene {
     this.handleBackgrounds();
     this.UIHandler.handleSelectButton();
     this.TerrainHandler.spawnChunk();
+    this.GoatController.handleGoats();
   }
 
 
