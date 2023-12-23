@@ -140,11 +140,10 @@ export default class PlayerController {
     }
 
     if (this.cursors.right.isDown ) {
-      this.player.direction = 'right';
       this.move.vx = 7;
       this.sliding = false;
     } else if (this.cursors.left.isDown) {
-      this.player.direction = 'left';
+
       this.move.vx = -7;
       this.sliding = false;
     }

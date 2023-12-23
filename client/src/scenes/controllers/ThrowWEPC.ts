@@ -67,12 +67,13 @@ export default class ThrowWEPC {
   }
 
   handleSpearThrow(player: Player) {
-    if (!this.spear && this.game.input.activePointer.isDown && global.equiped === 'spear') {
+    if (!this.spear && this.game.input.activePointer.isDown && global.equiped === 'spear') { //Spawn spear
       this.spear = this.game.add.sprite(player.pos.x, player.pos.y, 'spear').setOrigin(0, .5).setDepth(1);
       this.spear.name = this.curSpearId.toString();
       if (player.direction === 'left') {
         this.spear.setFlipY(true);
       }
+      this.handleWeaponRotation(this.spear, player, 'spear'); //Rotate right away
     }
 
     if (this.game.input.activePointer.isDown && this.spear && global.equiped === 'spear') { //Ready spear
