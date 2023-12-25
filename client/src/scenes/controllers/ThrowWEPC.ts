@@ -12,6 +12,7 @@ export default class ThrowWEPC {
   spear?: Phaser.GameObjects.Sprite;
   curSpearData: {[id: number]: {pos: GameObject, angle: number, collidedPlayerID: number}} = {}
   curThrownSpears: {[id: number]: {spear: Phaser.GameObjects.Sprite, vel: GameObject, collidedPlayerID: number, stuckPos: GameObject, collider: Phaser.GameObjects.Rectangle}} = {};
+  
   otherThrownSpears: {[playerID: number]: {[spearID: number]: Phaser.GameObjects.Sprite}} = {};
   otherCollidedSpears: {[playerID: number]: {[spearID: number]: {collidedPlayerID: number, stuckPos: GameObject, spear: Phaser.GameObjects.Sprite}}} = {};
   curSpearId = 0;
