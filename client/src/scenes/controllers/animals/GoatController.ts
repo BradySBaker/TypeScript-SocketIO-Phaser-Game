@@ -2,7 +2,7 @@ import { Socket } from "socket.io-client";
 import Game from "../../game";
 import global from "../../global";
 
-type goat = {container: Phaser.GameObjects.Container, right: boolean, vx: number, randomTimer: number, frontLegForward: boolean};
+type goat = {container: Phaser.GameObjects.Container, vx: number, randomTimer: number};
 
 export default class GoatController {
   game: Game;
@@ -36,7 +36,7 @@ export default class GoatController {
     let container = this.createGoat(pos);
     let id = this.goatCount + '' + global.curPlayerData.id;
 
-    this.curGoats[id] = {container, right: true, vx: 0, randomTimer: 300, frontLegForward: false};
+    this.curGoats[id] = {container, vx: 0, randomTimer: 300};
     this.goatsData[id] = {pos: {x: pos.x, y: pos.y}, assigned: true};
 
     this.goatCount++;
@@ -50,6 +50,7 @@ export default class GoatController {
     const leg2 = this.game.add.rectangle(this.goatOffset.leg.x, this.goatOffset.leg.y, this.size/5, this.size/2, 0xff).setName('leg2').setOrigin(0.5, 0);
 
     const container = this.game.add.container(pos.x, pos.y);
+    container.setData({frontLegForward: false});
     this.goatGroup.add(container);
     container.add([head, body, leg1, leg2]);
 
@@ -60,15 +61,6 @@ export default class GoatController {
     if (goat.randomTimer >= 300) {
       goat.randomTimer = 0;
       goat.vx = Math.floor((Math.random() * 5) - 2);
-      if (goat.vx < 0 && goat.right) {
-        goat.container.setScale(-1, 1);
-        goat.container.body!.setOffset(this.size/2, -this.size/4);
-        goat.right = false;
-      } else if (goat.vx > 0 && !goat.right) {
-        goat.container.setScale(1, 1);
-        goat.container.body!.setOffset(-this.size/2, -this.size/4);
-        goat.right = true;
-      }
     } else {
       goat.randomTimer += 1 * this.game.deltaTime;
     }
@@ -84,22 +76,59 @@ export default class GoatController {
   }
 
 
-  handleLimbs(goat: goat) {
-    const leg1 = goat.container.getByName('leg1');
-    const leg2 = goat.container.getByName('leg2');
-    let goatSpeed = Math.abs(goat.vx);
+  // handleLimbs(goat: goat) {
+  //   const leg1 = goat.container.getByName('leg1');
+  //   const leg2 = goat.container.getByName('leg2');
+  //   let goatSpeed = Math.abs(goat.vx);
+  //   if (goatSpeed > 0) {
+  //     if (!goat.frontLegForward) {
+  //       leg1.angle -= goatSpeed * this.game.deltaTime;
+  //       leg2.angle += goatSpeed * this.game.deltaTime;
+  //       if (leg2.angle >= goatSpeed * 20) {
+  //         goat.frontLegForward = true;
+  //       }
+  //     } else if (goat.frontLegForward) {
+  //       leg1.angle += goatSpeed * this.game.deltaTime;
+  //       leg2.angle -= goatSpeed * this.game.deltaTime;
+  //       if (leg1.angle >= goatSpeed * 20) {
+  //         goat.frontLegForward = false;
+  //       }
+  //     }
+  //   } else {
+  //     leg1.angle = 0;
+  //     leg2.angle = 0;
+  //   }
+  // }
+
+
+  handleLimbs(container: Phaser.GameObjects.Container, newPos: GameObject) {
+    const leg1 = container.getByName('leg1');
+    const leg2 = container.getByName('leg2');
+    let changeInX = newPos.x - container.x;
+    let goatSpeed = Math.abs(changeInX);
+    if (changeInX > 0) { //Handle flip
+      if (container.scaleX === -1) {
+        container.setScale(1, 1);
+        container.body!.setOffset(-this.size/2, -this.size/4);
+      }
+    } else if (changeInX < 0) {
+      if (container.scaleX === 1) {
+        container.setScale(-1, 1);
+        container.body!.setOffset(this.size/2, -this.size/4);
+      }
+    }
     if (goatSpeed > 0) {
-      if (!goat.frontLegForward) {
-        leg1.angle -= goatSpeed * this.game.deltaTime;
-        leg2.angle += goatSpeed * this.game.deltaTime;
-        if (leg2.angle >= goatSpeed * 20) {
-          goat.frontLegForward = true;
-        }
-      } else if (goat.frontLegForward) {
+      if (container.getData('frontLegForward')) {
         leg1.angle += goatSpeed * this.game.deltaTime;
         leg2.angle -= goatSpeed * this.game.deltaTime;
-        if (leg1.angle >= goatSpeed * 20) {
-          goat.frontLegForward = false;
+        if (leg1.angle >= goatSpeed * 30) {
+          container.setData('frontLegForward', false);
+        }
+      } else {
+        leg1.angle -= goatSpeed * this.game.deltaTime;
+        leg2.angle += goatSpeed * this.game.deltaTime;
+        if (leg2.angle >= goatSpeed * 30) {
+          container.setData('frontLegForward', true);
         }
       }
     } else {
@@ -108,7 +137,8 @@ export default class GoatController {
     }
   }
 
-  handleGround(goat: goat, id: number | string) {
+  handleMovement(goat: goat, id: number | string) {
+    let goatMove = {x: 0, y: 0};
     let blockY: number;
     let groundCollision = this.game.physics.overlap(goat.container, this.game.TerrainHandler.blockGroup, (goatContainer, block) => {
       let curBlockY = block.y - block.height/2 - this.size/1.4
@@ -125,11 +155,13 @@ export default class GoatController {
       if (goat.vx + goat.container.x < 320) { //stop goat at edge
         return;
       }
-
-      goat.container.x += goat.vx * this.game.deltaTime; //Set x pos
+      goatMove.x = goat.vx * this.game.deltaTime;
     } else {
-      goat.container.y += 4 * this.game.deltaTime;  //Set y pos
+      goatMove.y = 4 * this.game.deltaTime;
     }
+    this.handleLimbs(goat.container, {x: goatMove.x + goat.container.x, y: goatMove.y + goat.container.y});
+    goat.container.x += goatMove.x;
+    goat.container.y += goatMove.y;
     this.goatsData[id].pos.x = goat.container.x;
     this.goatsData[id].pos.y = goat.container.y;
   }
@@ -139,8 +171,7 @@ export default class GoatController {
     for (const id in this.curGoats) {
       const curGoat = this.curGoats[id];
       this.handleRandom(curGoat);
-      this.handleGround(curGoat, id);
-      this.handleLimbs(curGoat);
+      this.handleMovement(curGoat, id);
       if (!this.goatInRenderDistance(curGoat.container)) { //despawn goat
         this.curGoats[id].container.destroy();
         delete this.curGoats[id];
@@ -173,6 +204,7 @@ export default class GoatController {
         if (!this.otherGoats[id]) {
           this.otherGoats[id] = this.createGoat(curGoat.pos);
         } else {
+          this.handleLimbs(this.otherGoats[id], {x: curGoat.pos.x, y: curGoat.pos.y});
           this.otherGoats[id].setPosition(curGoat.pos.x, curGoat.pos.y);
         }
       }
@@ -182,7 +214,7 @@ export default class GoatController {
     this.socket.on('goatAssignment', (id: string, goatData: {pos: GameObject, assigned: boolean}) => {
       let container = this.createGoat(goatData.pos);
       this.goatsData[id] = {pos: goatData.pos, assigned: true};
-      this.curGoats[id] = {container, right: false, vx: 0, randomTimer: 0, frontLegForward: false};
+      this.curGoats[id] = {container, vx: 0, randomTimer: 0};
     });
   }
 
