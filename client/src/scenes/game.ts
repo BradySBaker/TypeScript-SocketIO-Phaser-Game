@@ -52,6 +52,8 @@ export default class Game extends Phaser.Scene {
 
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
+    this.GoatController = new GoatController(this, socket);
+
     this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
     this.GrappleHandler = new GrappleHandler(this);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
@@ -59,7 +61,6 @@ export default class Game extends Phaser.Scene {
     this.TerrainHandler = new TerrainHandler(this);
     this.UIHandler = new UIHandler(this);
 
-    this.GoatController = new GoatController(this, socket);
 
     this.handleSendData(false);
 

@@ -251,7 +251,9 @@ export default class PlayerController {
         return;
       }
       global.playersData[id] = {body: this.game.add.rectangle(data.pos.x, data.pos.y, 50, 100, 0xfffff), grapplingPos: data.grapplingPos}
-      global.playersData[id].body.name = id;
+      let body = global.playersData[id].body;
+      body.setData('id', id);
+      body.setData('type', 'player');
       this.playerGroup.add(global.playersData[id].body);
     });
 
@@ -259,7 +261,10 @@ export default class PlayerController {
     this.socket.on('playerData', (data: {[id: number]: {pos: GameObject, grapplingPos: GameObject | undefined}}, id: number, collidedSpearPositions: {[playerId: number]: {[spearID: number]: {stuckPos: GameObject, angle: number, collidedPlayerID: number}}}) => { //Recieved personal player data
       for (let playerId in data) {
         global.playersData[playerId] = {body: this.game.add.rectangle(data[playerId].pos.x, data[playerId].pos.y, 50, 100, 0xfffff), grapplingPos: data[playerId].grapplingPos};
-        global.playersData[playerId].body.name = playerId
+        let body = global.playersData[playerId].body;
+        body.setData('id', id);
+        body.setData('type', 'player');
+
         this.playerGroup.add(global.playersData[playerId].body);
         this.player.pos.x = data[playerId].pos.x;
         this.player.pos.y = data[playerId].pos.y;

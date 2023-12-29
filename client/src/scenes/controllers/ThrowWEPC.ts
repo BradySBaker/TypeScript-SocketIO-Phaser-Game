@@ -11,8 +11,8 @@ export default class ThrowWEPC {
   game: Game;
   spear?: Phaser.GameObjects.Sprite;
   curSpearData: {[id: number]: {pos: GameObject, angle: number, collidedPlayerID: number}} = {}
-  curThrownSpears: {[id: number]: {spear: Phaser.GameObjects.Sprite, vel: GameObject, collidedPlayerID: number, stuckPos: GameObject, collider: Phaser.GameObjects.Rectangle}} = {};
-  
+  curThrownSpears: {[id: number]: {spear: Phaser.GameObjects.Sprite, vel: GameObject, collidedInfo: {type: string, id: number}, stuckPos: GameObject, collider: Phaser.GameObjects.Rectangle}} = {};
+
   otherThrownSpears: {[playerID: number]: {[spearID: number]: Phaser.GameObjects.Sprite}} = {};
   otherCollidedSpears: {[playerID: number]: {[spearID: number]: {collidedPlayerID: number, stuckPos: GameObject, spear: Phaser.GameObjects.Sprite}}} = {};
   curSpearId = 0;
@@ -27,6 +27,7 @@ export default class ThrowWEPC {
     this.spearGroup = game.physics.add.group({classType: Phaser.GameObjects.Sprite,});
 
     game.physics.add.overlap(this.spearGroup, this.playerGroup, this.handleSpearCollide, null, this);
+    game.physics.add.overlap(this.spearGroup, this.game.GoatController.goatGroup, this.handleSpearCollide, null, this);
   }
 
   handleWeaponRotation(weapon: Phaser.GameObjects.Sprite, player: Player, type: string) {
@@ -168,11 +169,12 @@ export default class ThrowWEPC {
   }
 
 
-  handleSpearCollide(spear: Phaser.GameObjects.Rectangle, player: Phaser.GameObjects.Rectangle) {
+  handleSpearCollide(spear: Phaser.GameObjects.Rectangle, target: Phaser.GameObjects.GameObject) {
     let spearObj = this.curThrownSpears[spear.name];
-    spearObj.stuckPos = {x: player.x - spearObj.spear.x, y: player.y - spearObj.spear.y}
-    spearObj.collidedPlayerID = player.name;
+    spearObj.stuckPos = {x: target.x - spearObj.spear.x, y: target.y - spearObj.spear.y}
+    spearObj.collidedInfo = {type: target.getData('type'), id: target.getData('id')};
   }
+
 
 
   handleOtherCollidedSpears() {
