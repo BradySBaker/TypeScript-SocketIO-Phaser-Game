@@ -76,31 +76,6 @@ export default class GoatController {
   }
 
 
-  // handleLimbs(goat: goat) {
-  //   const leg1 = goat.container.getByName('leg1');
-  //   const leg2 = goat.container.getByName('leg2');
-  //   let goatSpeed = Math.abs(goat.vx);
-  //   if (goatSpeed > 0) {
-  //     if (!goat.frontLegForward) {
-  //       leg1.angle -= goatSpeed * this.game.deltaTime;
-  //       leg2.angle += goatSpeed * this.game.deltaTime;
-  //       if (leg2.angle >= goatSpeed * 20) {
-  //         goat.frontLegForward = true;
-  //       }
-  //     } else if (goat.frontLegForward) {
-  //       leg1.angle += goatSpeed * this.game.deltaTime;
-  //       leg2.angle -= goatSpeed * this.game.deltaTime;
-  //       if (leg1.angle >= goatSpeed * 20) {
-  //         goat.frontLegForward = false;
-  //       }
-  //     }
-  //   } else {
-  //     leg1.angle = 0;
-  //     leg2.angle = 0;
-  //   }
-  // }
-
-
   handleLimbs(container: Phaser.GameObjects.Container, newPos: GameObject) {
     const leg1 = container.getByName('leg1');
     const leg2 = container.getByName('leg2');
