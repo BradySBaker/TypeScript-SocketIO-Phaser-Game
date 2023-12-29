@@ -170,9 +170,14 @@ export default class PlayerController {
       return;
     }
     let blockY: number;
-    let groundCollision = this.game.physics.overlap(global.curPlayerData.body, this.game.TerrainHandler.blockGroup, (player, block) => {
-      if (!blockY) {
-        blockY = block.y - block.height/2 - global.curPlayerData.body.height/2;
+    const groundCollision = this.game.physics.overlap(global.curPlayerData.body, this.game.TerrainHandler.blockGroup, (player, block) => {
+      const curBlockY = block.y - block.height/2 - global.curPlayerData.body.height/2;
+      if (this.move.vx > 0 && block.x > player.x) { //Fix setting wrong block
+        blockY = curBlockY;
+      } else if (this.move.vx < 0 && block.x < player.x) {
+        blockY = curBlockY;
+      } else if (!blockY) {
+        blockY = curBlockY
       }
     });
     if (groundCollision) {
@@ -225,19 +230,6 @@ export default class PlayerController {
 
 
   retrievePlayerData() {
-    setInterval(() => {
-      if (this.game.ThrowWEPC.curSpearId !== 0) {
-        this.socket.emit('updateSpearPositions', global.curPlayerData.id, this.game.ThrowWEPC?.curSpearData);
-      }
-
-      if (global.curPlayerData && (Math.abs(this.player.pos.x - this.sentPos.x) > 5 || Math.abs(this.player.pos.y - this.sentPos.y) > 5)) {
-        let grapplingPont = this.game.GrappleHandler.grappling ? this.game.GrappleHandler.grapplePoint : undefined;
-        this.socket.emit('updatePosition', {pos: this.player.pos, grapplePos: grapplingPont});
-        this.sentPos.x = this.player.pos.x;
-        this.sentPos.y = this.player.pos.y;
-      }
-    }, 10);
-
     this.socket.on('updatePosition', (data: {pos: GameObject, grapplePos: GameObject | undefined}, id: number) => { //Handle player update
         this.playersToMove[id] = data.pos;
         let ropes = this.game.GrappleHandler.ropes;

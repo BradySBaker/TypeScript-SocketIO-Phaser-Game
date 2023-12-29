@@ -3,7 +3,9 @@ declare type GameObject = {
   y: number
 }
 
-type Player = {
+declare type Player = {
   pos: PlayerPos;
   direction: string;
 }
+
+declare type Rect = Phaser.GameObjects.Rectangle;

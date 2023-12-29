@@ -123,7 +123,7 @@ export default class GrappleHandler {
     this.grappleCheckCircle.setPosition(mousePos.x, mousePos.y)
 
     let collision;
-    collision = this.game.physics.overlap(this.grappleCheckCircle, this.game.TerrainHandler.blockGroup, (circle, platform: Phaser.GameObjects.Rectangle) => {
+    collision = this.game.physics.overlap(this.grappleCheckCircle, this.game.TerrainHandler.blockGroup, (circle, platform: Rect) => {
       if (Math.abs(mousePos.y - platform.y) <= 50) {
         this.grappleCheckCircle.alpha = 1;
         this.grappleCheckCircle.y = platform.y + this.grappleCheckCircle.width/2;
