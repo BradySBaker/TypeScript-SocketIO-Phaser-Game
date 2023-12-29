@@ -243,6 +243,7 @@ export default class PlayerController {
     this.socket.on('deletePlayer', (id) => { //Player left
       global.playersData[id].body.destroy();
       delete global.playersData[id];
+      delete this.playersToMove[id];
     });
 
     this.socket.on('newPlayer', (id: string, data: {pos: GameObject, grapplingPos: GameObject | undefined}) => { //New player joined
@@ -263,7 +264,6 @@ export default class PlayerController {
         this.player.pos.x = data[playerId].pos.x;
         this.player.pos.y = data[playerId].pos.y;
       }
-      let collidedSpears = this.game.ThrowWEPC.otherCollidedSpears; //Handle spears that have collided with something
       for (let playerID in collidedSpearPositions) {
         for (let spearID in collidedSpearPositions[playerID]) {
           let spearData = collidedSpearPositions[playerID][spearID];

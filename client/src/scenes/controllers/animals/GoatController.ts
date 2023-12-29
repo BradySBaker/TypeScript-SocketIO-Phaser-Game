@@ -162,7 +162,7 @@ export default class GoatController {
       const curGoat = this.unasignedGoats[id];
       if (this.goatInRenderDistance(curGoat)) {
         delete this.unasignedGoats[id];
-        this.goatsData[id].assigned = true;
+        this.goatsData[id] = {pos: curGoat, assigned: true};
         let container = this.createGoat(curGoat);
         this.goatsData[id] = {pos: curGoat, assigned: true};
         this.curGoats[id] = {container, vx: 0, randomTimer: 0};
@@ -202,7 +202,7 @@ export default class GoatController {
 
 
     this.socket.on('goatAssignment', (id: string, goatData: {pos: GameObject, assigned: boolean}) => {
-      console.log('occured');
+      console.log('assigned');
       let container = this.createGoat(goatData.pos);
       this.goatsData[id] = {pos: goatData.pos, assigned: true};
       this.curGoats[id] = {container, vx: 0, randomTimer: 0};
@@ -212,7 +212,6 @@ export default class GoatController {
       console.log(goatData);
         for (let id in goatData) {
           this.goatsData[id] = goatData[id];
-          this.goatsData[id].assigned = false;
           this.unasignedGoats[id] = goatData[id].pos;
           if (this.otherGoats[id]) {
             this.otherGoats[id].destroy();
