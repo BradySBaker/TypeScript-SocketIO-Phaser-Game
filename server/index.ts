@@ -16,32 +16,36 @@ let collidedSpearPositions: {[playerId: number]: {[spearID: number]: {stuckPos: 
 
 let recentlyAssignedGoat = '-1';
 
+let connectedClients: string[] = [];
+
 const io = new Server(3000, {
   cors: {
     origin: ['http://localhost:2000']
   }
 });
 
-setInterval(() => {
-    // for (let id in projectilePositions) {
-    //   let curProjectile = projectilePositions[id];
-    //   if (curProjectile.direction === 'right') {
-    //     curProjectile.pos.x += 30;
-    //   } else {
-    //     curProjectile.pos.x -= 30;
-    //   }
-    //   curProjectile.pos.y += .5;
-    //   if (curProjectile.pos.x > 1000 || curProjectile.pos.x < 0 || curProjectile.pos.y > 1000 || curProjectile.pos.y < 0) {
-    //     io.emit('deleteProjectile', id);
-    //     delete projectilePositions[id];
-    //   }
-    // }
-    // io.emit('projectileData', projectilePositions);
-  }
-  , 10);
+// setInterval(() => {
+//     // for (let id in projectilePositions) {
+//     //   let curProjectile = projectilePositions[id];
+//     //   if (curProjectile.direction === 'right') {
+//     //     curProjectile.pos.x += 30;
+//     //   } else {
+//     //     curProjectile.pos.x -= 30;
+//     //   }
+//     //   curProjectile.pos.y += .5;
+//     //   if (curProjectile.pos.x > 1000 || curProjectile.pos.x < 0 || curProjectile.pos.y > 1000 || curProjectile.pos.y < 0) {
+//     //     io.emit('deleteProjectile', id);
+//     //     delete projectilePositions[id];
+//     //   }
+//     // }
+//     // io.emit('projectileData', projectilePositions);
+//   }
+//   , 10);
 
 io.on('connection', (socket: Socket) => {
   console.log(socket.id + 'connected');
+  connectedClients.push(socket.id);
+
   let playerId = playerCount;
   playerData[playerId] = {pos: {x: 500, y: 100}, grapplePos: undefined };
   io.to(socket.id).emit('playerData', playerData, playerId, collidedSpearPositions);
@@ -52,13 +56,6 @@ io.on('connection', (socket: Socket) => {
     playerData[playerId] = data;
     io.emit('updatePosition', data, playerId);
   })
-
-  socket.on('disconnect', () => {
-    console.log(`Game Object ${playerId} disconnected`);
-    socket.disconnect(true);
-    delete playerData[playerId];
-    io.emit('deletePlayer', playerId);
-  });
 
   socket.on('newProjectile', (pos: GameObject, direction: string, playerId: number) => {
     projectilePositions[projectileCount] = {direction: direction, pos: {x: direction === 'left' ? pos.x - 25: pos.x + 20, y: pos.y}, startPos: pos, playerId};
@@ -87,6 +84,18 @@ io.on('connection', (socket: Socket) => {
 
   socket.on('updateGoats', (goatData: {[goatId: string]: {pos: GameObject, assigned: boolean}}) => {
     socket.broadcast.emit('updateGoats', goatData);;
+  });
+
+  socket.on('disconnectClient', (goatData: {[goatId: string]: {pos: GameObject, assigned: boolean}}) => {
+    const index = connectedClients.indexOf(socket.id);
+    if (index !== -1) {
+      connectedClients.splice(index, 1);
+    }
+
+    socket.disconnect(true);
+    delete playerData[playerId];
+    io.emit('deletePlayer', playerId);
+    io.to(connectedClients[0]).emit('disconnectGoatAssignment', goatData);
   });
 
   socket.on('requestGoatAssignment', (goatId: string, goat: {pos: GameObject, assigned: boolean}) => {
