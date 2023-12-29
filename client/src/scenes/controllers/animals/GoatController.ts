@@ -1,6 +1,7 @@
 import { Socket } from "socket.io-client";
 import Game from "../../game";
 import global from "../../global";
+import { GameObjects } from "phaser";
 
 type goat = {container: Phaser.GameObjects.Container, vx: number, randomTimer: number};
 
@@ -9,6 +10,8 @@ export default class GoatController {
   socket: Socket;
   curGoats: {[id: string]: goat} = {};
   goatsData: {[id: string]: {pos: GameObject, assigned: boolean}} = {}; //For sending to server
+  unasignedGoats: {[id: string]: {x: number, y: number}} = {};
+
   otherGoats: {[id: string]: Phaser.GameObjects.Container} = {}; //Recieved goats
 
   size = 65;
@@ -36,7 +39,7 @@ export default class GoatController {
     let container = this.createGoat(pos);
     let id = this.goatCount + '' + global.curPlayerData.id;
 
-    this.curGoats[id] = {container, vx: 0, randomTimer: 300};
+    this.curGoats[id] = {container, vx: 1, randomTimer: 300};
     this.goatsData[id] = {pos: {x: pos.x, y: pos.y}, assigned: true};
 
     this.goatCount++;
@@ -148,10 +151,22 @@ export default class GoatController {
       this.handleRandom(curGoat);
       this.handleMovement(curGoat, id);
       if (!this.goatInRenderDistance(curGoat.container)) { //despawn goat
+        this.unasignedGoats[id] = {x: curGoat.container.x, y: curGoat.container.y};
         this.curGoats[id].container.destroy();
         delete this.curGoats[id];
         this.goatsData[id].assigned = false;
       };
+    }
+
+    for (const id in this.unasignedGoats) {
+      const curGoat = this.unasignedGoats[id];
+      if (this.goatInRenderDistance(curGoat)) {
+        delete this.unasignedGoats[id];
+        this.goatsData[id] = {pos: curGoat, assigned: true};
+        let container = this.createGoat(curGoat);
+        this.goatsData[id] = {pos: curGoat, assigned: true};
+        this.curGoats[id] = {container, vx: 0, randomTimer: 0};
+      }
     }
   }
 
@@ -187,9 +202,22 @@ export default class GoatController {
 
 
     this.socket.on('goatAssignment', (id: string, goatData: {pos: GameObject, assigned: boolean}) => {
+      console.log('assigned');
       let container = this.createGoat(goatData.pos);
       this.goatsData[id] = {pos: goatData.pos, assigned: true};
       this.curGoats[id] = {container, vx: 0, randomTimer: 0};
+    });
+
+    this.socket.on('disconnectGoatAssignment', (goatData: {[id: number]: {pos: GameObject, assigned: boolean}}) => {
+      console.log(goatData);
+        for (let id in goatData) {
+          this.goatsData[id] = goatData[id];
+          this.unasignedGoats[id] = goatData[id].pos;
+          if (this.otherGoats[id]) {
+            this.otherGoats[id].destroy();
+            delete this.otherGoats[id];
+          }
+        }
     });
   }
 

@@ -15,16 +15,6 @@ import global from './global.ts';
 import * as socketClient from 'socket.io-client';
 let socket: socketClient.Socket;
 
-window.addEventListener('beforeunload', () => {
-  socket.disconnect();
-  console.log('Disconnecting before page unload');
-});
-
-window.addEventListener('unload', () => {
-  socket.disconnect();
-  console.log('Page unloaded');
-});
-
 
 export default class Game extends Phaser.Scene {
   deltaTime: number = 0;
@@ -71,7 +61,7 @@ export default class Game extends Phaser.Scene {
 
     this.GoatController = new GoatController(this, socket);
 
-    this.handleSendData();
+    this.handleSendData(false);
 
     this.UIHandler.draw();
 
@@ -84,6 +74,16 @@ export default class Game extends Phaser.Scene {
     socket.on('projectileData', (projectiles: {[id: number]: {direction: string, pos: GameObject, startPos: GameObject, playerId: number}}) => { //Handle all projectiles
       this.ProjectileController.handleProjectiles(projectiles);
     });
+
+    window.addEventListener('unload', () => {
+      socket.emit('disconnectClient', this.GoatController.goatsData); //Handle disconnect and send data
+    });
+    // window.addEventListener('beforeunload', () => { //On disconnect
+    //   socket.emit('updateGoats', this.GoatController.goatsData, true); //Tell server to assign goats
+    //   socket.disconnect();
+    //   console.log('Disconnecting before page unload');
+    // });
+
   }
 
 
@@ -175,7 +175,7 @@ export default class Game extends Phaser.Scene {
         PC.sentPos.y = PC.player.pos.y;
       }
       if (Object.keys(this.GoatController.goatsData).length > 0) {
-        socket.emit('updateGoats', this.GoatController.goatsData);
+        socket.emit('updateGoats', this.GoatController.goatsData, false);
       }
     }, 10);
   }
