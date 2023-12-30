@@ -262,7 +262,7 @@ export default class PlayerController {
       for (let playerId in data) {
         global.playersData[playerId] = {body: this.game.add.rectangle(data[playerId].pos.x, data[playerId].pos.y, 50, 100, 0xfffff), grapplingPos: data[playerId].grapplingPos};
         let body = global.playersData[playerId].body;
-        body.setData('id', id);
+        body.setData('id', playerId);
         body.setData('type', 'player');
 
         this.playerGroup.add(global.playersData[playerId].body);
