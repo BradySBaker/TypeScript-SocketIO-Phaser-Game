@@ -18,7 +18,10 @@ export default class GoatController {
   goatOffset = {leg: {x: this.size/3, y: this.size/4}, head: {x: this.size/1.5}};
   goatGroup!: Phaser.GameObjects.Group;
   lastSpawnPoint: GameObject = {x: 0, y: 0};
+  startHealth = 5;
   goatCount = 0;
+
+  destroyedGoats: {[id: number|string]: boolean} = {};
 
   constructor(game: Game, socket: Socket) {
       this.game = game;
@@ -32,6 +35,11 @@ export default class GoatController {
         });
       this.handleData();
   }
+
+  damage(id: number | string) {
+    this.socket.emit('damageGoat', id, 'goat');
+  }
+
 
   spawn(pos: GameObject) {
     this.lastSpawnPoint = pos;
@@ -52,8 +60,9 @@ export default class GoatController {
     const leg1 = this.game.add.rectangle(-this.goatOffset.leg.x, this.goatOffset.leg.y, this.size/5, this.size/2, 0xff).setName('leg1').setOrigin(0.5, 0);
     const leg2 = this.game.add.rectangle(this.goatOffset.leg.x, this.goatOffset.leg.y, this.size/5, this.size/2, 0xff).setName('leg2').setOrigin(0.5, 0);
 
+
     const container = this.game.add.container(pos.x, pos.y).setDepth(1);
-    container.setData({frontLegForward: false, type: 'goat', id});
+    container.setData({frontLegForward: false, type: 'goat', id, health: this.startHealth});
     this.goatGroup.add(container);
     container.add([head, body, leg1, leg2]);
 
@@ -192,6 +201,9 @@ export default class GoatController {
         }
 
         if (!this.otherGoats[id]) {
+          if (this.destroyedGoats[id]) {
+            return;
+          }
           this.otherGoats[id] = this.createGoat(curGoat.pos, id);
         } else {
           this.handleLimbs(this.otherGoats[id], {x: curGoat.pos.x, y: curGoat.pos.y});
@@ -216,6 +228,19 @@ export default class GoatController {
             delete this.otherGoats[id];
           }
         }
+    });
+
+
+    this.socket.on('goatDied', (id: number | string) => {
+      if (this.otherGoats[id]) {
+        this.destroyedGoats[id] = true;
+        this.otherGoats[id].destroy();
+        delete this.otherGoats[id];
+      } else {
+        this.curGoats[id].container.destroy();
+        delete this.curGoats[id];
+        delete this.goatsData[id];
+      }
     });
   }
 
