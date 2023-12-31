@@ -1,25 +1,16 @@
 import { Socket } from "socket.io-client";
 import Game from "../../game";
 import global from "../../global";
-import { GameObjects } from "phaser";
-
-type goat = {container: Phaser.GameObjects.Container, vx: number, randomTimer: number};
 
 export default class GoatController {
   game: Game;
   socket: Socket;
-  curGoats: {[id: string]: goat} = {};
-  goatsData: {[id: string]: {pos: GameObject, assigned: boolean}} = {}; //For sending to server
-  unasignedGoats: {[id: string]: {x: number, y: number}} = {};
-
-  otherGoats: {[id: string]: Phaser.GameObjects.Container} = {}; //Recieved goats
 
   size = 65;
   goatOffset = {leg: {x: this.size/3, y: this.size/4}, head: {x: this.size/1.5}};
   goatGroup!: Phaser.GameObjects.Group;
   lastSpawnPoint: GameObject = {x: 0, y: 0};
   startHealth = 5;
-  goatCount = 0;
 
   destroyedGoats: {[id: number|string]: boolean} = {};
 
@@ -44,13 +35,13 @@ export default class GoatController {
   spawn(pos: GameObject) {
     this.lastSpawnPoint = pos;
 
-    let id = this.goatCount + '' + global.curPlayerData.id;
+    let id = global.mobCount + '' + global.curPlayerData.id;
     let container = this.createGoat(pos, id);
 
-    this.curGoats[id] = {container, vx: 1, randomTimer: 300};
-    this.goatsData[id] = {pos: {x: pos.x, y: pos.y}, assigned: true};
+    global.curMobs[id] = {container, vx: 1, randomTimer: 300};
+    global.curMobData[id] = {pos: {x: pos.x, y: pos.y}, assigned: true, type: 'goat'};
 
-    this.goatCount++;
+    global.mobCount++;
   }
 
   createGoat(pos: GameObject, id: number | string): Phaser.GameObjects.Container {
@@ -69,7 +60,7 @@ export default class GoatController {
     return container;
   }
 
-  handleRandom(goat: goat) {
+  handleRandom(goat: animal) {
     if (goat.randomTimer >= 300) {
       goat.randomTimer = 0;
       goat.vx = Math.floor((Math.random() * 5) - 2);
@@ -124,7 +115,7 @@ export default class GoatController {
     }
   }
 
-  handleMovement(goat: goat, id: number | string) {
+  handleMovement(goat: animal, id: number | string) {
     let goatMove = {x: 0, y: 0};
     let blockY: number;
     let groundCollision = this.game.physics.overlap(goat.container, this.game.TerrainHandler.blockGroup, (object1, object2) => {
@@ -152,32 +143,31 @@ export default class GoatController {
     this.handleLimbs(goat.container, {x: goatMove.x + goat.container.x, y: goatMove.y + goat.container.y});
     goat.container.x += goatMove.x;
     goat.container.y += goatMove.y;
-    this.goatsData[id].pos.x = goat.container.x;
-    this.goatsData[id].pos.y = goat.container.y;
+    global.curMobData[id].pos.x = goat.container.x;
+    global.curMobData[id].pos.y = goat.container.y;
   }
 
 
   handleGoats() {
-    for (const id in this.curGoats) {
-      const curGoat = this.curGoats[id];
+    for (const id in global.curMobs) {
+      const curGoat = global.curMobs[id];
       this.handleRandom(curGoat);
       this.handleMovement(curGoat, id);
       if (!this.goatInRenderDistance(curGoat.container)) { //despawn goat
-        this.unasignedGoats[id] = {x: curGoat.container.x, y: curGoat.container.y};
-        this.curGoats[id].container.destroy();
-        delete this.curGoats[id];
-        this.goatsData[id].assigned = false;
+        global.unasignedMobs[id] = {x: curGoat.container.x, y: curGoat.container.y};
+        global.curMobs[id].container.destroy();
+        delete global.curMobs[id];
+        global.curMobData[id].assigned = false;
       };
     }
 
-    for (const id in this.unasignedGoats) {
-      const curGoat = this.unasignedGoats[id];
+    for (const id in global.unasignedMobs) {
+      const curGoat = global.unasignedMobs[id];
       if (this.goatInRenderDistance(curGoat)) {
-        delete this.unasignedGoats[id];
-        this.goatsData[id] = {pos: curGoat, assigned: true};
+        delete global.unasignedMobs[id];
+        global.curMobData[id] = {pos: curGoat, assigned: true, type: 'goat'};
         let container = this.createGoat(curGoat, id);
-        this.goatsData[id] = {pos: curGoat, assigned: true};
-        this.curGoats[id] = {container, vx: 0, randomTimer: 0};
+        global.curMobs[id] = {container, vx: 0, randomTimer: 0};
       }
     }
   }
@@ -186,16 +176,16 @@ export default class GoatController {
   handleData() {
     this.socket.on('updateGoats', (goatData: {[goatId: number]: {pos: GameObject, assigned: boolean}}) => {
       for (let id in goatData) {
-        if (this.goatsData[id] && this.goatsData[id].assigned === false) { //Goat assignment changed
-          delete this.goatsData[id];
+        if (global.curMobData[id] && global.curMobData[id].assigned === false) { //Goat assignment changed
+          delete global.curMobData[id];
         }
 
         let curGoat = goatData[id];
 
         if (curGoat.assigned === false || !this.goatInRenderDistance(curGoat.pos)) { //Goat assignment needs updating
-          if (this.otherGoats[id]) {
-            this.otherGoats[id].destroy();
-            delete this.otherGoats[id];
+          if (global.otherMobs[id]) {
+            global.otherMobs[id].destroy();
+            delete global.otherMobs[id];
           }
           if (curGoat.assigned === false) {
             this.socket.emit('requestGoatAssignment', id, curGoat);
@@ -203,47 +193,47 @@ export default class GoatController {
           return;
         }
 
-        if (!this.otherGoats[id]) {
+        if (!global.otherMobs[id]) {
           if (this.destroyedGoats[id]) {
             return;
           }
-          this.otherGoats[id] = this.createGoat(curGoat.pos, id);
+          global.otherMobs[id] = this.createGoat(curGoat.pos, id);
         } else {
-          this.handleLimbs(this.otherGoats[id], {x: curGoat.pos.x, y: curGoat.pos.y});
-          this.otherGoats[id].setPosition(curGoat.pos.x, curGoat.pos.y);
+          this.handleLimbs(global.otherMobs[id], {x: curGoat.pos.x, y: curGoat.pos.y});
+          global.otherMobs[id].setPosition(curGoat.pos.x, curGoat.pos.y);
         }
       }
     })
 
 
     this.socket.on('goatAssignment', (id: string, goatData: {pos: GameObject, assigned: boolean}) => {
-      if (this.goatsData[id]) {return;}
+      if (global.curMobData[id]) {return;}
       let container = this.createGoat(goatData.pos, id);
-      this.goatsData[id] = {pos: goatData.pos, assigned: true};
-      this.curGoats[id] = {container, vx: 0, randomTimer: 0};
+      global.curMobData[id] = {pos: goatData.pos, assigned: true, type: 'goat'};
+      global.curMobs[id] = {container, vx: 0, randomTimer: 0};
     });
 
-    this.socket.on('disconnectGoatAssignment', (goatData: {[id: number]: {pos: GameObject, assigned: boolean}}) => {
+    this.socket.on('disconnectGoatAssignment', (goatData: {[id: number]: {pos: GameObject, assigned: boolean, type: string}}) => {
         for (let id in goatData) {
-          this.goatsData[id] = goatData[id];
-          this.unasignedGoats[id] = goatData[id].pos;
-          if (this.otherGoats[id]) {
-            this.otherGoats[id].destroy();
-            delete this.otherGoats[id];
+          global.curMobData[id] = goatData[id];
+          global.unasignedMobs[id] = goatData[id].pos;
+          if (global.otherMobs[id]) {
+            global.otherMobs[id].destroy();
+            delete global.otherMobs[id];
           }
         }
     });
 
 
     this.socket.on('goatDied', (id: number | string) => {
-      if (this.otherGoats[id]) {
+      if (global.otherMobs[id]) {
         this.destroyedGoats[id] = true;
-        this.otherGoats[id].destroy();
-        delete this.otherGoats[id];
+        global.otherMobs[id].destroy();
+        delete global.otherMobs[id];
       } else {
-        this.curGoats[id].container.destroy();
-        delete this.curGoats[id];
-        delete this.goatsData[id];
+        global.curMobs[id].container.destroy();
+        delete global.curMobs[id];
+        delete global.curMobData[id];
       }
     });
   }

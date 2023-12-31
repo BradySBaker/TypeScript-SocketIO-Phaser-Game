@@ -114,12 +114,12 @@ export default class ThrowWEPC {
   getGameObject(info: {type: string, id: number | string}): Phaser.GameObjects.GameObject | false {
     let gameObject: Phaser.GameObjects.GameObject | false = false;
     if (info.type === 'goat') {
-      if (this.game.GoatController.curGoats[info.id]) {
-        if (this.game.GoatController.curGoats[info.id]) {
-          gameObject = this.game.GoatController.curGoats[info.id].container;
+      if (global.curMobs[info.id]) {
+        if (global.curMobs[info.id]) {
+          gameObject = global.curMobs[info.id].container;
         }
-      } else if (this.game.GoatController.otherGoats[info.id]) {
-        gameObject = this.game.GoatController.otherGoats[info.id];
+      } else if (global.otherMobs[info.id]) {
+        gameObject = global.otherMobs[info.id];
       }
     } else if(info.type === 'player') {
       if (global.playersData[info.id]) {

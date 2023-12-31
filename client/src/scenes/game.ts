@@ -68,7 +68,7 @@ export default class Game extends Phaser.Scene {
     this.UIHandler.draw();
 
     window.addEventListener('unload', () => {
-      socket.emit('disconnectClient', this.GoatController.goatsData); //Handle disconnect and send data
+      socket.emit('disconnectClient', global.curMobData); //Handle disconnect and send data
     });
 
   }
@@ -86,7 +86,7 @@ export default class Game extends Phaser.Scene {
     // this.animalSpawnHandler();
     this.GoatController.handleGoats();
     if (this.PlayerController.spaceKey.isDown) {
-      if (this.GoatController.goatCount < 1) {
+      if (global.mobCount < 1) {
         this.GoatController.spawn(global.curPlayerData.body);
       }
     }
@@ -161,8 +161,8 @@ export default class Game extends Phaser.Scene {
         PC.sentPos.x = PC.player.pos.x;
         PC.sentPos.y = PC.player.pos.y;
       }
-      if (Object.keys(this.GoatController.goatsData).length > 0) {
-        socket.emit('updateGoats', this.GoatController.goatsData, false);
+      if (Object.keys(global.curMobData).length > 0) {
+        socket.emit('updateGoats', global.curMobData, false);
       }
     }, 10);
   }

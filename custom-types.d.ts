@@ -9,3 +9,5 @@ declare type Player = {
 }
 
 declare type Rect = Phaser.GameObjects.Rectangle;
+
+type animal = {container: Phaser.GameObjects.Container, vx: number, randomTimer: number};
