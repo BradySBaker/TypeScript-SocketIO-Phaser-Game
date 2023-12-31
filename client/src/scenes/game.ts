@@ -63,28 +63,13 @@ export default class Game extends Phaser.Scene {
     this.UIHandler = new UIHandler(this);
 
 
-    this.handleSendData(false);
+    this.handleSendData();
 
     this.UIHandler.draw();
-
-
-    socket.on('deleteProjectile', (id) => {
-      this.ProjectileController.deleteProjectile(id);
-    });
-
-
-    socket.on('projectileData', (projectiles: {[id: number]: {direction: string, pos: GameObject, startPos: GameObject, playerId: number}}) => { //Handle all projectiles
-      this.ProjectileController.handleProjectiles(projectiles);
-    });
 
     window.addEventListener('unload', () => {
       socket.emit('disconnectClient', this.GoatController.goatsData); //Handle disconnect and send data
     });
-    // window.addEventListener('beforeunload', () => { //On disconnect
-    //   socket.emit('updateGoats', this.GoatController.goatsData, true); //Tell server to assign goats
-    //   socket.disconnect();
-    //   console.log('Disconnecting before page unload');
-    // });
 
   }
 

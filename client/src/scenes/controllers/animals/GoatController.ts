@@ -30,7 +30,7 @@ export default class GoatController {
       this.goatGroup = this.game.physics.add.group({
           classType: Phaser.GameObjects.Rectangle,
           createCallback: ((goat: Phaser.GameObjects.GameObject) => {
-            goat.body!.setOffset(-this.size/2, -this.size/4);
+            (goat.body as Phaser.Physics.Arcade.Body).setOffset(-this.size/2, -this.size/4);
           })
         });
       this.handleData();
@@ -89,19 +89,19 @@ export default class GoatController {
 
 
   handleLimbs(container: Phaser.GameObjects.Container, newPos: GameObject) {
-    const leg1 = container.getByName('leg1');
-    const leg2 = container.getByName('leg2');
+    const leg1 = container.getByName('leg1') as Phaser.GameObjects.Sprite;
+    const leg2 = container.getByName('leg2') as Phaser.GameObjects.Sprite;
     let changeInX = newPos.x - container.x;
     let goatSpeed = Math.abs(changeInX);
     if (changeInX > 0) { //Handle flip
       if (container.scaleX === -1) {
         container.setScale(1, 1);
-        container.body!.setOffset(-this.size/2, -this.size/4);
+        (container.body as Phaser.Physics.Arcade.Body).setOffset(-this.size/2, -this.size/4);
       }
     } else if (changeInX < 0) {
       if (container.scaleX === 1) {
         container.setScale(-1, 1);
-        container.body!.setOffset(this.size/2, -this.size/4);
+        (container.body as Phaser.Physics.Arcade.Body).setOffset(this.size/2, -this.size/4);
       }
     }
     if (goatSpeed > 0) {
@@ -127,7 +127,10 @@ export default class GoatController {
   handleMovement(goat: goat, id: number | string) {
     let goatMove = {x: 0, y: 0};
     let blockY: number;
-    let groundCollision = this.game.physics.overlap(goat.container, this.game.TerrainHandler.blockGroup, (goatContainer, block) => {
+    let groundCollision = this.game.physics.overlap(goat.container, this.game.TerrainHandler.blockGroup, (object1, object2) => {
+      let block = object2 as Phaser.GameObjects.Rectangle;
+      let goatContainer = object1 as Phaser.GameObjects.Container;
+
       let curBlockY = block.y - block.height/2 - this.size/1.4
       if (block.x > goatContainer.x && goat.vx > 0) {
         blockY = curBlockY;

@@ -105,7 +105,7 @@ export default class GrappleHandler {
 
       playerC.setPosition(newX, newY);
 
-      this.ropes[playerC.id] = {pos: {x: newX, y: newY}, grapplePos: this.grapplePoint};
+      this.ropes[global.curPlayerData.id] = {pos: {x: newX, y: newY}, grapplePos: this.grapplePoint};
 
       let targetGrappleRad = Phaser.Math.Angle.Between(
         this.grappleHook.x, this.grappleHook.y,
@@ -123,7 +123,8 @@ export default class GrappleHandler {
     this.grappleCheckCircle.setPosition(mousePos.x, mousePos.y)
 
     let collision;
-    collision = this.game.physics.overlap(this.grappleCheckCircle, this.game.TerrainHandler.blockGroup, (circle, platform: Rect) => {
+    collision = this.game.physics.overlap(this.grappleCheckCircle, this.game.TerrainHandler.blockGroup, (object1, object2) => {
+      let platform = object1 as Phaser.GameObjects.Rectangle;
       if (Math.abs(mousePos.y - platform.y) <= 50) {
         this.grappleCheckCircle.alpha = 1;
         this.grappleCheckCircle.y = platform.y + this.grappleCheckCircle.width/2;

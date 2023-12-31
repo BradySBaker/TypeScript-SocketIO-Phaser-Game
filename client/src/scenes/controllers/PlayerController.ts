@@ -171,10 +171,13 @@ export default class PlayerController {
     }
     let blockY: number;
     const groundCollision = this.game.physics.overlap(global.curPlayerData.body, this.game.TerrainHandler.blockGroup, (player, block) => {
-      const curBlockY = block.y - block.height/2 - global.curPlayerData.body.height/2;
-      if (this.move.vx > 0 && block.x > player.x) { //Fix setting wrong block
+      const tileBlock = block as Phaser.GameObjects.TileSprite;
+      const playerRect = player as Phaser.GameObjects.Rectangle;
+
+      const curBlockY = tileBlock.y - tileBlock.height/2 - global.curPlayerData.body.height/2;
+      if (this.move.vx > 0 && tileBlock.x > playerRect.x) { //Fix setting wrong block
         blockY = curBlockY;
-      } else if (this.move.vx < 0 && block.x < player.x) {
+      } else if (this.move.vx < 0 && tileBlock.x < playerRect.x) {
         blockY = curBlockY;
       } else if (!blockY) {
         blockY = curBlockY
@@ -182,8 +185,8 @@ export default class PlayerController {
     });
     if (groundCollision) {
       this.ground = true;
-      global.curPlayerData.body.y = blockY+5;
-      this.player.pos.y = blockY+5;
+      global.curPlayerData.body.y = blockY!+5;
+      this.player.pos.y = blockY!+5;
       this.move.vy = 0;
       if (this.game.GrappleHandler.grappling) { //Cancel grapple
         this.game.GrappleHandler.grappling = false;
@@ -258,7 +261,7 @@ export default class PlayerController {
     });
 
 
-    this.socket.on('playerData', (data: {[id: number]: {pos: GameObject, grapplingPos: GameObject | undefined}}, id: number, collidedSpearPositions: {[playerId: number]: {[spearID: number]: {stuckPos: GameObject, angle: number, collidedPlayerID: number}}}) => { //Recieved personal player data
+    this.socket.on('playerData', (data: {[id: number]: {pos: GameObject, grapplingPos: GameObject | undefined}}, id: number, collidedSpearPositions: {[playerId: number]: {[spearID: number]: {stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}}}) => { //Recieved personal player data
       for (let playerId in data) {
         global.playersData[playerId] = {body: this.game.add.rectangle(data[playerId].pos.x, data[playerId].pos.y, 50, 100, 0xfffff).setDepth(1), grapplingPos: data[playerId].grapplingPos};
         let body = global.playersData[playerId].body;
