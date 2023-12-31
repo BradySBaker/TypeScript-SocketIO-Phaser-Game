@@ -104,7 +104,7 @@ export default class ThrowWEPC {
   }
 
   getGameObject(info: {type: string, id: number | string}): Phaser.GameObjects.GameObject | false {
-    let gameObject: Phaser.GameObjects.GameObject | false = global.playersData[info.id];
+    let gameObject: Phaser.GameObjects.GameObject | false = false;
     if (info.type === 'goat') {
       if (this.game.GoatController.curGoats[info.id]) {
         if (this.game.GoatController.curGoats[info.id]) {
@@ -112,8 +112,10 @@ export default class ThrowWEPC {
         }
       } else if (this.game.GoatController.otherGoats[info.id]) {
         gameObject = this.game.GoatController.otherGoats[info.id];
-      } else {
-        gameObject = false;
+      }
+    } else if(info.type === 'player') {
+      if (global.playersData[info.id]) {
+        gameObject  = global.playersData[info.id].body;
       }
     }
     return gameObject;
@@ -139,8 +141,21 @@ export default class ThrowWEPC {
       delete this.curSpearData[id];
       return;
     }
-    spearObj.spear.x = gameObject.body.x - spearObj.stuckPos.x;
-    spearObj.spear.y = gameObject.body.y - spearObj.stuckPos.y;
+
+    let targetObject: any = gameObject.body;
+
+    if (gameObject.getData('type') === 'player') {
+      targetObject = gameObject;
+    }
+
+    spearObj.spear.x = targetObject.x - spearObj.stuckPos.x;
+    spearObj.spear.y = targetObject.y - spearObj.stuckPos.y;
+
+    if (!spearObj.particles) {
+      if (gameObject.getData('type') === 'goat') {
+        this.game.GoatController.damage(gameObject.getData('id'));
+      }
+    }
 
     spearObj.particles = this.handleBlood(spearObj.spear, spearObj.particles);
 
@@ -232,13 +247,23 @@ export default class ThrowWEPC {
           continue;
         }
         let gameObject = this.getGameObject(spearData.collidedInfo);
-        if (!gameObject) { //Handle left player
+        if (!gameObject) { //Handle gameObject destroyed
           spearData.spear.destroy();
+          if (spearData.particles) {
+            spearData.particles.destroy();
+          }
           delete this.otherCollidedSpears[playerID][spearID];
           continue;
         }
-        spearData.spear.x = gameObject.body.x - spearData.stuckPos.x;
-        spearData.spear.y = gameObject.body.y - spearData.stuckPos.y;
+
+        let targetObject: any = gameObject.body;
+
+        if (gameObject.getData('type') === 'player') {
+          targetObject = gameObject;
+        }
+
+        spearData.spear.x = targetObject.x - spearData.stuckPos.x;
+        spearData.spear.y = targetObject.y - spearData.stuckPos.y;
 
         spearData.particles = this.handleBlood(spearData.spear, spearData.particles);
       }
