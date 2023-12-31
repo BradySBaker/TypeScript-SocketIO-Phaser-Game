@@ -3,18 +3,22 @@ import { Socket } from "socket.io-client";
 import Game from '../game.js';
 
 import global from '../global.js';
+import createParticles from "./Particles.js";
+import Particles from "./Particles.js";
 
 let spearReadySpeed = 2;
+
+type spearObj = {spear: Phaser.GameObjects.Sprite, vel: GameObject, collidedInfo: {type: string, id: number}, stuckPos: GameObject, collider: Phaser.GameObjects.Rectangle, particles: Phaser.GameObjects.Particles.ParticleEmitter};
 
 export default class ThrowWEPC {
   playerGroup!: Phaser.GameObjects.Group;
   game: Game;
   spear?: Phaser.GameObjects.Sprite;
-  curSpearData: {[id: number]: {pos: GameObject, angle: number, collidedPlayerID: number}} = {}
-  curThrownSpears: {[id: number]: {spear: Phaser.GameObjects.Sprite, vel: GameObject, collidedPlayerID: number, stuckPos: GameObject, collider: Phaser.GameObjects.Rectangle}} = {};
-  
+  curSpearData: {[id: number| string]: {pos: GameObject, angle: number, collidedPlayerID: number}} = {}
+  curThrownSpears: {[id: number| string]: spearObj} = {};
+
   otherThrownSpears: {[playerID: number]: {[spearID: number]: Phaser.GameObjects.Sprite}} = {};
-  otherCollidedSpears: {[playerID: number]: {[spearID: number]: {collidedPlayerID: number, stuckPos: GameObject, spear: Phaser.GameObjects.Sprite}}} = {};
+  otherCollidedSpears: {[playerID: number]: {[spearID: number]: {collidedInfo: {type: string, id: number}, stuckPos: GameObject, spear: Phaser.GameObjects.Sprite, particles: Phaser.GameObjects.Particles.ParticleEmitter}}} = {};
   curSpearId = 0;
   spearGroup!: Phaser.GameObjects.Group;
   socket: Socket;
@@ -27,6 +31,7 @@ export default class ThrowWEPC {
     this.spearGroup = game.physics.add.group({classType: Phaser.GameObjects.Sprite,});
 
     game.physics.add.overlap(this.spearGroup, this.playerGroup, this.handleSpearCollide, null, this);
+    game.physics.add.overlap(this.spearGroup, this.game.GoatController.goatGroup, this.handleSpearCollide, null, this);
   }
 
   handleWeaponRotation(weapon: Phaser.GameObjects.Sprite, player: Player, type: string) {
@@ -83,7 +88,7 @@ export default class ThrowWEPC {
 
       let collider = this.game.add.rectangle(this.spear.x, this.spear.y, 10, 10);
       collider.name = this.curSpearId.toString();
-
+      this.spear.setDepth(0);
       this.curThrownSpears[this.curSpearId] = {spear: this.spear, vel: {x: 0, y: 0}, collider};
       this.curSpearData[this.curSpearId] = {pos: {x: this.spear.x, y: this.spear.y}, angle: this.spear.angle};
 
@@ -98,39 +103,81 @@ export default class ThrowWEPC {
     this.handleThrownSpears();
   }
 
+  getGameObject(info: {type: string, id: number | string}): Phaser.GameObjects.GameObject | false {
+    let gameObject: Phaser.GameObjects.GameObject | false = global.playersData[info.id];
+    if (info.type === 'goat') {
+      if (this.game.GoatController.curGoats[info.id]) {
+        if (this.game.GoatController.curGoats[info.id]) {
+          gameObject = this.game.GoatController.curGoats[info.id].container;
+        }
+      } else if (this.game.GoatController.otherGoats[info.id]) {
+        gameObject = this.game.GoatController.otherGoats[info.id];
+      } else {
+        gameObject = false;
+      }
+    }
+    return gameObject;
+  }
+
+
+  handleCollidedSpear(spearObj: spearObj, id: number|string, groundCollision: boolean) { // ==================
+    if (groundCollision) { //If spear touches ground
+      delete this.curSpearData[id];
+      delete this.curThrownSpears[id];
+      this.spearGroup.remove(spearObj.collider);
+      spearObj.collider.destroy();
+      this.socket.emit('updateCollidedSpear', global.curPlayerData.id, {id: id, stuckPos: {x: spearObj.spear.x, y: spearObj.spear.y }, angle: spearObj.spear.angle, collidedPlayerID: undefined});
+      return
+    }
+
+    let gameObject = this.getGameObject(spearObj.collidedInfo); //If spear touched gameobject
+    if (!gameObject) {
+      this.spearGroup.remove(spearObj.collider);
+      spearObj.collider.destroy();
+      spearObj.spear.destroy();
+      spearObj.particles.destroy();
+      delete this.curSpearData[id];
+      return;
+    }
+    spearObj.spear.x = gameObject.body.x - spearObj.stuckPos.x;
+    spearObj.spear.y = gameObject.body.y - spearObj.stuckPos.y;
+
+    spearObj.particles = this.handleBlood(spearObj.spear, spearObj.particles);
+
+    if (this.curSpearData[id]) {
+      delete this.curSpearData[id];
+      this.spearGroup.remove(spearObj.collider);
+      spearObj.collider.destroy();
+      this.socket.emit('updateCollidedSpear', global.curPlayerData.id, {id: id, stuckPos: {x: spearObj.stuckPos.x, y: spearObj.stuckPos.y}, angle: spearObj.spear.angle, collidedInfo: spearObj.collidedInfo});
+    }
+  }               //=========================
+
+
+
+  handleBlood(obj: {x: number, y: number, width: number, angle: number}, particles: Phaser.GameObjects.Particles.ParticleEmitter | undefined): Phaser.GameObjects.Particles.ParticleEmitter {
+    const tipX = obj.x + obj.width * Math.cos(Phaser.Math.DegToRad(obj.angle));
+    const tipY = obj.y + obj.width * Math.sin(Phaser.Math.DegToRad(obj.angle));
+    if (!particles) {
+      particles = createParticles(this.game, {x: tipX, y: tipY}, obj.angle + 180);
+    } else {
+      particles.setPosition(tipX, tipY);
+    }
+    return particles;
+  }
+
+
+
 
   handleThrownSpears() {
     for (let id in this.curThrownSpears) {
       const spearObj = this.curThrownSpears[id];
       const groundCollision = this.game.physics.overlap(spearObj.collider, this.game.TerrainHandler.blockGroup);
 
-      if (groundCollision) { //If spear touches ground
-        delete this.curSpearData[id];
-        delete this.curThrownSpears[id];
-        this.spearGroup.remove(spearObj.collider);
-        spearObj.collider.destroy();
-        this.socket.emit('updateCollidedSpear', global.curPlayerData.id, {id: id, stuckPos: {x: spearObj.spear.x, y: spearObj.spear.y * 1.15 }, angle: spearObj.spear.angle, collidedPlayerID: undefined});
+      if (groundCollision || spearObj.collidedInfo) {
+        this.handleCollidedSpear(spearObj, id, groundCollision);
         continue;
       }
-      if (spearObj.collidedPlayerID) { //If spear collided with player
 
-        if (!global.playersData[spearObj.collidedPlayerID]) {
-          this.spearGroup.remove(spearObj.collider);
-          spearObj.collider.destroy();
-          spearObj.spear.destroy();
-          delete this.curSpearData[id];
-          continue;
-        }
-        spearObj.spear.x = global.playersData[spearObj.collidedPlayerID].body.x - spearObj.stuckPos.x;
-        spearObj.spear.y = global.playersData[spearObj.collidedPlayerID].body.y - spearObj.stuckPos.y;
-        if (this.curSpearData[id]) {
-          delete this.curSpearData[id];
-          this.spearGroup.remove(spearObj.collider);
-          spearObj.collider.destroy();
-          this.socket.emit('updateCollidedSpear', global.curPlayerData.id, {id: id, stuckPos: {x: spearObj.stuckPos.x, y: spearObj.stuckPos.y}, angle: spearObj.spear.angle, collidedPlayerID: spearObj.collidedPlayerID});
-        }
-        continue;
-      }
 
       spearObj.spear.x += spearObj.vel.x * this.game.deltaTime;
       spearObj.spear.y += spearObj.vel.y * this.game.deltaTime;
@@ -168,27 +215,32 @@ export default class ThrowWEPC {
   }
 
 
-  handleSpearCollide(spear: Phaser.GameObjects.Rectangle, player: Phaser.GameObjects.Rectangle) {
+  handleSpearCollide(spear: Phaser.GameObjects.Rectangle, target: Phaser.GameObjects.GameObject) {
     let spearObj = this.curThrownSpears[spear.name];
-    spearObj.stuckPos = {x: player.x - spearObj.spear.x, y: player.y - spearObj.spear.y}
-    spearObj.collidedPlayerID = player.name;
+    let targetPos = target.getData('type') === 'player' ? target : target.body;
+    spearObj.stuckPos = {x: targetPos.x - spearObj.spear.x, y: targetPos.y - spearObj.spear.y}
+    spearObj.collidedInfo = {type: target.getData('type'), id: target.getData('id')};
   }
+
 
 
   handleOtherCollidedSpears() {
     for (let playerID in this.otherCollidedSpears) {
       for (let spearID in this.otherCollidedSpears[playerID]) {
         let spearData = this.otherCollidedSpears[playerID][spearID];
-        if (spearData.collidedPlayerID === undefined) { //handle ground spear
+        if (spearData.collidedInfo === undefined) { //handle ground spear
           continue;
         }
-        if (!global.playersData[spearData.collidedPlayerID]) { //Handle left player
+        let gameObject = this.getGameObject(spearData.collidedInfo);
+        if (!gameObject) { //Handle left player
           spearData.spear.destroy();
           delete this.otherCollidedSpears[playerID][spearID];
           continue;
         }
-        spearData.spear.x = global.playersData[spearData.collidedPlayerID].body.x - spearData.stuckPos.x /1.8;
-        spearData.spear.y = global.playersData[spearData.collidedPlayerID].body.y - spearData.stuckPos.y /1.2;
+        spearData.spear.x = gameObject.body.x - spearData.stuckPos.x;
+        spearData.spear.y = gameObject.body.y - spearData.stuckPos.y;
+
+        spearData.particles = this.handleBlood(spearData.spear, spearData.particles);
       }
     }
   }
@@ -202,7 +254,7 @@ export default class ThrowWEPC {
           thrownSpears[playerID] = {};
         }
         if (!thrownSpears[playerID][spearID]) {
-          thrownSpears[playerID][spearID] = this.game.add.sprite(curSpearData.pos.x, curSpearData.pos.y, 'spear').setOrigin(0, .5).setDepth(1);
+          thrownSpears[playerID][spearID] = this.game.add.sprite(curSpearData.pos.x, curSpearData.pos.y, 'spear').setOrigin(0, .5).setDepth(0);
           thrownSpears[playerID][spearID].angle = curSpearData.angle;
         } else {
           let thrownSpear = thrownSpears[playerID][spearID];
@@ -213,12 +265,12 @@ export default class ThrowWEPC {
       }
     });
 
-    this.socket.on('updateCollidedSpear', (playerID: number, spearData: {id: number, stuckPos: GameObject, angle: number, collidedPlayerID: number}) => {
+    this.socket.on('updateCollidedSpear', (playerID: number, spearData: {id: number, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) => {
       this.handleCollidedSpearData(playerID, spearData);
     });
   }
 
-  handleCollidedSpearData(playerID: number, spearData: {id: number, stuckPos: GameObject, angle: number, collidedPlayerID: number}) {
+  handleCollidedSpearData(playerID: number, spearData: {id: number, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) {
     if (!this.otherCollidedSpears[playerID]) {
       this.otherCollidedSpears[playerID] = {};
     }
@@ -228,11 +280,11 @@ export default class ThrowWEPC {
     }
     let x = 500;
     let y = 500;
-    if (spearData.collidedPlayerID === undefined) {
+    if (spearData.collidedInfo === undefined) {
       x = spearData.stuckPos.x;
       y = spearData.stuckPos.y;
     }
-    this.otherCollidedSpears[playerID][spearData.id] = {...spearData, spear: this.game.add.sprite(x, y, 'spear')};
+    this.otherCollidedSpears[playerID][spearData.id] = {...spearData, spear: this.game.add.sprite(x, y, 'spear').setOrigin(0, .5).setDepth(0)};
     this.otherCollidedSpears[playerID][spearData.id].spear.angle = spearData.angle;
   }
 

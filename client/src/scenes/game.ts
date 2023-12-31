@@ -41,6 +41,7 @@ export default class Game extends Phaser.Scene {
     this.load.image('spear', './assets/spear.png');
     this.load.image('grapple', './assets/grapple.png');
     this.load.image('grass', './assets/grass.png');
+    this.load.image('bloodDrop', './assets/bloodDrop.png');
     this.load.on('complete', () => {
       socket = socketClient.io('http://localhost:3000');
     });
@@ -52,6 +53,8 @@ export default class Game extends Phaser.Scene {
 
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
+    this.GoatController = new GoatController(this, socket);
+
     this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
     this.GrappleHandler = new GrappleHandler(this);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
@@ -59,7 +62,6 @@ export default class Game extends Phaser.Scene {
     this.TerrainHandler = new TerrainHandler(this);
     this.UIHandler = new UIHandler(this);
 
-    this.GoatController = new GoatController(this, socket);
 
     this.handleSendData(false);
 

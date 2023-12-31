@@ -36,8 +36,8 @@ export default class GoatController {
   spawn(pos: GameObject) {
     this.lastSpawnPoint = pos;
 
-    let container = this.createGoat(pos);
     let id = this.goatCount + '' + global.curPlayerData.id;
+    let container = this.createGoat(pos, id);
 
     this.curGoats[id] = {container, vx: 1, randomTimer: 300};
     this.goatsData[id] = {pos: {x: pos.x, y: pos.y}, assigned: true};
@@ -45,15 +45,15 @@ export default class GoatController {
     this.goatCount++;
   }
 
-  createGoat(pos: GameObject): Phaser.GameObjects.Container {
+  createGoat(pos: GameObject, id: number | string): Phaser.GameObjects.Container {
     const body = this.game.add.rectangle(0, 0, this.size, this.size/2, 0xff).setName('body');
     const head = this.game.add.rectangle(this.goatOffset.head.x, 0, this.size/3, this.size/1.5, 0xff0000).setName('head');
     head.angle = -30;
     const leg1 = this.game.add.rectangle(-this.goatOffset.leg.x, this.goatOffset.leg.y, this.size/5, this.size/2, 0xff).setName('leg1').setOrigin(0.5, 0);
     const leg2 = this.game.add.rectangle(this.goatOffset.leg.x, this.goatOffset.leg.y, this.size/5, this.size/2, 0xff).setName('leg2').setOrigin(0.5, 0);
 
-    const container = this.game.add.container(pos.x, pos.y);
-    container.setData({frontLegForward: false});
+    const container = this.game.add.container(pos.x, pos.y).setDepth(1);
+    container.setData({frontLegForward: false, type: 'goat', id});
     this.goatGroup.add(container);
     container.add([head, body, leg1, leg2]);
 
@@ -163,7 +163,7 @@ export default class GoatController {
       if (this.goatInRenderDistance(curGoat)) {
         delete this.unasignedGoats[id];
         this.goatsData[id] = {pos: curGoat, assigned: true};
-        let container = this.createGoat(curGoat);
+        let container = this.createGoat(curGoat, id);
         this.goatsData[id] = {pos: curGoat, assigned: true};
         this.curGoats[id] = {container, vx: 0, randomTimer: 0};
       }
@@ -192,7 +192,7 @@ export default class GoatController {
         }
 
         if (!this.otherGoats[id]) {
-          this.otherGoats[id] = this.createGoat(curGoat.pos);
+          this.otherGoats[id] = this.createGoat(curGoat.pos, id);
         } else {
           this.handleLimbs(this.otherGoats[id], {x: curGoat.pos.x, y: curGoat.pos.y});
           this.otherGoats[id].setPosition(curGoat.pos.x, curGoat.pos.y);
@@ -202,14 +202,12 @@ export default class GoatController {
 
 
     this.socket.on('goatAssignment', (id: string, goatData: {pos: GameObject, assigned: boolean}) => {
-      console.log('assigned');
-      let container = this.createGoat(goatData.pos);
+      let container = this.createGoat(goatData.pos, id);
       this.goatsData[id] = {pos: goatData.pos, assigned: true};
       this.curGoats[id] = {container, vx: 0, randomTimer: 0};
     });
 
     this.socket.on('disconnectGoatAssignment', (goatData: {[id: number]: {pos: GameObject, assigned: boolean}}) => {
-      console.log(goatData);
         for (let id in goatData) {
           this.goatsData[id] = goatData[id];
           this.unasignedGoats[id] = goatData[id].pos;
