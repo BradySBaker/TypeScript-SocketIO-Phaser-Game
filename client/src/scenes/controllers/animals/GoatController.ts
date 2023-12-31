@@ -214,6 +214,7 @@ export default class GoatController {
 
 
     this.socket.on('goatAssignment', (id: string, goatData: {pos: GameObject, assigned: boolean}) => {
+      if (this.goatsData[id]) {return;}
       let container = this.createGoat(goatData.pos, id);
       this.goatsData[id] = {pos: goatData.pos, assigned: true};
       this.curGoats[id] = {container, vx: 0, randomTimer: 0};
