@@ -25,7 +25,7 @@ export default class TerrainHandler {
     }
     this.prevChunks[this.chunkDetails.lastChunk - 1] = [];
     prevChunk.forEach((pos, idx) => {
-      let curRect = this.game.add.tileSprite(pos.x, pos.y, this.blockDetails.width, this.blockDetails.height, 'grass');
+      let curRect = this.game.add.tileSprite(pos.x, pos.y, this.blockDetails.width, this.blockDetails.height, 'grass').setDepth(1);
       this.blockGroup.add(curRect);
       this.prevChunks[this.chunkDetails.lastChunk - 1][idx] = curRect;
     });
@@ -80,7 +80,7 @@ export default class TerrainHandler {
     let moveY = random < .5 ? 0 : 1;
     let yPos = this.prevBlock.y + moveY * yDir * 50;
 
-    let curRect = this.game.add.tileSprite(this.prevBlock.x + 50, yPos, this.blockDetails.width, this.blockDetails.height, 'grass');
+    let curRect = this.game.add.tileSprite(this.prevBlock.x + 50, yPos, this.blockDetails.width, this.blockDetails.height, 'grass').setDepth(1);
     this.blockGroup.add(curRect);
     this.prevChunkData[this.chunkDetails.curChunk].push({x: curRect.x, y: curRect.y});
     this.prevChunks[this.chunkDetails.curChunk].push(curRect);

@@ -52,7 +52,7 @@ export default class GoatController {
     const leg1 = this.game.add.rectangle(-this.goatOffset.leg.x, this.goatOffset.leg.y, this.size/5, this.size/2, 0xff).setName('leg1').setOrigin(0.5, 0);
     const leg2 = this.game.add.rectangle(this.goatOffset.leg.x, this.goatOffset.leg.y, this.size/5, this.size/2, 0xff).setName('leg2').setOrigin(0.5, 0);
 
-    const container = this.game.add.container(pos.x, pos.y);
+    const container = this.game.add.container(pos.x, pos.y).setDepth(1);
     container.setData({frontLegForward: false, type: 'goat', id});
     this.goatGroup.add(container);
     container.add([head, body, leg1, leg2]);
