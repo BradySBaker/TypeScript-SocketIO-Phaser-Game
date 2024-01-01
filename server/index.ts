@@ -1,5 +1,7 @@
 import { Socket, Server } from 'socket.io';
 
+type MobTypes = 'goat';
+
 type GameObject = {
   x: number,
   y: number
@@ -7,20 +9,20 @@ type GameObject = {
 
 let playerCount: number = 0;
 
-let goatStartHealth = 5;
+let mobStartHealths = {goat: 5, skug: 2};
 
 let projectileCount: number = 0;
 
-let playerData: {[playerId: number]: {pos: GameObject, grapplePos: GameObject | undefined}} = {};
-let projectilePositions: {[playerId: number]: {direction: string, pos: GameObject, startPos: GameObject, playerId: number}} = {};
-let spearPositions: {[playerId: number]: {[spearID: number]: {pos: GameObject, angle: number}}} = {};
-let collidedSpearPositions: {[playerId: number]: {[spearID: number]: {stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}}} = {};
+let playerData: { [playerId: number]: { pos: GameObject, grapplePos: GameObject | undefined } } = {};
+let projectilePositions: { [playerId: number]: { direction: string, pos: GameObject, startPos: GameObject, playerId: number } } = {};
+let spearPositions: { [playerId: number]: { [spearID: number]: { pos: GameObject, angle: number } } } = {};
+let collidedSpearPositions: { [playerId: number]: { [spearID: number]: { stuckPos: GameObject, angle: number, collidedInfo: { type: string, id: number } } } } = {};
 
-let recentlyAssignedGoat = '-1';
+let recentlyAssignedMob = '-1';
 
 let connectedClients: string[] = [];
 
-let goatHealths: {[id: number | string]: number} = {};
+let mobHealths: { [id: number | string]: number } = {};
 
 const io = new Server(3000, {
   cors: {
@@ -51,18 +53,18 @@ io.on('connection', (socket: Socket) => {
   connectedClients.push(socket.id);
 
   let playerId = playerCount;
-  playerData[playerId] = {pos: {x: 500, y: 100}, grapplePos: undefined };
+  playerData[playerId] = { pos: { x: 500, y: 100 }, grapplePos: undefined };
   io.to(socket.id).emit('playerData', playerData, playerId, collidedSpearPositions);
   io.emit('newPlayer', playerId, playerData[playerId]);
   playerCount++;
 
-  socket.on('updatePosition', (data: {pos: GameObject, grapplePos: GameObject | undefined}) => { //recieved Game Object position and sends it to all clients
+  socket.on('updatePosition', (data: { pos: GameObject, grapplePos: GameObject | undefined }) => { //recieved Game Object position and sends it to all clients
     playerData[playerId] = data;
     io.emit('updatePosition', data, playerId);
   })
 
   socket.on('newProjectile', (pos: GameObject, direction: string, playerId: number) => {
-    projectilePositions[projectileCount] = {direction: direction, pos: {x: direction === 'left' ? pos.x - 25: pos.x + 20, y: pos.y}, startPos: pos, playerId};
+    projectilePositions[projectileCount] = { direction: direction, pos: { x: direction === 'left' ? pos.x - 25 : pos.x + 20, y: pos.y }, startPos: pos, playerId };
     projectileCount++;
   });
 
@@ -73,12 +75,12 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
-  socket.on('updateSpearPositions', (playerId: number, spearData: {[id: number]: {pos: GameObject, angle: number}}) => {
+  socket.on('updateSpearPositions', (playerId: number, spearData: { [id: number]: { pos: GameObject, angle: number } }) => {
     spearPositions[playerId] = spearData;
     socket.broadcast.emit('updateSpearPositions', playerId, spearData);
   });
 
-  socket.on('updateCollidedSpear', (playerId: number, spearData: {id: number, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) => {
+  socket.on('updateCollidedSpear', (playerId: number, spearData: { id: number, stuckPos: GameObject, angle: number, collidedInfo: { type: string, id: number } }) => {
     if (!collidedSpearPositions[playerId]) {
       collidedSpearPositions[playerId] = {};
     }
@@ -87,24 +89,24 @@ io.on('connection', (socket: Socket) => {
   });
 
 
-  socket.on('updateGoats', (goatData: {[goatId: string]: {pos: GameObject, assigned: boolean}}) => {
-    socket.broadcast.emit('updateGoats', goatData);;
+  socket.on('updateMobs', (mobData: { [id: string]: { pos: GameObject, assigned: boolean, type: 'goat' } }) => {
+    socket.broadcast.emit('updateMobs', mobData);;
   });
 
-  socket.on('damageGoat', (id: number | string) => {
-    if (!goatHealths[id]) {
-      goatHealths[id] = goatStartHealth - 1;
+  socket.on('damageMob', (id: number | string, type: MobTypes) => {
+    console.log(type);
+    if (!mobHealths[id]) {
+      mobHealths[id] = mobStartHealths[type] - 1;
     } else {
-      goatHealths[id]--;
+      mobHealths[id]--;
     }
-    console.log(goatHealths[id]);
-    if (goatHealths[id] === 0) {
-      io.emit('goatDied', id);
-      delete goatHealths[id];
+    if (mobHealths[id] === 0) {
+      io.emit('mobDied', id);
+      delete mobHealths[id];
     }
   });
 
-  socket.on('disconnectClient', (goatData: {[goatId: string]: {pos: GameObject, assigned: boolean}}) => {
+  socket.on('disconnectClient', (mobData: { [goatId: string]: { pos: GameObject, assigned: boolean, type: MobTypes } }) => {
     const index = connectedClients.indexOf(socket.id);
     if (index !== -1) {
       connectedClients.splice(index, 1);
@@ -113,13 +115,14 @@ io.on('connection', (socket: Socket) => {
     socket.disconnect(true);
     delete playerData[playerId];
     io.emit('deletePlayer', playerId);
-    io.to(connectedClients[0]).emit('disconnectGoatAssignment', goatData);
+    io.to(connectedClients[0]).emit('mobDisconnectAssignment', mobData);
   });
 
-  socket.on('requestGoatAssignment', (goatId: string, goat: {pos: GameObject, assigned: boolean}) => {
-    if (recentlyAssignedGoat !== goatId) {
-      recentlyAssignedGoat = goatId;
-      socket.emit('goatAssignment', goatId, goat);
+  socket.on('requestMobAssignment', (id: string, mob: { pos: GameObject, assigned: boolean, type: MobTypes }) => {
+    console.log('requesting mob assignment')
+    if (recentlyAssignedMob !== id) {
+      recentlyAssignedMob = id;
+      socket.emit('mobAssignment', id, mob);
     }
   });
 
