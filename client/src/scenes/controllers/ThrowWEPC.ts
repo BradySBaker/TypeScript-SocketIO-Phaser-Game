@@ -33,7 +33,7 @@ export default class ThrowWEPC {
     // @ts-ignore
     game.physics.add.overlap(this.spearGroup, this.playerGroup, this.handleSpearCollide, null, this);
     // @ts-ignore
-    game.physics.add.overlap(this.spearGroup, this.game.GoatController.goatGroup, this.handleSpearCollide, null, this);
+    game.physics.add.overlap(this.spearGroup, this.game.MobController.mobGroup, this.handleSpearCollide, null, this);
   }
 
 
@@ -161,7 +161,7 @@ export default class ThrowWEPC {
 
     if (!spearObj.particles) {
       if (gameObject.getData('type') === 'goat') {
-        this.game.GoatController.damage(gameObject.getData('id'));
+        this.game.MobController.damage(gameObject.getData('id'), gameObject.getData('type'));
       }
     }
 

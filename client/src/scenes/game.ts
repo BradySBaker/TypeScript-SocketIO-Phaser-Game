@@ -5,7 +5,7 @@ import ThrowWEPC from "./controllers/ThrowWEPC.js";
 import GrappleHandler from "./controllers/GrappleHandler.js";
 import TerrainHandler from "./objects/TerrainHandler.js";
 
-import GoatController from "./controllers/animals/GoatController.js";
+import MobController from "./controllers/mobs/MobController.js";
 
 import UIHandler from "./objects/UIHandler.js";
 
@@ -29,7 +29,7 @@ export default class Game extends Phaser.Scene {
   UIHandler!: UIHandler;
   spawnCounter: number = 0;
 
-  GoatController!: GoatController;
+  MobController!: MobController;
 
 
 
@@ -53,7 +53,7 @@ export default class Game extends Phaser.Scene {
 
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
-    this.GoatController = new GoatController(this, socket);
+    this.MobController = new MobController(this, socket);
 
     this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
     this.GrappleHandler = new GrappleHandler(this);
@@ -84,31 +84,31 @@ export default class Game extends Phaser.Scene {
     this.UIHandler.handleSelectButton();
     this.TerrainHandler.spawnChunk();
     // this.animalSpawnHandler();
-    this.GoatController.handleGoats();
+    this.MobController.handleMobs();
     if (this.PlayerController.spaceKey.isDown) {
       if (global.mobCount < 1) {
-        this.GoatController.spawn(global.curPlayerData.body);
+        this.MobController.spawn(global.curPlayerData.body, 'goat');
       }
     }
   }
 
-  animalSpawnHandler() {
-    if (this.spawnCounter >= 100) {
-      const player = this.PlayerController.player;
+  // animalSpawnHandler() {
+  //   if (this.spawnCounter >= 100) {
+  //     const player = this.PlayerController.player;
 
-      //handle goat
-      if (this.PlayerController.move.vx > 0 || this.PlayerController.move.vx < 0) {
-        let distance = Math.sqrt((player.pos.x - this.GoatController.lastSpawnPoint.x) ** 2 + (player.pos.y - this.GoatController.lastSpawnPoint.y) ** 2);
-        let percent = Math.min(distance/5000, .8);
-        let random = Math.random();
-        if (random < percent) {
-          this.GoatController.spawn({x: player.pos.x + 500, y: player.pos.y});
-        }
-      }
-      this.spawnCounter = 0;
-    }
-    this.spawnCounter += this.deltaTime;
-  }
+  //     //handle goat
+  //     if (this.PlayerController.move.vx > 0 || this.PlayerController.move.vx < 0) {
+  //       let distance = Math.sqrt((player.pos.x - this.GoatController.lastSpawnPoint.x) ** 2 + (player.pos.y - this.GoatController.lastSpawnPoint.y) ** 2);
+  //       let percent = Math.min(distance/5000, .8);
+  //       let random = Math.random();
+  //       if (random < percent) {
+  //         this.GoatController.spawn({x: player.pos.x + 500, y: player.pos.y});
+  //       }
+  //     }
+  //     this.spawnCounter = 0;
+  //   }
+  //   this.spawnCounter += this.deltaTime;
+  // }
 
 
   createBackgrounds() {
@@ -162,7 +162,7 @@ export default class Game extends Phaser.Scene {
         PC.sentPos.y = PC.player.pos.y;
       }
       if (Object.keys(global.curMobData).length > 0) {
-        socket.emit('updateGoats', global.curMobData, false);
+        socket.emit('updateMobs', global.curMobData, false);
       }
     }, 10);
   }
