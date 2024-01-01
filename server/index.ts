@@ -9,7 +9,7 @@ type GameObject = {
 
 let playerCount: number = 0;
 
-let mobStartHealths = {goat: 5};
+let mobStartHealths = {goat: 5, skug: 2};
 
 let projectileCount: number = 0;
 
@@ -94,6 +94,7 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('damageMob', (id: number | string, type: MobTypes) => {
+    console.log(type);
     if (!mobHealths[id]) {
       mobHealths[id] = mobStartHealths[type] - 1;
     } else {

@@ -87,7 +87,7 @@ export default class Game extends Phaser.Scene {
     this.MobController.handleMobs();
     if (this.PlayerController.spaceKey.isDown) {
       if (global.mobCount < 1) {
-        this.MobController.spawn(global.curPlayerData.body, 'goat');
+        this.MobController.spawn(global.curPlayerData.body, 'skug');
       }
     }
   }

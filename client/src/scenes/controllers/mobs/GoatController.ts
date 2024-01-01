@@ -1,6 +1,4 @@
-import { Socket } from "socket.io-client";
 import Game from "../../game";
-import global from "../../global";
 
 export default class GoatController {
   game: Game;

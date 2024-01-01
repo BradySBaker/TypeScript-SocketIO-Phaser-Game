@@ -113,7 +113,7 @@ export default class ThrowWEPC {
 
   getGameObject(info: {type: string, id: number | string}): Phaser.GameObjects.GameObject | false {
     let gameObject: Phaser.GameObjects.GameObject | false = false;
-    if (info.type === 'goat') {
+    if (info.type === 'goat' || info.type === 'skug') {
       if (global.curMobs[info.id]) {
         if (global.curMobs[info.id]) {
           gameObject = global.curMobs[info.id].container;
@@ -145,7 +145,9 @@ export default class ThrowWEPC {
       this.spearGroup.remove(spearObj.collider);
       spearObj.collider.destroy();
       spearObj.spear.destroy();
-      spearObj.particles!.destroy();
+      if (spearObj.particles) {
+        spearObj.particles.destroy();
+      }
       delete this.curSpearData[id];
       return;
     }
@@ -160,8 +162,9 @@ export default class ThrowWEPC {
     spearObj.spear.y = targetObject.y - spearObj.stuckPos!.y;
 
     if (!spearObj.particles) {
-      if (gameObject.getData('type') === 'goat') {
-        this.game.MobController.damage(gameObject.getData('id'), gameObject.getData('type'));
+      let type = gameObject.getData('type')
+      if (type === 'goat' || type === 'skug') {
+        this.game.MobController.damage(gameObject.getData('id'), type);
       }
     }
 

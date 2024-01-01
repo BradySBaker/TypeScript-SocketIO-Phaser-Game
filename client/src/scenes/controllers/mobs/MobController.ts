@@ -3,19 +3,21 @@ import Game from "../../game";
 import global from "../../global";
 
 import GoatController from "./GoatController";
+import SkugController from "./SkugController";
 
 export default class MobController {
   socket: Socket;
   game: Game;
   mobGroup!: Phaser.GameObjects.Group;
   lastSpawnPoint: GameObject = {x: 0, y: 0};
-  controllers!: {'goat': GoatController};
+  controllers!: {'goat': GoatController, 'skug': SkugController};
 
   destroyedMobs: {[id: number|string]: boolean} = {};
 
   constructor(game: Game, socket: Socket) {
     this.controllers = {
-      goat: new GoatController(game)
+      goat: new GoatController(game),
+      skug: new SkugController(game),
     };
 
     this.game = game;
@@ -29,7 +31,7 @@ export default class MobController {
 
 
 
-  spawn(pos: GameObject, type: 'goat') {
+  spawn(pos: GameObject, type: MobTypes) {
 
     this.lastSpawnPoint = pos;
 
