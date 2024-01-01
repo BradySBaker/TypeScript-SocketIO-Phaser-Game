@@ -6,7 +6,7 @@ export default class GoatController {
   size = 65;
   goatOffset = {leg: {x: this.size/3, y: this.size/4}, head: {x: this.size/1.5}};
   speed = 5;
-  goatGroup!: Phaser.GameObjects.Group;
+  bodyYOffset = 0;
 
   destroyedGoats: {[id: number|string]: boolean} = {};
 

@@ -56,12 +56,12 @@ export default class MobController {
     let blockY: number;
     let groundCollision = this.game.physics.overlap(mob.container, this.game.TerrainHandler.blockGroup, (object1, object2) => {
     let block = object2 as Phaser.GameObjects.Rectangle;
-    let goatContainer = object1 as Phaser.GameObjects.Container;
+    let mobContainer = object1 as Phaser.GameObjects.Container;
 
-    let curBlockY = block.y - block.height/2 - this.controllers[type].size/1.4
-    if (block.x > goatContainer.x && mob.vx > 0) {
+    let curBlockY = block.y - block.height/2 - (mobContainer.body as Phaser.Physics.Arcade.Body)!.height/2 + this.controllers[type].bodyYOffset;
+    if (block.x > mobContainer.x && mob.vx > 0) {
       blockY = curBlockY;
-    } else if (block.x < goatContainer.x && mob.vx < 0) {
+    } else if (block.x < mobContainer.x && mob.vx < 0) {
       blockY = curBlockY;
     } else if (!blockY) {
       blockY = curBlockY;
