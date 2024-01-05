@@ -11,6 +11,7 @@ import UIHandler from "./objects/UIHandler.js";
 
 import global from './global.ts';
 
+import {startUI} from '../UI/index.js';
 
 import * as socketClient from 'socket.io-client';
 let socket: socketClient.Socket;
@@ -53,6 +54,7 @@ export default class Game extends Phaser.Scene {
   }
 
   create() {
+    startUI();
     this.gameHeight = this.sys.game.canvas.height;
 		this.createBackgrounds();
 
@@ -91,7 +93,7 @@ export default class Game extends Phaser.Scene {
     // this.animalSpawnHandler();
     this.MobController.handleMobs();
     if (this.PlayerController.spaceKey.isDown) {
-      if (global.mobCount < 1) {
+      if (global.mobCount < 3) {
         this.MobController.spawn(global.curPlayerData.body, 'skug');
       }
     }
