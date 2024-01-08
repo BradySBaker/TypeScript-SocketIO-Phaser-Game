@@ -164,7 +164,7 @@ export default class ThrowWEPC {
     if (!spearObj.particles) {
       let type = gameObject.getData('type')
       if (type === 'goat' || type === 'skug') {
-        this.game.MobController.damage(gameObject.getData('id'), type);
+        this.game.MobController.damage(gameObject.getData('id'), {type, pos: targetObject.position});
       }
     }
 

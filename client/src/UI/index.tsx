@@ -3,6 +3,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 
+let pickups: {[itemId: number | string]: number} = {};
 
 const MyComponent: React.FC<{}> = () => {
   return (
@@ -21,7 +22,7 @@ let startUI = () => {
       <MyComponent />
     </React.StrictMode>
   )
-}
+};
 
 
 export {startUI};

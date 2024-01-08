@@ -5,11 +5,12 @@ import ThrowWEPC from "./controllers/ThrowWEPC.js";
 import GrappleHandler from "./controllers/GrappleHandler.js";
 import TerrainHandler from "./objects/TerrainHandler.js";
 
+import DropHandler from "./controllers/DropHandler.js";
 import MobController from "./controllers/mobs/MobController.js";
 
 import UIHandler from "./objects/UIHandler.js";
 
-import global from './global.ts';
+import global from './global.js';
 
 import {startUI} from '../UI/index.js';
 
@@ -28,6 +29,8 @@ export default class Game extends Phaser.Scene {
   GrappleHandler!: GrappleHandler;
   TerrainHandler!: TerrainHandler;
   UIHandler!: UIHandler;
+  DropHandler!: DropHandler;
+
   spawnCounter: number = 0;
 
   MobController!: MobController;
@@ -48,6 +51,8 @@ export default class Game extends Phaser.Scene {
     this.load.image('skugHead', './assets/skug/skugHead.png');
     this.load.image('skugLeg', './assets/skug/skugLeg.png');
 
+    this.load.image('bone', './assets/drops/bone.png');
+
     this.load.on('complete', () => {
       socket = socketClient.io('http://localhost:3000');
     });
@@ -58,6 +63,7 @@ export default class Game extends Phaser.Scene {
     this.gameHeight = this.sys.game.canvas.height;
 		this.createBackgrounds();
 
+    this.DropHandler = new DropHandler(this, socket);
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
     this.MobController = new MobController(this, socket);

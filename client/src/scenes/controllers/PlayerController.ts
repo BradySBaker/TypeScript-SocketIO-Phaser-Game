@@ -281,6 +281,9 @@ export default class PlayerController {
       this.sentPos = {x: data[id].pos.x, y: data[id].pos.y};
       global.curPlayerData = {...global.playersData[id], id};
 
+    // @ts-ignore
+      this.game.physics.add.overlap(global.curPlayerData.body, this.game.DropHandler.dropGroup, this.game.DropHandler.handlePickup, null, this);
+
       this.game.cameras.main.startFollow(global.curPlayerData.body, true, 0.5, 0.5, -100, 350);
 
     });
