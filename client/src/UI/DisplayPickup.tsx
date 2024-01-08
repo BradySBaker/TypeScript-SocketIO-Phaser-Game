@@ -5,6 +5,9 @@ import dropTypesAndCrafting from '../../../dropTypesAndCrafting';
 const DisplayPickup: React.FC<{newPickup: {count: number, type: number}}> = ({newPickup}) => {
 
   useEffect(() => {
+    if (!newPickup.type) {
+      return;
+    }
     let pickup = document.getElementById('pickup');
 
     pickup?.classList.remove('fade');

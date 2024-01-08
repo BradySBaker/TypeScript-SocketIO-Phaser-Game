@@ -24,13 +24,15 @@ export default class GrappleHandler {
     this.graphics = game.add.graphics();
     this.grappleCheckCircle = game.add.ellipse(0, 0, 50, 50, 0xFFFFFF, 1).setDepth(1).setAlpha(0);
     game.physics.add.existing(this.grappleCheckCircle);
+    this.grappleHook = this.game.add.sprite(0, 0, 'grapple').setOrigin(0, 0.5).setDepth(2);
   }
 
   handlePosition(id: number | string) {
-    if (!this.grappleHook) {
-      this.grappleHook = this.game.add.sprite(0, 0, 'grapple').setOrigin(0, 0.5).setDepth(1);
-    }
     this.grappleHook.setPosition(global.playersData[id].body.x, global.playersData[id].body.y);
+    if (!this.grappleHook.visible) {
+      this.grappleHook.setActive(true);
+      this.grappleHook.setVisible(true);
+    }
   }
 
   getMouseWorld() {

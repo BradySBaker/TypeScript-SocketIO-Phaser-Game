@@ -8,8 +8,6 @@ import TerrainHandler from "./objects/TerrainHandler.js";
 import DropHandler from "./controllers/DropHandler.js";
 import MobController from "./controllers/mobs/MobController.js";
 
-import UIHandler from "./objects/UIHandler.js";
-
 import global from './global.js';
 
 import {startUI} from '../UI/index.js';
@@ -28,7 +26,6 @@ export default class Game extends Phaser.Scene {
   ThrowWEPC!: ThrowWEPC;
   GrappleHandler!: GrappleHandler;
   TerrainHandler!: TerrainHandler;
-  UIHandler!: UIHandler;
   DropHandler!: DropHandler;
 
   spawnCounter: number = 0;
@@ -42,8 +39,8 @@ export default class Game extends Phaser.Scene {
     this.load.image('ground', './assets/ground2.png');
     this.load.image('mountains1', './assets/mountains1.png');
     this.load.image('mountains2', './assets/mountains2.png');
-    this.load.image('spear', './assets/spear.png');
-    this.load.image('grapple', './assets/grapple.png');
+    this.load.image('spear', './assets/tools/spear.png');
+    this.load.image('grapple', './assets/tools/grapple.png');
     this.load.image('grass', './assets/grass.png');
     this.load.image('bloodDrop', './assets/bloodDrop.png');
 
@@ -73,12 +70,9 @@ export default class Game extends Phaser.Scene {
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
     this.ThrowWEPC.handleIncomingSpearData();
     this.TerrainHandler = new TerrainHandler(this);
-    this.UIHandler = new UIHandler(this);
 
 
     this.handleSendData();
-
-    this.UIHandler.draw();
 
     window.addEventListener('unload', () => {
       socket.emit('disconnectClient', global.curMobData); //Handle disconnect and send data
@@ -94,7 +88,6 @@ export default class Game extends Phaser.Scene {
     this.ThrowWEPC.handleOtherCollidedSpears();
     this.GrappleHandler.drawRopes();
     this.handleBackgrounds();
-    this.UIHandler.handleSelectButton();
     this.TerrainHandler.spawnChunk();
     // this.animalSpawnHandler();
     this.MobController.handleMobs();

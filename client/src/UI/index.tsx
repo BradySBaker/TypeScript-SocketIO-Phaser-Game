@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 import { createRoot } from 'react-dom/client';
 
 import DisplayPickup from './DisplayPickup.jsx';
+import ToolSelector from './ToolSelector.jsx';
 
 let externalSetPickup!: Function;
 
@@ -12,6 +13,7 @@ const UI: React.FC<{}> = () => {
   return (
     <div id="app">
       <DisplayPickup newPickup={newPickup}/>
+      <ToolSelector />
     </div>
   )
 };

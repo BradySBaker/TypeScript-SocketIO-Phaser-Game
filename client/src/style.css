@@ -19,16 +19,19 @@ canvas {
 }
 
 @keyframes fadeOut {
-  from {
+  0% {
     opacity: 1;
   }
-  to {
+  50% {
+    opacity: 1;
+  }
+  100% {
     opacity: 0;
   }
 }
 
 .fade {
-  animation: fadeOut 1.5s ease-out;
+  animation: fadeOut 2s ease-out;
 }
 
 #pickup {
@@ -39,8 +42,8 @@ canvas {
   right: 10%;
   color: rgb(179, 255, 0);
   background-color: rgba(149, 255, 0, 0.423);
-  border-radius: 1vw;
-  font-size: 3vw;
+  border-radius: 5%;
+  font-size: 200%;
 
 }
 
@@ -50,5 +53,27 @@ canvas {
 
 #pickup-count {
   display: inline-block;
-  margin-right: 1vw;
+  margin-right: 8px;
+}
+
+#toolSelector {
+  position: absolute;
+  display: flex;
+  bottom: 5%;
+  right: 5%;
+}
+
+.selectionBox {
+  width: 1.2vw;
+  height: 1.2vw;
+  min-width: 30px;
+  min-height: 30px;
+  background-color: rgba(128, 128, 128, 0.462);
+  margin-right: 5px;
+}
+
+.selectionIcon {
+  width: 110%;
+  height: auto;
+  transform: rotate(-45deg);
 }
