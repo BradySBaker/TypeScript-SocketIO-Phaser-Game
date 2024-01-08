@@ -1,14 +1,17 @@
-// MyComponent.tsx
-
-import React from 'react';
+import React, {useState} from 'react';
 import { createRoot } from 'react-dom/client';
 
-let pickups: {[itemId: number | string]: number} = {};
+import DisplayPickup from './DisplayPickup.jsx';
 
-const MyComponent: React.FC<{}> = () => {
+let externalSetPickup!: Function;
+
+const UI: React.FC<{}> = () => {
+  const [newPickup, setNewPickup] = useState({count: 0, type: 0});
+  externalSetPickup = setNewPickup;
+
   return (
-    <div>
-      Hello world!
+    <div id="app">
+      <DisplayPickup newPickup={newPickup}/>
     </div>
   )
 };
@@ -19,10 +22,10 @@ const root = createRoot(document.getElementById('root')!);
 let startUI = () => {
   root.render(
     <React.StrictMode>
-      <MyComponent />
+      <UI />
     </React.StrictMode>
   )
 };
 
 
-export {startUI};
+export {startUI, externalSetPickup};

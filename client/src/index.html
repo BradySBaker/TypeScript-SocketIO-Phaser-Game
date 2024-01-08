@@ -8,8 +8,13 @@
 	<title>Multiplayer Madness</title>
 </head>
 <body>
-	<script type="module" src="main.ts"></script>
   <div id="root">
+  <script>
+    const root = document.getElementById('root');
+    root.style.width = window.innerWidth + 'px';
+    root.style.height = Math.min(Math.max(window.innerHeight, 400), 800) + 'px';
+  </script>
+  <script type="module" src="main.ts"></script>
 </body>
 
 </html>

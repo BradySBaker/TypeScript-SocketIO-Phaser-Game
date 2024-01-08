@@ -2,13 +2,15 @@ import global from "../global";
 import Game from "../game";
 import dropTypesAndCrafting from "../../../../dropTypesAndCrafting.js";
 import { Socket } from "socket.io-client";
-import { NormalModule } from "webpack";
+
+import { externalSetPickup } from "../../UI/index.js";
 
 export default class DropHandler {
   game: Game;
   socket: Socket;
   dropGroup!: Phaser.GameObjects.Group;
   dropData: {[id: number]: Phaser.GameObjects.Container} = {};
+
     constructor(game: Game, socket: Socket) {
       this.game = game;
       this.socket = socket;
@@ -56,7 +58,11 @@ export default class DropHandler {
 
 
       this.socket.on('pickupVerified', (type: number, count: number) => {
-        console.log(type, count);
+        if (!global.pickups[type]) {
+          global.pickups[type] = 0;
+        }
+        global.pickups[type] += count;
+        externalSetPickup({type, count});
       });
 
       this.socket.on('deleteDrop', (id) => {

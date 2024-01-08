@@ -1,0 +1,54 @@
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+#root {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+#app {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.fade {
+  animation: fadeOut 1.5s ease-out;
+}
+
+#pickup {
+  opacity: 0;
+  position: absolute;
+  display: inline-block;
+  bottom: 10%;
+  right: 10%;
+  color: rgb(179, 255, 0);
+  background-color: rgba(149, 255, 0, 0.423);
+  border-radius: 1vw;
+  font-size: 3vw;
+
+}
+
+#pickup-name {
+  display: inline-block;
+}
+
+#pickup-count {
+  display: inline-block;
+  margin-right: 1vw;
+}
