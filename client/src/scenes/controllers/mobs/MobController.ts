@@ -14,6 +14,8 @@ export default class MobController {
 
   destroyedMobs: {[id: number|string]: boolean} = {};
 
+
+
   constructor(game: Game, socket: Socket) {
     this.controllers = {
       goat: new GoatController(game),
@@ -46,8 +48,8 @@ export default class MobController {
 
 
 
-  damage(id: number | string, type: string) {
-    this.socket.emit('damageMob', id, type);
+  damage(id: number | string, info: {type: string, pos: GameObject}) {
+    this.socket.emit('damageMob', id, {pos: {x: Math.round(info.pos.x), y: Math.round(info.pos.y)}, type: info.type});
   }
 
   handleMovement(mob: Mob, id: number | string) {
@@ -194,6 +196,7 @@ export default class MobController {
         delete global.curMobs[id];
         delete global.curMobData[id];
       }
+
     });
   }
 }

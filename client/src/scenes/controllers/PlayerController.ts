@@ -99,18 +99,23 @@ export default class PlayerController {
   handleMovement() {
     this.handleGround();
     //Handle equips ==
+    const grappleHook = this.game.GrappleHandler.grappleHook;
+
     if (this.game.ThrowWEPC.spear && global.equiped === 'spear') {
       this.game.ThrowWEPC.handleWeaponRotation(this.game.ThrowWEPC.spear, this.player, 'spear');
     } else if (global.equiped === 'grapple') {
-      if (this.game.GrappleHandler.grappleHook) {
+      if (grappleHook) {
         this.game.GrappleHandler.handleGrapple();
       }
       this.game.GrappleHandler.handlePosition(global.curPlayerData.id);
       if (!this.game.GrappleHandler.grappling) {
-        this.game.ThrowWEPC.handleWeaponRotation(this.game.GrappleHandler.grappleHook, this.player, 'grapple');
+        this.game.ThrowWEPC.handleWeaponRotation(grappleHook, this.player, 'grapple');
       }
-
+    } else if (grappleHook) {
+      grappleHook.setActive(false);
+      grappleHook.setVisible(false);
     }
+
     this.game.ThrowWEPC.handleSpearThrow(this.player);
     // ==
 
@@ -280,6 +285,9 @@ export default class PlayerController {
       }
       this.sentPos = {x: data[id].pos.x, y: data[id].pos.y};
       global.curPlayerData = {...global.playersData[id], id};
+
+    // @ts-ignore
+      this.game.physics.add.overlap(global.curPlayerData.body, this.game.DropHandler.dropGroup, this.game.DropHandler.handlePickup, null, this);
 
       this.game.cameras.main.startFollow(global.curPlayerData.body, true, 0.5, 0.5, -100, 350);
 

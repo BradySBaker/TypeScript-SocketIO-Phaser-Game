@@ -13,3 +13,4 @@ declare type Rect = Phaser.GameObjects.Rectangle;
 type Mob = {container: Phaser.GameObjects.Container, vx: number, randomTimer: number};
 
 type MobTypes = 'goat' | 'skug';
+
