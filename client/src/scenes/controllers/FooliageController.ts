@@ -4,7 +4,6 @@ import global from "../global";
 
 let plantRates: {[type in PlantType]: number} = {'stickyFurn': .5};
 let plants: {[id: number | string]: Phaser.GameObjects.Sprite} = {};
-let createCount = 0;
 
 export default class FooliageController {
   game: Game;
@@ -28,16 +27,14 @@ export default class FooliageController {
     for (let type in plantRates) {
       const plantType = type as PlantType;
       if (Math.random() <= plantRates[plantType]) {
-        let id = global.curPlayerData.id + '' + createCount;
-        this.createPlant(id, plantType, pos);
-        this.socket.emit('newPlant', id, type, pos); //send position to server
-        createCount++;
+        this.socket.emit('newPlant', type, pos); //send position to server
       }
     }
   };
 
   handleIncomingPlantData() {
     this.socket.on('newPlant', (id: number | string, type: PlantType, pos: GameObject) => {
+      console.log(id, type, pos);
       this.createPlant(id, type, pos);
     });
 
