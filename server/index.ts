@@ -2,6 +2,7 @@ import { Socket, Server } from 'socket.io';
 // import dropTypesAndCrafting from '../dropTypesAndCrafting.js';
 
 type MobTypes = 'goat' | 'skug';
+type PlantType = 'stickyFurn';
 
 type GameObject = {
   x: number,
@@ -21,6 +22,8 @@ let collidedSpearPositions: { [playerId: number]: { [spearID: number]: { stuckPo
 
 let playerInventoryData: {[playerId: number]: { [itemID: string | number]: number }} = {};
 let recentDrops: {[itemId: string]: number} = {};
+
+let curFooliage: {[plantId: string | number]: {type: PlantType, pos: GameObject}} = {};
 
 let recentlyAssignedMob = '-1';
 
@@ -60,6 +63,7 @@ io.on('connection', (socket: Socket) => {
 
   let playerId = playerCount;
   playerPosData[playerId] = { pos: { x: 500, y: 100 }, grapplePos: undefined };
+  io.to(socket.id).emit('fooliage', curFooliage);
   io.to(socket.id).emit('playerData', playerPosData, playerId, collidedSpearPositions);
   io.emit('newPlayer', playerId, playerPosData[playerId]);
   playerCount++;
@@ -149,6 +153,11 @@ io.on('connection', (socket: Socket) => {
       recentlyAssignedMob = id;
       socket.emit('mobAssignment', id, mob);
     }
+  });
+
+  socket.on('newPlant', (id: number | string, type: PlantType, pos: GameObject) => {
+    curFooliage[id] = {type, pos};
+    socket.broadcast.emit('newPlant', id, type, pos);
   });
 
 });

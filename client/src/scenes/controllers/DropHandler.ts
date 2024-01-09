@@ -4,7 +4,6 @@ import dropTypesAndCrafting from "../../../../dropTypesAndCrafting.js";
 import { Socket } from "socket.io-client";
 
 import { externalSetPickup } from "../../UI/index.js";
-import { useDebugValue } from "react";
 
 export default class DropHandler {
   game: Game;

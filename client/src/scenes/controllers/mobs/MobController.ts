@@ -9,7 +9,6 @@ export default class MobController {
   socket: Socket;
   game: Game;
   mobGroup!: Phaser.GameObjects.Group;
-  lastSpawnPoint: GameObject = {x: 0, y: 0};
   controllers!: {'goat': GoatController, 'skug': SkugController};
 
   destroyedMobs: {[id: number|string]: boolean} = {};
@@ -34,9 +33,6 @@ export default class MobController {
 
 
   spawn(pos: GameObject, type: MobTypes) {
-
-    this.lastSpawnPoint = pos;
-
     let id = global.mobCount + '' + global.curPlayerData.id;
     let container = this.controllers[type].create(pos, id);
 
