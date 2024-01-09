@@ -7,35 +7,23 @@ tools.fill('');
 tools[0] = 'spear';
 tools[1] = 'grapple';
 
-const ToolSelector: React.FC<{}> = () => {
+const ToolSelector: React.FC<{keyPress: string}> = ({keyPress}) => {
   const [curIcon, setCurIcon] = useState('spear');
-
-  const handleKeyPress = (event: KeyboardEvent) => {
-    let selected = tools[Number(event.key) - 1];
+  useEffect(() => {
+    let selected = tools[Number(keyPress) - 1];
     if (selected) {
       setCurIcon(selected);
       global.equiped = selected;
     }
-  };
-
-  useEffect(() => {
-    // Attach event listener when the component mounts
-    window.addEventListener('keydown', handleKeyPress);
-
-    // Detach event listener when the component unmounts
-    return () => {
-      window.removeEventListener('keydown', handleKeyPress);
-    };
-  }, []);
-
+  }, [keyPress]);
 
   return (
     <div id="toolSelector">
       {
         tools.map((curTool) => {
           return(
-            <div className="selectionBox" style={curIcon === curTool ? {backgroundColor: 'rgba(255, 215, 0, 0.5)'} : {}}>
-              {curTool !== '' ?  <img className="selectionIcon" src={`./assets/tools/${curTool}.png`}/> : null}
+            <div className="selection-box" style={curIcon === curTool ? {backgroundColor: 'rgba(255, 215, 0, 0.5)'} : {}}>
+              {curTool !== '' ?  <img className="selection-icon" src={`./assets/tools/${curTool}.png`}/> : null}
             </div>
           )
         })

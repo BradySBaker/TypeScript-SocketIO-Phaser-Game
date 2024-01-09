@@ -64,7 +64,7 @@ canvas {
   right: 5%;
 }
 
-.selectionBox {
+.selection-box, .inventory-box {
   background-color: #80808076;
   width: 1.2vw;
   min-width: 30px;
@@ -73,10 +73,35 @@ canvas {
   margin-right: 5px;
 }
 
-.selectionIcon {
+#inventory {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.inventory-box-row {
+  margin-bottom: 5px;
+  display: flex;
+}
+
+.inventory-box {
+  color: wheat;
+  background-color: #494949d4;
+  width: 2vw;
+  height: 2vw;
+  margin-right: 10px;
+}
+
+.selection-icon, .item-icon {
   width: 110%;
   height: auto;
   transform: rotate(-45deg);
+}
+
+.item-icon {
+  width: 50%;
+  margin-left: 10%;
 }
 
 /*# sourceMappingURL=index.49297165.css.map */

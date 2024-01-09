@@ -8,5 +8,5 @@ export default {
   unasignedMobs: {} as {[id: string]: {x: number, y: number, type: MobTypes}}, //Waiting to be assigned
   otherMobs: {} as {[id: string]: Phaser.GameObjects.Container}, //Recieved mobs
   mobCount: 0 as number,
-  pickups: {} as {[itemId: number | string]: number}
+  pickups: {} as {[itemId: number | string]: {count: number, pos: GameObject}}
 }
