@@ -71,9 +71,9 @@ io.on('connection', (socket: Socket) => {
   playerCount++;
 
   socket.on('updatePosition', (data: { pos: GameObject, grapplePos: GameObject | undefined }) => { //recieved Game Object position and sends it to all clients
-    if (data.pos.x <= minMaxPlayerPosX.min - 50) {
+    if (data.pos.x <= minMaxPlayerPosX.min) {
       minMaxPlayerPosX.min = data.pos.x;
-    } else if (data.pos.x >= minMaxPlayerPosX.max + 50) {
+    } else if (data.pos.x >= minMaxPlayerPosX.max) {
       minMaxPlayerPosX.max = data.pos.x;
     }
     playerPosData[playerId] = data;
@@ -163,10 +163,10 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('newPlant', (type: PlantType, pos: GameObject) => {
-    if (pos.x >= minMaxPlayerPosX.max || pos.x <= minMaxPlayerPosX.min) {
-      console.log(plantCreateCount);
+    console.log(type, pos);
+    if (pos.x > minMaxPlayerPosX.max || pos.x < minMaxPlayerPosX.min) {
       curFooliage[plantCreateCount] = {type, pos};
-      io.emit('newPlant', plantCreateCount, type, pos);
+      io.emit('newPlant', {id: plantCreateCount, type, pos});
       plantCreateCount++;
     }
   });

@@ -94,6 +94,7 @@ export default class Game extends Phaser.Scene {
     this.handleBackgrounds();
     this.TerrainHandler.spawnChunk();
     this.MobController.handleMobs();
+    this.FooliageController.decideSpawnAndDeletePlants();
     if (this.PlayerController.spaceKey.isDown) {
       if (global.mobCount < 3) {
         this.MobController.spawn(global.curPlayerData.body, 'skug');

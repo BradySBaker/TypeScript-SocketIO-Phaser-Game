@@ -187,7 +187,7 @@ export default class MobController {
         this.destroyedMobs[id] = true;
         global.otherMobs[id].destroy();
         delete global.otherMobs[id];
-      } else {
+      } else if (global.curMobs[id]) {
         global.curMobs[id].container.destroy();
         delete global.curMobs[id];
         delete global.curMobData[id];

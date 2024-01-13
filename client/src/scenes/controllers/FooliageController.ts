@@ -2,8 +2,15 @@ import Game from "../game";
 import { Socket } from "socket.io-client";
 import global from "../global";
 
+type PlantData = {id: number | string, type: PlantType, pos: GameObject};
+
+const PLANT_RENDER_DISTANCE = 2000; //should be 2000!
+
+let prevPlayerAreaX: undefined | number;
+
 let plantRates: {[type in PlantType]: number} = {'stickyFurn': .5};
 let plants: {[id: number | string]: Phaser.GameObjects.Sprite} = {};
+let allPlantData: {[areaX: number]: {[id: number | string]: {type: PlantType, pos: GameObject}}} = {}; //Will house objects based on areaX to + 2000
 
 export default class FooliageController {
   game: Game;
@@ -14,14 +21,14 @@ export default class FooliageController {
      this.handleIncomingPlantData();
   }
 
-  createPlant(id: number | string, type: PlantType, pos: GameObject) {
-    let newPlant = this.game.add.sprite(pos.x, pos.y, type).setScale(3);
+  spawnPlant(plantData: PlantData) {
+    let newPlant = this.game.add.sprite(plantData.pos.x, plantData.pos.y, plantData.type).setScale(3);
     newPlant.y -= (newPlant.height * 3)/2;
-    plants[id] = newPlant;
+    plants[plantData.id] = newPlant;
   };
 
-  validateAndSpawnPlant(pos: GameObject) {
-    if (Math.random() > .1) {
+  validateAndCreatePlant(pos: GameObject) {
+    if (Math.random() > .3) {
       return
     }
     for (let type in plantRates) {
@@ -32,17 +39,47 @@ export default class FooliageController {
     }
   };
 
+  addToPlantData(plantData: PlantData) {
+    let areaX = Math.floor(plantData.pos.x / 2000) * 2000;
+    if (!allPlantData[areaX]) {
+     allPlantData[areaX] = {};
+    }
+    allPlantData[areaX][plantData.id] = {type: plantData.type, pos: plantData.pos};
+  }
+
   handleIncomingPlantData() {
-    this.socket.on('newPlant', (id: number | string, type: PlantType, pos: GameObject) => {
-      console.log(id, type, pos);
-      this.createPlant(id, type, pos);
+    this.socket.on('newPlant', (plantData: PlantData) => {
+      console.log(plantData);
+      this.addToPlantData(plantData);
     });
 
     this.socket.on('fooliage', (curFooliage: {[plantId: string | number]: {type: PlantType, pos: GameObject}}) => {
       for (let id in curFooliage) {
-        this.createPlant(id, curFooliage[id].type, curFooliage[id].pos);
+        this.addToPlantData({id, type: curFooliage[id].type, pos: curFooliage[id].pos});
       }
     });
   };
+
+  decideSpawnAndDeletePlants() {
+    let playerPos = global.curPlayerData.body;
+    if (!playerPos) {
+      return;
+    }
+    let newPlayerAreaX = Math.floor(playerPos.x / PLANT_RENDER_DISTANCE) * PLANT_RENDER_DISTANCE;
+
+    if (prevPlayerAreaX !== newPlayerAreaX || !prevPlayerAreaX) {
+      prevPlayerAreaX = newPlayerAreaX;
+      for (let id in plants) { // --fix remove from group
+        console.log('deleted ', id)
+        plants[id].destroy();
+        delete plants[id];
+      }
+      let plantDataAtArea = allPlantData[newPlayerAreaX];
+      for (let id in plantDataAtArea) {
+        console.log('added', id);
+        this.spawnPlant({id, type: plantDataAtArea[id].type, pos: plantDataAtArea[id].pos});
+      }
+    }
+  }
 
 }
