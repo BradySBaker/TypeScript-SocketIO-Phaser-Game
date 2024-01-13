@@ -40,17 +40,20 @@ export default class FooliageController {
   };
 
   addToPlantData(plantData: PlantData) {
-    let areaX = Math.floor(plantData.pos.x / 2000) * 2000;
+    let areaX = Math.floor(plantData.pos.x / PLANT_RENDER_DISTANCE) * PLANT_RENDER_DISTANCE;
     if (!allPlantData[areaX]) {
      allPlantData[areaX] = {};
     }
     allPlantData[areaX][plantData.id] = {type: plantData.type, pos: plantData.pos};
+    return areaX;
   }
 
   handleIncomingPlantData() {
     this.socket.on('newPlant', (plantData: PlantData) => {
-      console.log(plantData);
-      this.addToPlantData(plantData);
+      let areaX = this.addToPlantData(plantData);
+      if (areaX === 0) { //Fix first player glitch
+        prevPlayerAreaX = undefined;
+      }
     });
 
     this.socket.on('fooliage', (curFooliage: {[plantId: string | number]: {type: PlantType, pos: GameObject}}) => {
@@ -66,8 +69,7 @@ export default class FooliageController {
       return;
     }
     let newPlayerAreaX = Math.floor(playerPos.x / PLANT_RENDER_DISTANCE) * PLANT_RENDER_DISTANCE;
-
-    if (prevPlayerAreaX !== newPlayerAreaX || !prevPlayerAreaX) {
+    if (prevPlayerAreaX !== newPlayerAreaX || prevPlayerAreaX === undefined) {
       prevPlayerAreaX = newPlayerAreaX;
       for (let id in plants) { // --fix remove from group
         console.log('deleted ', id)
@@ -75,6 +77,7 @@ export default class FooliageController {
         delete plants[id];
       }
       let plantDataAtArea = allPlantData[newPlayerAreaX];
+      console.log(allPlantData);
       for (let id in plantDataAtArea) {
         console.log('added', id);
         this.spawnPlant({id, type: plantDataAtArea[id].type, pos: plantDataAtArea[id].pos});
