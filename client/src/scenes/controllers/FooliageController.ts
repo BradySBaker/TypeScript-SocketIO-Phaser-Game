@@ -1,6 +1,7 @@
 import Game from "../game";
 import { Socket } from "socket.io-client";
 import global from "../global";
+import {externalSetUse} from "../../UI/index";
 
 type PlantData = {id: number | string, type: PlantType, pos: GameObject};
 
@@ -15,16 +16,26 @@ let allPlantData: {[areaX: number]: {[id: number | string]: {type: PlantType, po
 export default class FooliageController {
   game: Game;
   socket: Socket;
+  plantGroup!: Phaser.GameObjects.Group;
+  overlap = false;
+  overlapId = 0;
+  overlapFalseTime = 10;
   constructor(game: Game, socket: Socket) {
      this.game = game;
      this.socket = socket;
+     this.plantGroup = game.physics.add.group({
+      classType: Phaser.GameObjects.Sprite,
+     });
+
      this.handleIncomingPlantData();
   }
 
   spawnPlant(plantData: PlantData) {
     let newPlant = this.game.add.sprite(plantData.pos.x, plantData.pos.y, plantData.type).setScale(3);
+    newPlant.setData('id', plantData.id);
     newPlant.y -= (newPlant.height * 3)/2;
     plants[plantData.id] = newPlant;
+    this.plantGroup.add(newPlant);
   };
 
   validateAndCreatePlant(pos: GameObject) {
@@ -71,18 +82,40 @@ export default class FooliageController {
     let newPlayerAreaX = Math.floor(playerPos.x / PLANT_RENDER_DISTANCE) * PLANT_RENDER_DISTANCE;
     if (prevPlayerAreaX !== newPlayerAreaX || prevPlayerAreaX === undefined) {
       prevPlayerAreaX = newPlayerAreaX;
-      for (let id in plants) { // --fix remove from group
-        console.log('deleted ', id)
+      for (let id in plants) {
+        this.plantGroup.remove(plants[id]);
         plants[id].destroy();
         delete plants[id];
       }
       let plantDataAtArea = allPlantData[newPlayerAreaX];
-      console.log(allPlantData);
       for (let id in plantDataAtArea) {
-        console.log('added', id);
         this.spawnPlant({id, type: plantDataAtArea[id].type, pos: plantDataAtArea[id].pos});
       }
     }
   }
+
+  handleOverlap(player: Phaser.Types.Physics.Arcade.GameObjectWithBody, plant: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
+    let id = plant.getData('id')
+    this.game.FooliageController.overlapId = id;
+    this.game.FooliageController.overlap = true;
+  };
+
+  handleDisplayUI() {
+    if (!externalSetUse) {
+      return;
+    }
+    if (!this.overlap) {
+      this.overlapFalseTime += this.game.deltaTime; //Make sure overlap is false long enough to remove ui
+    } else {
+      this.overlapFalseTime = 0;
+    }
+    if (this.overlapFalseTime < 4) {
+      externalSetUse(true);
+    } else {
+      externalSetUse(false);
+    }
+    this.overlap = false;
+
+  };
 
 }

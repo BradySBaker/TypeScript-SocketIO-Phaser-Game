@@ -104,4 +104,31 @@ canvas {
   margin-left: 10%;
 }
 
+ee #use-circle-container {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+  top: 70%;
+  left: 44%;
+  transform: translate(-44%, -70%);
+}
+
+#circular-progress {
+  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#middle-circle {
+  background-color: #fff;
+  border-radius: 50%;
+  width: 70%;
+  height: 70%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
 /*# sourceMappingURL=index.49297165.css.map */
