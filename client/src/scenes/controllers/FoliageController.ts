@@ -151,6 +151,7 @@ export default class FoliageController {
       externalSetUsePos({x: ((plant.x - camera.worldView.x) * camera.zoom) - plant.width/1.3, y: ((plant.y - camera.worldView.y) * camera.zoom) - plant.height/2});
 
       if (prevUseComplete === useComplete) {
+        this.overlap = false;
         return;
       }
       prevUseComplete = useComplete;
@@ -159,10 +160,10 @@ export default class FoliageController {
         this.pickupPlant(this.overlapId);
       }
     } else {
+      this.overlap = false;
       externalSetUsePos(false);
     }
     this.overlap = false;
-
   };
 
   pickupPlant(id: number) {

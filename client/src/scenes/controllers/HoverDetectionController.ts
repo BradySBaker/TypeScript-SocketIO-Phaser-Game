@@ -5,6 +5,7 @@ export default class HoverDetectionController {
   game: Game;
   hoverCollider!: Phaser.GameObjects.Rectangle;
   size = 20;
+  maxDistance = 200;
   constructor(game: Game) {
     this.game = game;
     this.hoverCollider = game.add.rectangle(0, 0, this.size, this.size, 0xfffff);
@@ -24,9 +25,18 @@ export default class HoverDetectionController {
     if (!global.curPlayerData.body) {
       return;
     }
-    if (Math.abs((mousePos.x - global.curPlayerData.body.x)) < 200 && Math.abs((mousePos.y - global.curPlayerData.body.y)) < 200) {
-      this.hoverCollider.setPosition(mousePos.x, mousePos.y)
-    }
+    let player = global.curPlayerData.body;
+    const deltaX = mousePos.x - player.x;
+    const deltaY = mousePos.y - player.y;
+
+    // Calculate the distance ratio
+    const distanceRatio = Math.min(1, this.maxDistance / Math.sqrt(deltaX**2 + deltaY**2));
+
+    // Calculate the new position for the collider
+    const newX = player.x + distanceRatio * deltaX;
+    const newY = player.y + distanceRatio * deltaY;
+
+    this.hoverCollider.setPosition(newX, newY);
   }
 
 }
