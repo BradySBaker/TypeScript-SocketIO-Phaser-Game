@@ -10,26 +10,39 @@ export default class TerrainHandler {
   prevBlock!: GameObject;
   prevChunks: {[chunk: number]: Phaser.GameObjects.TileSprite[]} = {};
   prevChunkData: {[chunk: number]: GameObject[]} = {};
-  chunkDetails = {curChunk: 0, lastChunk: 0, chunkAmount: 5, chunkLength: 10};
+  chunkDetails = {curChunk: 0, lastChunk: 0, chunkAmount: 5, chunkLength: 10}; //Chunk length must be atleast 5
   blockDetails = {height: 500, width: 50};
+
+  chunksGenerating = false;
+  curChunk = 0;
+  chunkAmount = 0;
+
+  chunkWidth = this.chunkDetails.chunkLength * this.blockDetails.width * this.chunkDetails.chunkAmount;
 
   constructor(game: Game) {
     this.game = game;
     this.blockGroup = game.physics.add.group({classType: Phaser.GameObjects.TileSprite});
   }
 
-  generatePrevChunk() {
-    let prevChunk = this.prevChunkData[this.chunkDetails.lastChunk - 1];
+  generatePrevChunk(lastChunk: boolean, forwards: boolean) {
+    let index = forwards ? this.curChunk : this.chunkDetails.lastChunk - 1;
+    let prevChunk = this.prevChunkData[index];
     if (!prevChunk) {
       return;
     }
-    this.prevChunks[this.chunkDetails.lastChunk - 1] = [];
+    this.prevChunks[index] = [];
     prevChunk.forEach((pos, idx) => {
       let curRect = this.game.add.tileSprite(pos.x, pos.y, this.blockDetails.width, this.blockDetails.height, 'grass').setDepth(1);
       this.blockGroup.add(curRect);
-      this.prevChunks[this.chunkDetails.lastChunk - 1][idx] = curRect;
+      this.prevChunks[index][idx] = curRect;
+      if (idx === prevChunk.length - 1 && lastChunk) {
+        if (forwards) {
+          this.prevBlock = curRect;
+        }
+        this.chunksGenerating = false;
+      }
     });
-    this.deleteChunk(false);
+    this.deleteChunk(forwards);
   }
 
 
@@ -48,7 +61,7 @@ export default class TerrainHandler {
     }
   }
 
-  generateChunk() {
+  generateChunk(lastChunk: boolean) {
     if ((this.chunkDetails.curChunk - this.chunkDetails.lastChunk) === this.chunkDetails.chunkAmount * 2) { //deletes chunk far enough away
       for (let i = 0; i < this.chunkDetails.chunkAmount; i++) {
         this.deleteChunk();
@@ -62,7 +75,8 @@ export default class TerrainHandler {
     let yDir = random > .5 ? 1 : -1;
 
     for (let i = 0; i < this.chunkDetails.chunkLength; i++) { //Generate chunkLength chunks
-      this.generateBlock(yDir, random);
+      let lastBlock = lastChunk && i === this.chunkDetails.chunkLength - 1 ? true : false;
+      this.generateBlock(yDir, random, lastBlock);
       random = this.rng();
     }
 
@@ -72,7 +86,7 @@ export default class TerrainHandler {
 
 
 
-  generateBlock(yDir: number, random: number) {
+  generateBlock(yDir: number, random: number, lastBlock: boolean) {
     if (!this.prevBlock) { //First block
       this.prevBlock = {x: 300, y: global.ground};
     }
@@ -87,24 +101,45 @@ export default class TerrainHandler {
     this.prevChunkData[this.chunkDetails.curChunk].push({x: curRect.x, y: curRect.y});
     this.prevChunks[this.chunkDetails.curChunk].push(curRect);
     this.prevBlock = curRect;
+    if (lastBlock) {
+      this.chunksGenerating = false;
+    }
   };
 
 
 
 
-  spawnChunk() {
+  spawnChunks() {
     let player = global.curPlayerData.body;
     if (!player) {
       return;
     }
-    let chunkWidth =  this.chunkDetails.chunkLength * this.blockDetails.width * this.chunkDetails.chunkAmount;
-    if (!this.prevBlock || this.prevBlock.x - player.x < chunkWidth/2) { //Forwards generate
-      for (let i = 0; i < this.chunkDetails.chunkAmount; i++) {
-        this.generateChunk();
+    if (this.chunksGenerating) {
+      return;
+    }
+    if (!this.prevBlock || this.prevBlock.x - player.x < this.chunkWidth/2) { //Forwards generate
+      this.chunksGenerating = true;
+      if (this.curChunk < this.chunkAmount) {
+        for (let i = 0; i < this.chunkDetails.chunkAmount; i++) {
+          const lastChunk = i === this.chunkDetails.chunkAmount - 1 ? true : false;
+          this.generatePrevChunk(lastChunk, true);
+          this.chunkDetails.curChunk++;
+          this.curChunk++;
+        }
+        return;
       }
-    } else if  (this.prevChunks[this.chunkDetails.lastChunk] && player.x - this.prevChunks[this.chunkDetails.lastChunk][0].x  < chunkWidth/3) { //Backward Generate
       for (let i = 0; i < this.chunkDetails.chunkAmount; i++) {
-        this.generatePrevChunk();
+        const lastChunk = i === this.chunkDetails.chunkAmount - 1 ? true : false;
+        this.generateChunk(lastChunk);
+        this.chunkAmount++;
+        this.curChunk++;
+      }
+    } else if  (this.prevChunks[this.chunkDetails.lastChunk] && player.x - this.prevChunks[this.chunkDetails.lastChunk][0].x  < this.chunkWidth/3 && this.curChunk - this.chunkDetails.chunkAmount > this.chunkDetails.chunkAmount) { //Backward Generate
+      this.chunksGenerating = true;
+      for (let i = 0; i < this.chunkDetails.chunkAmount; i++) {
+        const lastChunk = i === this.chunkDetails.chunkAmount - 1 ? true : false;
+        this.generatePrevChunk(lastChunk, false);
+        this.curChunk--;
       }
     }
   }

@@ -29,10 +29,8 @@ export default class HoverDetectionController {
     const deltaX = mousePos.x - player.x;
     const deltaY = mousePos.y - player.y;
 
-    // Calculate the distance ratio
     const distanceRatio = Math.min(1, this.maxDistance / Math.sqrt(deltaX**2 + deltaY**2));
 
-    // Calculate the new position for the collider
     const newX = player.x + distanceRatio * deltaX;
     const newY = player.y + distanceRatio * deltaY;
 
