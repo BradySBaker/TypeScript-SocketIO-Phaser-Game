@@ -98,7 +98,7 @@ export default class Game extends Phaser.Scene {
     this.ThrowWEPC.handleOtherCollidedSpears();
     this.GrappleHandler.drawRopes();
     this.handleBackgrounds();
-    this.TerrainHandler.spawnChunk();
+    this.TerrainHandler.spawnChunks();
     this.MobController.handleMobs();
     this.FoliageController.decideSpawnAndDeletePlants();
     this.FoliageController.handleDisplayUI();
