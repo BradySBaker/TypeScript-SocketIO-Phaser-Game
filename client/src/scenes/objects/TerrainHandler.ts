@@ -81,6 +81,8 @@ export default class TerrainHandler {
     let yPos = this.prevBlock.y + moveY * yDir * this.blockDetails.width;
 
     let curRect = this.game.add.tileSprite(this.prevBlock.x + this.blockDetails.width, yPos, this.blockDetails.width, this.blockDetails.height, 'grass').setDepth(1);
+    this.game.FoliageController.validateAndCreatePlant({x: curRect.x, y: curRect.y - this.blockDetails.height/2}); //Plant handler controls if it should spawn
+
     this.blockGroup.add(curRect);
     this.prevChunkData[this.chunkDetails.curChunk].push({x: curRect.x, y: curRect.y});
     this.prevChunks[this.chunkDetails.curChunk].push(curRect);

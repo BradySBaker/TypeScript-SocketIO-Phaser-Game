@@ -5,8 +5,11 @@ import ThrowWEPC from "./controllers/ThrowWEPC.js";
 import GrappleHandler from "./controllers/GrappleHandler.js";
 import TerrainHandler from "./objects/TerrainHandler.js";
 
+import HoverDetectionController from "./controllers/HoverDetectionController.js";
+
 import DropHandler from "./controllers/DropHandler.js";
 import MobController from "./controllers/mobs/MobController.js";
+import FoliageController from "./controllers/FoliageController.js";
 
 import global from './global.js';
 
@@ -31,6 +34,9 @@ export default class Game extends Phaser.Scene {
   spawnCounter: number = 0;
 
   MobController!: MobController;
+  FoliageController!: FoliageController;
+
+  HoverDetectionController!: HoverDetectionController;
 
 
 
@@ -49,6 +55,7 @@ export default class Game extends Phaser.Scene {
     this.load.image('skugLeg', './assets/skug/skugLeg.png');
 
     this.load.image('bone', './assets/drops/bone.png');
+    this.load.image('stickyFern', './assets/foliage/stickyFern.png');
 
     this.load.on('complete', () => {
       socket = socketClient.io('http://localhost:3000');
@@ -64,12 +71,15 @@ export default class Game extends Phaser.Scene {
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
     this.MobController = new MobController(this, socket);
+    this.FoliageController = new FoliageController(this, socket);
 
     this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
     this.GrappleHandler = new GrappleHandler(this);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
     this.ThrowWEPC.handleIncomingSpearData();
     this.TerrainHandler = new TerrainHandler(this);
+
+    this.HoverDetectionController = new HoverDetectionController(this);
 
 
     this.handleSendData();
@@ -89,32 +99,17 @@ export default class Game extends Phaser.Scene {
     this.GrappleHandler.drawRopes();
     this.handleBackgrounds();
     this.TerrainHandler.spawnChunk();
-    // this.animalSpawnHandler();
     this.MobController.handleMobs();
+    this.FoliageController.decideSpawnAndDeletePlants();
+    this.FoliageController.handleDisplayUI();
     if (this.PlayerController.spaceKey.isDown) {
       if (global.mobCount < 3) {
         this.MobController.spawn(global.curPlayerData.body, 'skug');
       }
     }
+    this.HoverDetectionController.positionColliderToMouse();
   }
 
-  // animalSpawnHandler() {
-  //   if (this.spawnCounter >= 100) {
-  //     const player = this.PlayerController.player;
-
-  //     //handle goat
-  //     if (this.PlayerController.move.vx > 0 || this.PlayerController.move.vx < 0) {
-  //       let distance = Math.sqrt((player.pos.x - this.GoatController.lastSpawnPoint.x) ** 2 + (player.pos.y - this.GoatController.lastSpawnPoint.y) ** 2);
-  //       let percent = Math.min(distance/5000, .8);
-  //       let random = Math.random();
-  //       if (random < percent) {
-  //         this.GoatController.spawn({x: player.pos.x + 500, y: player.pos.y});
-  //       }
-  //     }
-  //     this.spawnCounter = 0;
-  //   }
-  //   this.spawnCounter += this.deltaTime;
-  // }
 
 
   createBackgrounds() {

@@ -2,15 +2,19 @@ import { Socket, Server } from 'socket.io';
 // import dropTypesAndCrafting from '../dropTypesAndCrafting.js';
 
 type MobTypes = 'goat' | 'skug';
+type PlantType = 'stickyFern';
 
 type GameObject = {
   x: number,
   y: number
 }
+let plantCreateCount = 0;
+let minMaxPlayerPosX: {min: number, max: number} = {min: 0, max: 0};
 
 let playerCount: number = 0;
 
 let mobInfo = {goat: {health: 5, dropMax: 0, dropType: 0, dropMin: 1}, skug: {health: 2, dropMax: 3, dropMin: 1, dropType: 1}};
+let plantDrops = {stickyFern: 2}
 
 let projectileCount: number = 0;
 
@@ -21,6 +25,8 @@ let collidedSpearPositions: { [playerId: number]: { [spearID: number]: { stuckPo
 
 let playerInventoryData: {[playerId: number]: { [itemID: string | number]: number }} = {};
 let recentDrops: {[itemId: string]: number} = {};
+
+let curFooliage: {[plantId: string | number]: {type: PlantType, pos: GameObject}} = {};
 
 let recentlyAssignedMob = '-1';
 
@@ -60,6 +66,7 @@ io.on('connection', (socket: Socket) => {
 
   let playerId = playerCount;
   playerPosData[playerId] = { pos: { x: 500, y: 100 }, grapplePos: undefined };
+  io.to(socket.id).emit('fooliage', curFooliage);
   io.to(socket.id).emit('playerData', playerPosData, playerId, collidedSpearPositions);
   io.emit('newPlayer', playerId, playerPosData[playerId]);
   playerCount++;
@@ -131,6 +138,21 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
+  socket.on('pickupPlant', (playerId: number, id: number) => {
+    if (!playerInventoryData[playerId]) {
+      playerInventoryData[playerId] = {};
+    }
+    if (curFooliage[id]) {
+      let dropType = plantDrops[curFooliage[id].type];
+
+      let curAmount = playerInventoryData[playerId][dropType];
+      playerInventoryData[playerId][dropType] = !curAmount ? 1 : curAmount + 1;
+      delete curFooliage[id];
+      io.emit('deletePlant', id);
+      socket.emit('pickupVerified', dropType, 1);
+    }
+  });
+
 
   socket.on('disconnectClient', (mobData: { [goatId: string]: { pos: GameObject, assigned: boolean, type: MobTypes } }) => {
     const index = connectedClients.indexOf(socket.id);
@@ -148,6 +170,19 @@ io.on('connection', (socket: Socket) => {
     if (recentlyAssignedMob !== id) {
       recentlyAssignedMob = id;
       socket.emit('mobAssignment', id, mob);
+    }
+  });
+
+  socket.on('newPlant', (type: PlantType, pos: GameObject) => {
+    if (pos.x > minMaxPlayerPosX.max || pos.x < minMaxPlayerPosX.min) {
+      if (pos.x > minMaxPlayerPosX.max) {
+        minMaxPlayerPosX.max = pos.x;
+      } else {
+        minMaxPlayerPosX.min = pos.x
+      }
+      curFooliage[plantCreateCount] = {type, pos};
+      io.emit('newPlant', {id: plantCreateCount, type, pos});
+      plantCreateCount++;
     }
   });
 

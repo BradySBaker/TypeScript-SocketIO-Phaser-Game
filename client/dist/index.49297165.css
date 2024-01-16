@@ -91,6 +91,13 @@ canvas {
   width: 2vw;
   height: 2vw;
   margin-right: 10px;
+  position: relative;
+}
+
+.inventory-box p {
+  font-size: 1vw;
+  position: absolute;
+  top: -10px;
 }
 
 .selection-icon, .item-icon {
@@ -101,7 +108,32 @@ canvas {
 
 .item-icon {
   width: 50%;
+  height: 50%;
   margin-left: 10%;
+}
+
+#use-circle-container {
+  width: 30px;
+  height: 30px;
+  position: absolute;
+}
+
+#circular-progress {
+  border-radius: 50%;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#middle-circle {
+  background-color: #fff;
+  border-radius: 50%;
+  width: 70%;
+  height: 70%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 
 /*# sourceMappingURL=index.49297165.css.map */

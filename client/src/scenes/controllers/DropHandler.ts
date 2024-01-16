@@ -4,7 +4,6 @@ import dropTypesAndCrafting from "../../../../dropTypesAndCrafting.js";
 import { Socket } from "socket.io-client";
 
 import { externalSetPickup } from "../../UI/index.js";
-import { useDebugValue } from "react";
 
 export default class DropHandler {
   game: Game;
@@ -59,6 +58,7 @@ export default class DropHandler {
 
 
       this.socket.on('pickupVerified', (type: number, count: number) => {
+        console.log(type, count)
         if (!global.pickups[type]) {
           global.pickups[type] = {count: 0, pos: {x: -1, y: -1}}
         }
