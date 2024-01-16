@@ -8,6 +8,8 @@ type GameObject = {
   x: number,
   y: number
 }
+let unassignedMobs: {[id: number | string]: {pos: GameObject, type: MobTypes}} = {}; //Mobs needing control
+
 let plantCreateCount = 0;
 let minMaxPlayerPosX: {min: number, max: number} = {min: 0, max: 0};
 
@@ -28,8 +30,6 @@ let recentDrops: {[itemId: string]: number} = {};
 
 let curFooliage: {[plantId: string | number]: {type: PlantType, pos: GameObject}} = {};
 
-let recentlyAssignedMob = '-1';
-
 let connectedClients: string[] = [];
 
 let mobHealths: { [id: number | string]: number } = {};
@@ -42,23 +42,12 @@ const io = new Server(3000, {
   }
 });
 
-// setInterval(() => {
-//     // for (let id in projectilePositions) {
-//     //   let curProjectile = projectilePositions[id];
-//     //   if (curProjectile.direction === 'right') {
-//     //     curProjectile.pos.x += 30;
-//     //   } else {
-//     //     curProjectile.pos.x -= 30;
-//     //   }
-//     //   curProjectile.pos.y += .5;
-//     //   if (curProjectile.pos.x > 1000 || curProjectile.pos.x < 0 || curProjectile.pos.y > 1000 || curProjectile.pos.y < 0) {
-//     //     io.emit('deleteProjectile', id);
-//     //     delete projectilePositions[id];
-//     //   }
-//     // }
-//     // io.emit('projectileData', projectilePositions);
-//   }
-//   , 10);
+setInterval(() => {
+    if (Object.keys(unassignedMobs).length > 0) {
+      io.emit('unassignedMobs', unassignedMobs);
+    }
+  }
+  , 100);
 
 io.on('connection', (socket: Socket) => {
   console.log(socket.id + 'connected');
@@ -102,7 +91,22 @@ io.on('connection', (socket: Socket) => {
   });
 
 
-  socket.on('updateMobs', (mobData: { [id: string]: { pos: GameObject, assigned: boolean, type: 'goat' } }) => {
+
+
+  socket.on('unassignMob', (id: number, mobData: { pos: GameObject, type: MobTypes }) => {
+    unassignedMobs[id] = mobData;
+  });
+
+  socket.on('requestMobAssignment', (id: string) => {
+    if (unassignedMobs[id]) {
+      socket.emit('mobAssignment', id, unassignedMobs[id]);
+      delete unassignedMobs[id]
+    }
+  });
+
+
+
+  socket.on('updateMobs', (mobData: { [id: string]: { pos: GameObject, type: MobTypes } }) => {
     socket.broadcast.emit('updateMobs', mobData);;
   });
 
@@ -125,6 +129,9 @@ io.on('connection', (socket: Socket) => {
       delete mobHealths[id];
     }
   });
+
+
+
 
   socket.on('pickup', (playerId: number, info: {dropType: number, count: number, id: number}) => { //Verify position [fix]
     if (recentDrops[info.dropType] >= info.count) {
@@ -154,7 +161,7 @@ io.on('connection', (socket: Socket) => {
   });
 
 
-  socket.on('disconnectClient', (mobData: { [goatId: string]: { pos: GameObject, assigned: boolean, type: MobTypes } }) => {
+  socket.on('disconnectClient', (mobData: { [goatId: string]: { pos: GameObject, type: MobTypes } }) => {
     const index = connectedClients.indexOf(socket.id);
     if (index !== -1) {
       connectedClients.splice(index, 1);
@@ -163,13 +170,8 @@ io.on('connection', (socket: Socket) => {
     socket.disconnect(true);
     delete playerPosData[playerId];
     io.emit('deletePlayer', playerId);
-    io.to(connectedClients[0]).emit('mobDisconnectAssignment', mobData);
-  });
-
-  socket.on('requestMobAssignment', (id: string, mob: { pos: GameObject, assigned: boolean, type: MobTypes }) => {
-    if (recentlyAssignedMob !== id) {
-      recentlyAssignedMob = id;
-      socket.emit('mobAssignment', id, mob);
+    for (let id in mobData) {
+      unassignedMobs[id] = mobData[id];
     }
   });
 

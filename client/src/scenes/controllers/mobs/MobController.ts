@@ -37,7 +37,7 @@ export default class MobController {
     let container = this.controllers[type].create(pos, id);
 
     global.curMobs[id] = {container, vx: 1, randomTimer: 300};
-    global.curMobData[id] = {pos: {x: pos.x, y: pos.y}, assigned: true, type};
+    global.curMobData[id] = {pos: {x: pos.x, y: pos.y}, type};
 
     global.mobCount++;
   }
@@ -107,46 +107,42 @@ export default class MobController {
       this.handleRandom(curMob);
       this.handleMovement(curMob, id);
       if (!this.mobInRenderDistance(curMob.container)) { //despawn goat
-        global.unasignedMobs[id] = {x: curMob.container.x, y: curMob.container.y, type: curMob.container.getData('type')};
-        global.curMobs[id].container.destroy();
-        delete global.curMobs[id];
-        global.curMobData[id].assigned = false;
+        this.handleUnassignMob(id);
       };
     }
 
-    for (const id in global.unasignedMobs) {
-      const curMob = global.unasignedMobs[id];
-      if (this.mobInRenderDistance(curMob)) {
-        delete global.unasignedMobs[id];
-        global.curMobData[id] = {pos: curMob, assigned: true, type: curMob.type};
-        let container = this.controllers[curMob.type].create(curMob, id);
-        global.curMobs[id] = {container, vx: 0, randomTimer: 0};
-      }
-    }
   }
 
 
+  handleUnassignMob(id: number | string) {
+    this.socket.emit('unassignMob', id, global.curMobData[id]);
+    this.deleteMob(id);
+  }
 
 
+  deleteMob(id: number | string) {
+    if (global.otherMobs[id]) {
+      global.otherMobs[id].destroy();
+      this.mobGroup.remove(global.otherMobs[id]);
+      delete global.otherMobs[id];
+    }
+    if (global.curMobData[id]) {
+      delete global.curMobData[id];
+    }
+    if (global.curMobs[id]) {
+      global.curMobs[id].container.destroy();
+      this.mobGroup.remove(global.curMobs[id].container);
+      delete global.curMobs[id];
+    }
+  }
 
   handleData() {
     this.socket.on('updateMobs', (mobData: {[goatId: number]: {pos: GameObject, assigned: boolean, type: MobTypes}}) => {
       for (let id in mobData) {
-        if (global.curMobData[id] && global.curMobData[id].assigned === false) { //Mob assigned to new client
-          delete global.unasignedMobs[id];
-          delete global.curMobData[id];
-        }
-
         let curMob = mobData[id];
+        let inRender = this.mobInRenderDistance(curMob.pos);
 
-        if (curMob.assigned === false || !this.mobInRenderDistance(curMob.pos)) { //Mob needs new client controller
-          if (global.otherMobs[id]) {
-            global.otherMobs[id].destroy();
-            delete global.otherMobs[id];
-          }
-          if (curMob.assigned === false) {
-            this.socket.emit('requestMobAssignment', id, curMob);
-          }
+        if (!inRender) {
           return;
         }
 
@@ -164,35 +160,26 @@ export default class MobController {
 
 
     this.socket.on('mobAssignment', (id: string, mobData: {pos: GameObject, assigned: boolean, type: MobTypes}) => {
+      console.log(id);
       if (global.curMobData[id]) {return;}
       let container = this.controllers[mobData.type].create(mobData.pos, id);
-      global.curMobData[id] = {pos: mobData.pos, assigned: true, type: mobData.type};
+      global.curMobData[id] = {pos: mobData.pos, type: mobData.type};
       global.curMobs[id] = {container, vx: 0, randomTimer: 300};
-    });
-
-    this.socket.on('mobDisconnectAssignment', (mobData: {[id: number]: {pos: GameObject, assigned: boolean, type: MobTypes}}) => {
-        for (let id in mobData) {
-          global.curMobData[id] = mobData[id];
-          global.unasignedMobs[id] = {x: mobData[id].pos.x, y: mobData[id].pos.y, type: mobData[id].type};
-          if (global.otherMobs[id]) {
-            global.otherMobs[id].destroy();
-            delete global.otherMobs[id];
-          }
-        }
     });
 
 
     this.socket.on('mobDied', (id: number | string) => {
-      if (global.otherMobs[id]) {
-        this.destroyedMobs[id] = true;
-        global.otherMobs[id].destroy();
-        delete global.otherMobs[id];
-      } else if (global.curMobs[id]) {
-        global.curMobs[id].container.destroy();
-        delete global.curMobs[id];
-        delete global.curMobData[id];
-      }
+      this.deleteMob(id);
+    });
 
+    this.socket.on('unassignedMobs', (mobData: {[id: number | string]: {pos: GameObject, type: MobTypes}}) => {
+      for (let id in mobData) {
+        let curMob = mobData[id];
+        this.deleteMob(id);
+        if (this.mobInRenderDistance(curMob.pos)) {
+          this.socket.emit('requestMobAssignment', id, curMob);
+        }
+      }
     });
   }
 }
