@@ -25,6 +25,8 @@ export default class PlayerController {
 
   sliding = false;
 
+  speed = 20;
+
   // @ts-ignore
   constructor(game: Game, socket: Socket) {
     this.game = game;
@@ -145,11 +147,11 @@ export default class PlayerController {
     }
 
     if (this.cursors.right.isDown ) {
-      this.move.vx = 7;
+      this.move.vx = this.speed;
       this.sliding = false;
     } else if (this.cursors.left.isDown) {
 
-      this.move.vx = -7;
+      this.move.vx = -this.speed;
       this.sliding = false;
     }
 
