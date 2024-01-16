@@ -68,7 +68,7 @@ export default class FoliageController {
   handleIncomingPlantData() {
     this.socket.on('newPlant', (plantData: PlantData) => {
       let areaX = this.addToPlantData(plantData);
-      if (areaX === 0) { //Fix first player glitch
+      if (areaX === prevPlayerAreaX) { //Re-Render if new plants in player area
         prevPlayerAreaX = undefined;
       }
     });
