@@ -9,7 +9,7 @@ import HoverDetectionController from "./controllers/HoverDetectionController.js"
 
 import DropHandler from "./controllers/DropHandler.js";
 import MobController from "./controllers/mobs/MobController.js";
-import FooliageController from "./controllers/FooliageController.js";
+import FoliageController from "./controllers/FoliageController.js";
 
 import global from './global.js';
 
@@ -34,7 +34,7 @@ export default class Game extends Phaser.Scene {
   spawnCounter: number = 0;
 
   MobController!: MobController;
-  FooliageController!: FooliageController;
+  FoliageController!: FoliageController;
 
   HoverDetectionController!: HoverDetectionController;
 
@@ -55,7 +55,7 @@ export default class Game extends Phaser.Scene {
     this.load.image('skugLeg', './assets/skug/skugLeg.png');
 
     this.load.image('bone', './assets/drops/bone.png');
-    this.load.image('stickyFurn', './assets/drops/stickyFurn.png');
+    this.load.image('stickyFern', './assets/foliage/stickyFern.png');
 
     this.load.on('complete', () => {
       socket = socketClient.io('http://localhost:3000');
@@ -71,7 +71,7 @@ export default class Game extends Phaser.Scene {
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
     this.MobController = new MobController(this, socket);
-    this.FooliageController = new FooliageController(this, socket);
+    this.FoliageController = new FoliageController(this, socket);
 
     this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
     this.GrappleHandler = new GrappleHandler(this);
@@ -100,8 +100,8 @@ export default class Game extends Phaser.Scene {
     this.handleBackgrounds();
     this.TerrainHandler.spawnChunk();
     this.MobController.handleMobs();
-    this.FooliageController.decideSpawnAndDeletePlants();
-    this.FooliageController.handleDisplayUI();
+    this.FoliageController.decideSpawnAndDeletePlants();
+    this.FoliageController.handleDisplayUI();
     if (this.PlayerController.spaceKey.isDown) {
       if (global.mobCount < 3) {
         this.MobController.spawn(global.curPlayerData.body, 'skug');

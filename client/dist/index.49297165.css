@@ -91,6 +91,13 @@ canvas {
   width: 2vw;
   height: 2vw;
   margin-right: 10px;
+  position: relative;
+}
+
+.inventory-box p {
+  font-size: 1vw;
+  position: absolute;
+  top: -10px;
 }
 
 .selection-icon, .item-icon {
@@ -101,6 +108,7 @@ canvas {
 
 .item-icon {
   width: 50%;
+  height: 50%;
   margin-left: 10%;
 }
 

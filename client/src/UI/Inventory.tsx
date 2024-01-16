@@ -46,7 +46,7 @@ const Inventory: React.FC<{inventoryToggle: boolean, newPickup: {count: number, 
                   {boxElements[x][y] ?
                   <>
                     <img className="item-icon" src={`./assets/drops/${dropTypesAndCrafting[boxElements[x][y].type]}.png`} />
-                    {boxElements[x][y].count}x
+                    <p>{boxElements[x][y].count}x</p>
                   </>
                   : null}
                 </div>

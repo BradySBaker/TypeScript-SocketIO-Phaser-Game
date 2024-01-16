@@ -4,7 +4,7 @@ import { createRoot } from 'react-dom/client';
 import DisplayPickup from './DisplayPickup.jsx';
 import ToolSelector from './ToolSelector.jsx';
 import Inventory from './Inventory.js';
-import DisplayUse from './DisplayUse.js';
+import {DisplayUse} from './DisplayUse.js';
 
 let externalSetPickup!: Function;
 let externalSetUsePos!: Function;

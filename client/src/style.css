@@ -85,11 +85,18 @@ canvas {
 }
 
 .inventory-box {
+  position: relative;
   width: 2vw;
   height: 2vw;
   margin-right: 10px;
   background-color: rgba(73, 73, 73, 0.833);
   color: wheat;
+}
+
+.inventory-box p {
+  position: absolute;
+  top: -10px;
+  font-size: 1vw;
 }
 
 .selection-icon, .item-icon {
@@ -99,8 +106,9 @@ canvas {
 }
 
 .item-icon {
-  width: 50%;
   margin-left: 10%;
+  width: 50%;
+  height: 50%;
 }
 
 

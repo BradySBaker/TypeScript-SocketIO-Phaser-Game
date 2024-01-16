@@ -2,7 +2,7 @@ import { Socket, Server } from 'socket.io';
 // import dropTypesAndCrafting from '../dropTypesAndCrafting.js';
 
 type MobTypes = 'goat' | 'skug';
-type PlantType = 'stickyFurn';
+type PlantType = 'stickyFern';
 
 type GameObject = {
   x: number,
@@ -14,6 +14,7 @@ let minMaxPlayerPosX: {min: number, max: number} = {min: 0, max: 0};
 let playerCount: number = 0;
 
 let mobInfo = {goat: {health: 5, dropMax: 0, dropType: 0, dropMin: 1}, skug: {health: 2, dropMax: 3, dropMin: 1, dropType: 1}};
+let plantDrops = {stickyFern: 2}
 
 let projectileCount: number = 0;
 
@@ -134,6 +135,21 @@ io.on('connection', (socket: Socket) => {
       recentDrops[info.dropType] -= info.count;
       socket.broadcast.emit('deleteDrop', info.id);
       socket.emit('pickupVerified', info.dropType, info.count);
+    }
+  });
+
+  socket.on('pickupPlant', (playerId: number, id: number) => {
+    if (!playerInventoryData[playerId]) {
+      playerInventoryData[playerId] = {};
+    }
+    if (curFooliage[id]) {
+      let dropType = plantDrops[curFooliage[id].type];
+
+      let curAmount = playerInventoryData[playerId][dropType];
+      playerInventoryData[playerId][dropType] = !curAmount ? 1 : curAmount + 1;
+      delete curFooliage[id];
+      io.emit('deletePlant', id);
+      socket.emit('pickupVerified', dropType, 1);
     }
   });
 

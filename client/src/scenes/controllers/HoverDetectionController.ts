@@ -10,7 +10,7 @@ export default class HoverDetectionController {
     this.hoverCollider = game.add.rectangle(0, 0, this.size, this.size, 0xfffff);
     game.physics.world.enable(this.hoverCollider);
     // @ts-ignore
-    game.physics.add.overlap(this.hoverCollider, this.game.FooliageController.plantGroup, this.game.FooliageController.handleOverlap, null, this);
+    game.physics.add.overlap(this.hoverCollider, this.game.FoliageController.plantGroup, this.game.FoliageController.handleOverlap, null, this);
   }
 
   getMouseWorld() {
@@ -24,7 +24,6 @@ export default class HoverDetectionController {
     if (!global.curPlayerData.body) {
       return;
     }
-    console.log(Math.abs((mousePos.x - global.curPlayerData.body.x)),  Math.abs((mousePos.y - global.curPlayerData.body.y)))
     if (Math.abs((mousePos.x - global.curPlayerData.body.x)) < 200 && Math.abs((mousePos.y - global.curPlayerData.body.y)) < 200) {
       this.hoverCollider.setPosition(mousePos.x, mousePos.y)
     }
