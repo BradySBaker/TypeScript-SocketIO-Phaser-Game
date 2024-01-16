@@ -7,15 +7,15 @@ import Inventory from './Inventory.js';
 import DisplayUse from './DisplayUse.js';
 
 let externalSetPickup!: Function;
-let externalSetUse!: Function;
+let externalSetUsePos!: Function;
 
 const UI: React.FC<{}> = () => {
   const [inventoryToggle, setInventoryToggle] = useState(false);
   const [keyPress, setKeyPress] = useState('');
   const [newPickup, setNewPickup] = useState({count: 0, type: 0});
-  const [displayUse, setDisplayUse] = useState(false);
+  const [usePos, setUsePos] = useState<{x: number | undefined, y: number | undefined}>({x: undefined, y: undefined});
   const [useKeyDownTime, setUseKeyDownTime] = useState(0);
-  externalSetUse = setDisplayUse;
+  externalSetUsePos = setUsePos;
   externalSetPickup = setNewPickup;
 
   const handleKeyPress = (event: KeyboardEvent) => {
@@ -52,7 +52,7 @@ const UI: React.FC<{}> = () => {
       <DisplayPickup newPickup={newPickup}/>
       <Inventory inventoryToggle={inventoryToggle} newPickup={newPickup}/>
       <ToolSelector keyPress={keyPress}/>
-      {displayUse ? <DisplayUse useKeyDownTime={useKeyDownTime}/> : null}
+      {usePos.x !== undefined && usePos.y !== undefined ? <DisplayUse useKeyDownTime={useKeyDownTime} usePos={usePos}/> : null}
     </div>
   )
 };
@@ -69,4 +69,4 @@ let startUI = () => {
 };
 
 
-export {startUI, externalSetPickup, externalSetUse};
+export {startUI, externalSetPickup, externalSetUsePos};

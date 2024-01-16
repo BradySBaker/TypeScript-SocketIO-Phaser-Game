@@ -5,6 +5,8 @@ import ThrowWEPC from "./controllers/ThrowWEPC.js";
 import GrappleHandler from "./controllers/GrappleHandler.js";
 import TerrainHandler from "./objects/TerrainHandler.js";
 
+import HoverDetectionController from "./controllers/HoverDetectionController.js";
+
 import DropHandler from "./controllers/DropHandler.js";
 import MobController from "./controllers/mobs/MobController.js";
 import FooliageController from "./controllers/FooliageController.js";
@@ -33,6 +35,8 @@ export default class Game extends Phaser.Scene {
 
   MobController!: MobController;
   FooliageController!: FooliageController;
+
+  HoverDetectionController!: HoverDetectionController;
 
 
 
@@ -75,6 +79,8 @@ export default class Game extends Phaser.Scene {
     this.ThrowWEPC.handleIncomingSpearData();
     this.TerrainHandler = new TerrainHandler(this);
 
+    this.HoverDetectionController = new HoverDetectionController(this);
+
 
     this.handleSendData();
 
@@ -101,6 +107,7 @@ export default class Game extends Phaser.Scene {
         this.MobController.spawn(global.curPlayerData.body, 'skug');
       }
     }
+    this.HoverDetectionController.positionColliderToMouse();
   }
 
 

@@ -104,13 +104,10 @@ canvas {
   margin-left: 10%;
 }
 
-ee #use-circle-container {
+#use-circle-container {
   width: 30px;
   height: 30px;
   position: absolute;
-  top: 70%;
-  left: 44%;
-  transform: translate(-44%, -70%);
 }
 
 #circular-progress {

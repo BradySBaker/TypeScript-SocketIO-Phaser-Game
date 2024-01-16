@@ -104,14 +104,10 @@ canvas {
 }
 
 
-ee
 /* Progress Circle */
 
 #use-circle-container {
   position: absolute;
-  top: 70%;
-  left: 44%;
-  transform: translate(-44%, -70%);
   width: 30px;
   height: 30px;
 }

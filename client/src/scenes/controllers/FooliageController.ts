@@ -1,7 +1,7 @@
 import Game from "../game";
 import { Socket } from "socket.io-client";
 import global from "../global";
-import {externalSetUse} from "../../UI/index";
+import {externalSetUsePos} from "../../UI/index";
 
 type PlantData = {id: number | string, type: PlantType, pos: GameObject};
 
@@ -94,14 +94,14 @@ export default class FooliageController {
     }
   }
 
-  handleOverlap(player: Phaser.Types.Physics.Arcade.GameObjectWithBody, plant: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
+  handleOverlap(hoverDetector: Phaser.Types.Physics.Arcade.GameObjectWithBody, plant: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
     let id = plant.getData('id')
-    this.game.FooliageController.overlapId = id;
+    this.game.FooliageController.overlapId = id; //this = HoverDetectionController
     this.game.FooliageController.overlap = true;
   };
 
   handleDisplayUI() {
-    if (!externalSetUse) {
+    if (!externalSetUsePos || !plants[this.overlapId]) {
       return;
     }
     if (!this.overlap) {
@@ -110,9 +110,11 @@ export default class FooliageController {
       this.overlapFalseTime = 0;
     }
     if (this.overlapFalseTime < 4) {
-      externalSetUse(true);
+      let camera = this.game.cameras.main
+      let plant = plants[this.overlapId];
+      externalSetUsePos({x: ((plant.x - camera.worldView.x) * camera.zoom) - plant.width/1.3, y: ((plant.y - camera.worldView.y) * camera.zoom) - plant.height/2});
     } else {
-      externalSetUse(false);
+      externalSetUsePos(false);
     }
     this.overlap = false;
 
