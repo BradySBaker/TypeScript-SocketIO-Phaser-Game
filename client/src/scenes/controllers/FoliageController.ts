@@ -17,6 +17,7 @@ let allPlantData: {[areaX: number]: {[id: number | string]: {type: PlantType, po
 let requestingPickup: {[id: number | string]: boolean} = {};
 
 let prevUseComplete = false;
+let lastSpawnX: number;
 
 export default class FoliageController {
   game: Game;
@@ -104,14 +105,28 @@ export default class FoliageController {
     if (!playerPos) {
       return;
     }
-    let newPlayerAreaX = Math.floor(playerPos.x / PLANT_RENDER_DISTANCE) * PLANT_RENDER_DISTANCE;
+
+
+    let direction = playerPos.x < lastSpawnX ? -1 : 1;
+
+    let newPlayerAreaX = Math.floor((playerPos.x + (PLANT_RENDER_DISTANCE/2) * direction) / PLANT_RENDER_DISTANCE) * PLANT_RENDER_DISTANCE;
+
     if (prevPlayerAreaX !== newPlayerAreaX || prevPlayerAreaX === undefined) {
+      lastSpawnX = playerPos.x;
       prevPlayerAreaX = newPlayerAreaX;
       for (let id in plants) {
-        this.deletePlant(id);
+        if (Math.abs(plants[id].x - playerPos.x) > PLANT_RENDER_DISTANCE / 2) {
+          console.log('deleted', id)
+          this.deletePlant(id);
+        }
       }
       let plantDataAtArea = allPlantData[newPlayerAreaX];
       for (let id in plantDataAtArea) {
+        if (plants[id]) {
+          continue;
+        }
+        console.log('added', id)
+
         this.spawnPlant({id, type: plantDataAtArea[id].type, pos: plantDataAtArea[id].pos});
       }
     }
