@@ -116,7 +116,6 @@ export default class FoliageController {
       prevPlayerAreaX = newPlayerAreaX;
       for (let id in plants) {
         if (Math.abs(plants[id].x - playerPos.x) > PLANT_RENDER_DISTANCE / 2) {
-          console.log('deleted', id)
           this.deletePlant(id);
         }
       }
@@ -125,7 +124,6 @@ export default class FoliageController {
         if (plants[id]) {
           continue;
         }
-        console.log('added', id)
 
         this.spawnPlant({id, type: plantDataAtArea[id].type, pos: plantDataAtArea[id].pos});
       }
