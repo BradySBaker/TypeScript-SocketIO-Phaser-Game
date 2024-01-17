@@ -13,6 +13,8 @@ declare type Rect = Phaser.GameObjects.Rectangle;
 type Mob = {container: Phaser.GameObjects.Container, vx: number, randomTimer: number};
 
 type MobTypes = 'goat' | 'skug';
-type EnvObj = 'stickyFern';
+type EnvObj = 'stickyFern' | 'stone';
 
-type Throwable = 'rock' | 'spear';
+type Throwable = 'stone' | 'spear';
+type Tool = 'spear' | 'grapple' | 'stone';
+type Drop = 'bone' | 'stone' | 'goo';

@@ -45,8 +45,6 @@ export default class Game extends Phaser.Scene {
     this.load.image('ground', './assets/ground2.png');
     this.load.image('mountains1', './assets/mountains1.png');
     this.load.image('mountains2', './assets/mountains2.png');
-    this.load.image('spear', './assets/tools/spear.png');
-    this.load.image('grapple', './assets/tools/grapple.png');
     this.load.image('grass', './assets/grass.png');
     this.load.image('bloodDrop', './assets/bloodDrop.png');
 
@@ -54,8 +52,19 @@ export default class Game extends Phaser.Scene {
     this.load.image('skugHead', './assets/skug/skugHead.png');
     this.load.image('skugLeg', './assets/skug/skugLeg.png');
 
-    this.load.image('bone', './assets/drops/bone.png');
-    this.load.image('stickyFern', './assets/env/stickyFern.png');
+    global.EnvImages.forEach((curName) => {
+      this.load.image(curName, `./assets/env/${curName}.png`);
+    })
+    global.DropImages.forEach((curName) => {
+      this.load.image(curName, `./assets/drops/${curName}.png`);
+    });
+    global.ToolImages.forEach((curName) => {
+      this.load.image(curName, `./assets/tools/${curName}.png`);
+    });
+
+    global.DropImages.forEach(() => {
+
+    });
 
     this.load.on('complete', () => {
       socket = socketClient.io('http://localhost:3000');

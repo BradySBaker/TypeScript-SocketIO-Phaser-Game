@@ -2,16 +2,15 @@ import { Socket, Server } from 'socket.io';
 // import dropTypesAndCrafting from '../dropTypesAndCrafting.js';
 
 type MobTypes = 'goat' | 'skug';
-type EnvObj = 'stickyFern';
-
-type Throwable = 'rock' | 'spear';
+type EnvObj = 'stickyFern' | 'stone';
+type Throwable = 'stone' | 'spear';
 
 type GameObject = {
   x: number,
   y: number
 }
 
-let throwableDamage = {'rock': 1, 'spear': 5};
+let throwableDamage = {'stone': 1, 'spear': 5};
 
 let unassignedMobs: {[id: number | string]: {pos: GameObject, type: MobTypes}} = {}; //Mobs needing control
 
@@ -21,7 +20,7 @@ let minMaxPlayerPosX: {min: number, max: number} = {min: 0, max: 0};
 let playerCount: number = 0;
 
 let mobInfo = {goat: {health: 5, dropMax: 0, dropType: 0, dropMin: 1}, skug: {health: 2, dropMax: 3, dropMin: 1, dropType: 1}};
-let envObjDrops = {stickyFern: 2}
+let envObjDrops = {stickyFern: 2, stone: 3};
 
 let projectileCount: number = 0;
 

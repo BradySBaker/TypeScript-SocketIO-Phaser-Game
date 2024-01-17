@@ -10,7 +10,7 @@ const envObj_RENDER_DISTANCE = 2000; //should be 2000!
 
 let prevPlayerAreaX: undefined | number;
 
-let envObjRates: {[type in EnvObj]: number} = {'stickyFern': .5};
+let envObjRates: {[type in EnvObj]: number} = {'stickyFern': .5, 'stone': .5}; //must add up to 100
 let envObjs: {[id: number | string]: Phaser.GameObjects.Sprite} = {};
 let allEnvObjectData: {[areaX: number]: {[id: number | string]: {type: EnvObj, pos: GameObject}}} = {}; //Will house objects based on areaX to + 2000
 
@@ -18,6 +18,7 @@ let requestingPickup: {[id: number | string]: boolean} = {};
 
 let prevUseComplete = false;
 let lastSpawnX: number;
+let spawnProb = .2;
 
 export default class EnvironmentController {
   game: Game;
@@ -45,16 +46,23 @@ export default class EnvironmentController {
   };
 
   validateAndCreateEnvObj(pos: GameObject) {
-    if (Math.random() > .3) {
-      return
+    if (Math.random() > spawnProb) {
+      return;
     }
+    let randomNumber = Math.random();
+    let accumulatedProbability = 0;
+
     for (let type in envObjRates) {
       const envObjType = type as EnvObj;
-      if (Math.random() <= envObjRates[envObjType]) {
-        this.socket.emit('newEnvObj', type, pos); //send position to server
+      accumulatedProbability += envObjRates[envObjType];
+
+      if (randomNumber <= accumulatedProbability) {
+        this.socket.emit('newEnvObj', type, pos);
+        return;
       }
     }
   };
+
 
   addToEnvObjData(envObjData: envObjData) {
     let areaX = Math.floor(envObjData.pos.x / envObj_RENDER_DISTANCE) * envObj_RENDER_DISTANCE;
