@@ -152,7 +152,7 @@ export default class Game extends Phaser.Scene {
   handleSendData() {
     setInterval(() => {
       if (this.ThrowWEPC.curThrowableID !== 0) {
-        socket.emit('updateSpearPositions', global.curPlayerData.id, this.ThrowWEPC.curThrownObjData);
+        socket.emit('updateThrowablePositions', global.curPlayerData.id, this.ThrowWEPC.curThrownObjData);
       }
       const PC = this.PlayerController;
       if (global.curPlayerData && (Math.abs(PC.player.pos.x - PC.sentPos.x) > 5 || Math.abs(PC.player.pos.y - PC.sentPos.y) > 5)) {
