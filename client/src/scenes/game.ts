@@ -1,7 +1,7 @@
 import Phaser, { GameObjects } from "phaser";
 import ProjectileController from './controllers/ProjectileController.js';
 import PlayerController from './controllers/PlayerController.js';
-import ThrowWEPC from "./controllers/ThrowWEPC.js";
+import ThrowWEPC from "./controllers/weapons/ThrowWEPC.js";
 import GrappleHandler from "./controllers/GrappleHandler.js";
 import TerrainHandler from "./objects/TerrainHandler.js";
 
@@ -76,7 +76,6 @@ export default class Game extends Phaser.Scene {
     this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
     this.GrappleHandler = new GrappleHandler(this);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
-    this.ThrowWEPC.handleIncomingSpearData();
     this.TerrainHandler = new TerrainHandler(this);
 
     this.HoverDetectionController = new HoverDetectionController(this);
@@ -95,7 +94,7 @@ export default class Game extends Phaser.Scene {
     this.deltaTime = delta / (1000 / 60);
     this.PlayerController.handleMovement();
     this.PlayerController.interpolatePlayerPositions();
-    this.ThrowWEPC.handleOtherCollidedSpears();
+    this.ThrowWEPC.handleOtherCollidedThrowables();
     this.GrappleHandler.drawRopes();
     this.handleBackgrounds();
     this.TerrainHandler.spawnChunks();

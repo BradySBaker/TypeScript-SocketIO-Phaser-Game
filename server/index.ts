@@ -77,12 +77,12 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
-  socket.on('updateSpearPositions', (playerId: number, spearData: { [id: number]: { pos: GameObject, angle: number } }) => {
+  socket.on('updateThrowablePositions', (playerId: number, spearData: { [id: number]: { pos: GameObject, angle: number } }) => {
     spearPositions[playerId] = spearData;
-    socket.broadcast.emit('updateSpearPositions', playerId, spearData);
+    socket.broadcast.emit('updateThrowablePositions', playerId, spearData);
   });
 
-  socket.on('updateCollidedSpear', (playerId: number, spearData: { id: number, stuckPos: GameObject, angle: number, collidedInfo: { type: string, id: number } }) => {
+  socket.on('updateCollidedThrowable', (playerId: number, spearData: { id: number, stuckPos: GameObject, angle: number, collidedInfo: { type: string, id: number } }) => {
     if (!collidedSpearPositions[playerId]) {
       collidedSpearPositions[playerId] = {};
     }
