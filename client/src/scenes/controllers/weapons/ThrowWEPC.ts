@@ -5,6 +5,8 @@ import Game from '../../game.js';
 import global from '../../global.js';
 import createParticles from "../Particles.js";
 
+import WeaponSettings from "./WeaponSettings.js";
+
 type throwableObj = {obj: Phaser.GameObjects.Sprite, vel: GameObject, collidedInfo?: {type: string, id: number}, stuckPos?: GameObject, collider: Phaser.GameObjects.Rectangle, particles?: Phaser.GameObjects.Particles.ParticleEmitter};
 
 let throwableReadySpeed = 2;
@@ -79,6 +81,8 @@ export default class ThrowWEPC {
   handleObjThrow(player: Player) {
     if (!this.activeThrowable && this.game.input.activePointer.isDown && (global.Throwables[global.equiped])) { //Spawn throwable
       this.activeThrowable = this.game.add.sprite(player.pos.x, player.pos.y, global.equiped).setOrigin(0, .5).setDepth(1);
+      this.activeThrowable.setScale(WeaponSettings[global.equiped as Throwable].size);
+
       this.activeThrowable.setData('type', global.equiped);
       if (player.direction === 'left') {
         this.activeThrowable.setFlipY(true);
@@ -86,24 +90,27 @@ export default class ThrowWEPC {
       this.handleWeaponRotation(this.activeThrowable, player); //Rotate right away
     }
 
-    if (this.game.input.activePointer.isDown && this.activeThrowable && (global.equiped === global.equiped || global.equiped === 'rock')) { //Ready throwable obj
+    if (this.game.input.activePointer.isDown && this.activeThrowable && global.Throwables[global.equiped]) { //Ready throwable obj
       if (Math.abs(this.activeThrowable.x - player.pos.x) < 50) {
         this.activeThrowable.x += (player.direction === 'left' ? throwableReadySpeed : -throwableReadySpeed) * this.game.deltaTime;
       } else {
         this.activeThrowable.y += (this.activeThrowable.y < player.pos.y ? throwableReadySpeed : -throwableReadySpeed) * this.game.deltaTime;
       }
-    } else if (this.activeThrowable && this.activeThrowable.x !== player.pos.x) { //Throw obj
+    } else if (this.activeThrowable && this.activeThrowable.x !== player.pos.x && global.Throwables[global.equiped]) { //Throw obj
       const launchAngleInRadians = Phaser.Math.DegToRad(this.activeThrowable.angle);
 
       let collider = this.game.add.rectangle(this.activeThrowable.x, this.activeThrowable.y, 10, 10);
       collider.name = this.curThrowableID.toString();
       this.activeThrowable.setDepth(0);
       this.curThrownObjs[this.curThrowableID] = {obj: this.activeThrowable, vel: {x: 0, y: 0}, collider};
-      this.curThrownObjData[this.curThrowableID] = {pos: {x: this.activeThrowable.x, y: this.activeThrowable.y}, angle: this.activeThrowable.angle, type: global.equiped};
+
+      let type: Throwable = this.activeThrowable.getData('type');
+
+      this.curThrownObjData[this.curThrowableID] = {pos: {x: this.activeThrowable.x, y: this.activeThrowable.y}, angle: this.activeThrowable.angle, type};
 
       this.activeThrowable = undefined;
 
-      const throwingForce = Math.abs(Math.floor((player.pos.x - this.curThrownObjs[this.curThrowableID].obj.x)/1.5));
+      const throwingForce = Math.abs(Math.floor((player.pos.x - this.curThrownObjs[this.curThrowableID].obj.x)/WeaponSettings[type].fallSpeedModifer));
       this.curThrownObjs[this.curThrowableID].vel.x = throwingForce * Math.cos(launchAngleInRadians);
       this.curThrownObjs[this.curThrowableID].vel.y = throwingForce * Math.sin(launchAngleInRadians);
 
