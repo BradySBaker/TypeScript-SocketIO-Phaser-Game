@@ -103,8 +103,10 @@ export default class PlayerController {
     //Handle equips ==
     const grappleHook = this.game.GrappleHandler.grappleHook;
 
-    if (this.game.ThrowWEPC.activeThrowable && (global.equiped === 'spear' || global.equiped === 'rock')) {
-      this.game.ThrowWEPC.handleWeaponRotation(this.game.ThrowWEPC.activeThrowable, this.player);
+    if (global.Throwables[global.equiped]) {
+      if (this.game.ThrowWEPC.activeThrowable) {
+        this.game.ThrowWEPC.handleWeaponRotation(this.game.ThrowWEPC.activeThrowable, this.player);
+      }
     } else if (global.equiped === 'grapple') {
       if (grappleHook) {
         this.game.GrappleHandler.handleGrapple();
@@ -113,11 +115,11 @@ export default class PlayerController {
       if (!this.game.GrappleHandler.grappling) {
         this.game.ThrowWEPC.handleWeaponRotation(grappleHook, this.player);
       }
-    } else if (grappleHook) {
+    }
+    if (grappleHook && global.equiped !== 'grapple') {
       grappleHook.setActive(false);
       grappleHook.setVisible(false);
     }
-
     this.game.ThrowWEPC.handleObjThrow(this.player);
     // ==
 

@@ -77,7 +77,7 @@ export default class ThrowWEPC {
 
 
   handleObjThrow(player: Player) {
-    if (!this.activeThrowable && this.game.input.activePointer.isDown && (global.equiped === global.equiped || global.equiped === 'rock')) { //Spawn throwable
+    if (!this.activeThrowable && this.game.input.activePointer.isDown && (global.Throwables[global.equiped])) { //Spawn throwable
       this.activeThrowable = this.game.add.sprite(player.pos.x, player.pos.y, global.equiped).setOrigin(0, .5).setDepth(1);
       this.activeThrowable.setData('type', global.equiped);
       if (player.direction === 'left') {
@@ -247,7 +247,13 @@ export default class ThrowWEPC {
 
   handleThrowableCollide = (obj: Phaser.Types.Physics.Arcade.GameObjectWithBody, target: Phaser.Types.Physics.Arcade.GameObjectWithBody) => {
     let thrownObj = this.curThrownObjs[obj.name];
-    let targetPos = target.getData('type') === 'player' ? target : target.body!;
+    let type = target.getData('type');
+    if (type === 'player') {
+      if (target.getData('id') == global.curPlayerData.id) {
+        return;
+      }
+    }
+    let targetPos = type === 'player' ? target : target.body!;
 
     thrownObj.stuckPos = {x: targetPos.x - thrownObj.obj.x, y: targetPos.y - thrownObj.obj.y}
     thrownObj.collidedInfo = {type: target.getData('type'), id: target.getData('id')};
