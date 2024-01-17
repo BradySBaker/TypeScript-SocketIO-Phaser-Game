@@ -11,7 +11,7 @@ export default class HoverDetectionController {
     this.hoverCollider = game.add.rectangle(0, 0, this.size, this.size, 0xfffff);
     game.physics.world.enable(this.hoverCollider);
     // @ts-ignore
-    game.physics.add.overlap(this.hoverCollider, this.game.FoliageController.plantGroup, this.game.FoliageController.handleOverlap, null, this);
+    game.physics.add.overlap(this.hoverCollider, this.game.EnvironmentController.envObjGroup, this.game.EnvironmentController.handleOverlap, null, this);
   }
 
   getMouseWorld() {

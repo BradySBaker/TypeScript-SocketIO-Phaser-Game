@@ -14,7 +14,7 @@ export default class ThrowWEPC {
   activeThrowable?: Phaser.GameObjects.Sprite
 
   playerGroup!: Phaser.GameObjects.Group;
-  curThrownObjData: {[id: number| string]: {pos: GameObject, angle: number, type: 'spear' | 'rock'}} = {}
+  curThrownObjData: {[id: number| string]: {pos: GameObject, angle: number, type: Throwable}} = {}
   curThrownObjs: {[id: number| string]: throwableObj} = {};
 
   otherThrownObjs: {[playerID: number]: {[objID: number]: Phaser.GameObjects.Sprite}} = {};
@@ -79,6 +79,7 @@ export default class ThrowWEPC {
   handleObjThrow(player: Player) {
     if (!this.activeThrowable && this.game.input.activePointer.isDown && (global.equiped === global.equiped || global.equiped === 'rock')) { //Spawn throwable
       this.activeThrowable = this.game.add.sprite(player.pos.x, player.pos.y, global.equiped).setOrigin(0, .5).setDepth(1);
+      this.activeThrowable.setData('type', global.equiped);
       if (player.direction === 'left') {
         this.activeThrowable.setFlipY(true);
       }
@@ -166,7 +167,7 @@ export default class ThrowWEPC {
     if (!thrownObj.particles) {
       let type = gameObject.getData('type')
       if (type === 'goat' || type === 'skug') {
-        this.game.MobController.damage(gameObject.getData('id'), {type, pos: targetObject.position});
+        this.game.MobController.damage(gameObject.getData('id'), {type, pos: targetObject.position, weaponType: thrownObj.obj.getData('type')});
       }
     }
 

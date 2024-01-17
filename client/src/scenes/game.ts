@@ -9,7 +9,7 @@ import HoverDetectionController from "./controllers/HoverDetectionController.js"
 
 import DropHandler from "./controllers/DropHandler.js";
 import MobController from "./controllers/mobs/MobController.js";
-import FoliageController from "./controllers/FoliageController.js";
+import EnvironmentController from "./controllers/EnvironmentController.js";
 
 import global from './global.js';
 
@@ -34,7 +34,7 @@ export default class Game extends Phaser.Scene {
   spawnCounter: number = 0;
 
   MobController!: MobController;
-  FoliageController!: FoliageController;
+  EnvironmentController!: EnvironmentController;
 
   HoverDetectionController!: HoverDetectionController;
 
@@ -55,7 +55,7 @@ export default class Game extends Phaser.Scene {
     this.load.image('skugLeg', './assets/skug/skugLeg.png');
 
     this.load.image('bone', './assets/drops/bone.png');
-    this.load.image('stickyFern', './assets/foliage/stickyFern.png');
+    this.load.image('stickyFern', './assets/env/stickyFern.png');
 
     this.load.on('complete', () => {
       socket = socketClient.io('http://localhost:3000');
@@ -71,7 +71,7 @@ export default class Game extends Phaser.Scene {
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
     this.MobController = new MobController(this, socket);
-    this.FoliageController = new FoliageController(this, socket);
+    this.EnvironmentController = new EnvironmentController(this, socket);
 
     this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
     this.GrappleHandler = new GrappleHandler(this);
@@ -99,8 +99,8 @@ export default class Game extends Phaser.Scene {
     this.handleBackgrounds();
     this.TerrainHandler.spawnChunks();
     this.MobController.handleMobs();
-    this.FoliageController.decideSpawnAndDeletePlants();
-    this.FoliageController.handleDisplayUI();
+    this.EnvironmentController.decideSpawnAndDeleteEnvObjs();
+    this.EnvironmentController.handleDisplayUI();
     if (this.PlayerController.spaceKey.isDown) {
       if (global.mobCount < 3) {
         this.MobController.spawn(global.curPlayerData.body, 'skug');
@@ -151,8 +151,8 @@ export default class Game extends Phaser.Scene {
 
   handleSendData() {
     setInterval(() => {
-      if (this.ThrowWEPC.curSpearId !== 0) {
-        socket.emit('updateSpearPositions', global.curPlayerData.id, this.ThrowWEPC.curSpearData);
+      if (this.ThrowWEPC.curThrowableID !== 0) {
+        socket.emit('updateSpearPositions', global.curPlayerData.id, this.ThrowWEPC.curThrownObjData);
       }
       const PC = this.PlayerController;
       if (global.curPlayerData && (Math.abs(PC.player.pos.x - PC.sentPos.x) > 5 || Math.abs(PC.player.pos.y - PC.sentPos.y) > 5)) {
