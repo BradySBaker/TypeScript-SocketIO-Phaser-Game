@@ -44,8 +44,8 @@ export default class MobController {
 
 
 
-  damage(id: number | string, info: {type: string, pos: GameObject}) {
-    this.socket.emit('damageMob', id, {pos: {x: Math.round(info.pos.x), y: Math.round(info.pos.y)}, type: info.type});
+  damage(id: number | string, info: {type: string, pos: GameObject, weaponType: Throwable}) {
+    this.socket.emit('damageMob', id, {pos: {x: Math.round(info.pos.x), y: Math.round(info.pos.y)}, type: info.type, weaponType: info.weaponType});
   }
 
   handleMovement(mob: Mob, id: number | string) {
@@ -122,6 +122,7 @@ export default class MobController {
 
   deleteMob(id: number | string) {
     if (global.otherMobs[id]) {
+      this.destroyedMobs[id] = true;
       global.otherMobs[id].destroy();
       this.mobGroup.remove(global.otherMobs[id]);
       delete global.otherMobs[id];
@@ -139,6 +140,10 @@ export default class MobController {
   handleData() {
     this.socket.on('updateMobs', (mobData: {[goatId: number]: {pos: GameObject, assigned: boolean, type: MobTypes}}) => {
       for (let id in mobData) {
+        if (this.destroyedMobs[id]) {
+          delete this.destroyedMobs[id];
+          return;
+        }
         let curMob = mobData[id];
         let inRender = this.mobInRenderDistance(curMob.pos);
 
@@ -169,6 +174,7 @@ export default class MobController {
 
 
     this.socket.on('mobDied', (id: number | string) => {
+      console.log(id)
       this.deleteMob(id);
     });
 

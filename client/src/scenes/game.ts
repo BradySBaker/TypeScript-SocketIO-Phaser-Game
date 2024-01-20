@@ -1,7 +1,7 @@
 import Phaser, { GameObjects } from "phaser";
 import ProjectileController from './controllers/ProjectileController.js';
 import PlayerController from './controllers/PlayerController.js';
-import ThrowWEPC from "./controllers/ThrowWEPC.js";
+import ThrowWEPC from "./controllers/weapons/ThrowWEPC.js";
 import GrappleHandler from "./controllers/GrappleHandler.js";
 import TerrainHandler from "./objects/TerrainHandler.js";
 
@@ -9,7 +9,7 @@ import HoverDetectionController from "./controllers/HoverDetectionController.js"
 
 import DropHandler from "./controllers/DropHandler.js";
 import MobController from "./controllers/mobs/MobController.js";
-import FoliageController from "./controllers/FoliageController.js";
+import EnvironmentController from "./controllers/EnvironmentController.js";
 
 import global from './global.js';
 
@@ -34,7 +34,7 @@ export default class Game extends Phaser.Scene {
   spawnCounter: number = 0;
 
   MobController!: MobController;
-  FoliageController!: FoliageController;
+  EnvironmentController!: EnvironmentController;
 
   HoverDetectionController!: HoverDetectionController;
 
@@ -45,8 +45,6 @@ export default class Game extends Phaser.Scene {
     this.load.image('ground', './assets/ground2.png');
     this.load.image('mountains1', './assets/mountains1.png');
     this.load.image('mountains2', './assets/mountains2.png');
-    this.load.image('spear', './assets/tools/spear.png');
-    this.load.image('grapple', './assets/tools/grapple.png');
     this.load.image('grass', './assets/grass.png');
     this.load.image('bloodDrop', './assets/bloodDrop.png');
 
@@ -54,8 +52,12 @@ export default class Game extends Phaser.Scene {
     this.load.image('skugHead', './assets/skug/skugHead.png');
     this.load.image('skugLeg', './assets/skug/skugLeg.png');
 
-    this.load.image('bone', './assets/drops/bone.png');
-    this.load.image('stickyFern', './assets/foliage/stickyFern.png');
+    global.EnvImages.forEach((curName) => {
+      this.load.image(curName, `./assets/env/${curName}.png`);
+    })
+    global.ItemImages.forEach((curName) => {
+      this.load.image(curName, `./assets/items/${curName}.png`);
+    });
 
     this.load.on('complete', () => {
       socket = socketClient.io('http://localhost:3000');
@@ -71,12 +73,11 @@ export default class Game extends Phaser.Scene {
     this.PlayerController = new PlayerController(this, socket);
     this.PlayerController.setupPlayer();
     this.MobController = new MobController(this, socket);
-    this.FoliageController = new FoliageController(this, socket);
+    this.EnvironmentController = new EnvironmentController(this, socket);
 
     this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
     this.GrappleHandler = new GrappleHandler(this);
     this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
-    this.ThrowWEPC.handleIncomingSpearData();
     this.TerrainHandler = new TerrainHandler(this);
 
     this.HoverDetectionController = new HoverDetectionController(this);
@@ -95,13 +96,13 @@ export default class Game extends Phaser.Scene {
     this.deltaTime = delta / (1000 / 60);
     this.PlayerController.handleMovement();
     this.PlayerController.interpolatePlayerPositions();
-    this.ThrowWEPC.handleOtherCollidedSpears();
+    this.ThrowWEPC.handleOtherCollidedThrowables();
     this.GrappleHandler.drawRopes();
     this.handleBackgrounds();
     this.TerrainHandler.spawnChunks();
     this.MobController.handleMobs();
-    this.FoliageController.decideSpawnAndDeletePlants();
-    this.FoliageController.handleDisplayUI();
+    this.EnvironmentController.decideSpawnAndDeleteEnvObjs();
+    this.EnvironmentController.handleDisplayUI();
     if (this.PlayerController.spaceKey.isDown) {
       if (global.mobCount < 3) {
         this.MobController.spawn(global.curPlayerData.body, 'skug');
@@ -152,8 +153,8 @@ export default class Game extends Phaser.Scene {
 
   handleSendData() {
     setInterval(() => {
-      if (this.ThrowWEPC.curSpearId !== 0) {
-        socket.emit('updateSpearPositions', global.curPlayerData.id, this.ThrowWEPC.curSpearData);
+      if (this.ThrowWEPC.curThrowableID !== 0) {
+        socket.emit('updateThrowablePositions', global.curPlayerData.id, this.ThrowWEPC.curThrownObjData);
       }
       const PC = this.PlayerController;
       if (global.curPlayerData && (Math.abs(PC.player.pos.x - PC.sentPos.x) > 5 || Math.abs(PC.player.pos.y - PC.sentPos.y) > 5)) {

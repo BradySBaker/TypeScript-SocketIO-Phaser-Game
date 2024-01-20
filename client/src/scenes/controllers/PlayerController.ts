@@ -103,22 +103,24 @@ export default class PlayerController {
     //Handle equips ==
     const grappleHook = this.game.GrappleHandler.grappleHook;
 
-    if (this.game.ThrowWEPC.spear && global.equiped === 'spear') {
-      this.game.ThrowWEPC.handleWeaponRotation(this.game.ThrowWEPC.spear, this.player, 'spear');
+    if (global.Throwables[global.equiped]) {
+      if (this.game.ThrowWEPC.activeThrowable) {
+        this.game.ThrowWEPC.handleWeaponRotation(this.game.ThrowWEPC.activeThrowable, this.player);
+      }
     } else if (global.equiped === 'grapple') {
       if (grappleHook) {
         this.game.GrappleHandler.handleGrapple();
       }
       this.game.GrappleHandler.handlePosition(global.curPlayerData.id);
       if (!this.game.GrappleHandler.grappling) {
-        this.game.ThrowWEPC.handleWeaponRotation(grappleHook, this.player, 'grapple');
+        this.game.ThrowWEPC.handleWeaponRotation(grappleHook, this.player);
       }
-    } else if (grappleHook) {
+    }
+    if (grappleHook && global.equiped !== 'grapple') {
       grappleHook.setActive(false);
       grappleHook.setVisible(false);
     }
-
-    this.game.ThrowWEPC.handleSpearThrow(this.player);
+    this.game.ThrowWEPC.handleObjThrow(this.player);
     // ==
 
     if (this.game.GrappleHandler.grappling) {
@@ -164,9 +166,9 @@ export default class PlayerController {
     }
     this.setPosition(this.move.vx, this.move.vy, true)
 
-    if (this.game.ThrowWEPC?.spear) {
-      this.game.ThrowWEPC.spear.x += this.move.vx * this.game.deltaTime;
-      this.game.ThrowWEPC.spear.y = this.player.pos.y;
+    if (this.game.ThrowWEPC?.activeThrowable) { //Set throwable position
+      this.game.ThrowWEPC.activeThrowable.x += this.move.vx * this.game.deltaTime;
+      this.game.ThrowWEPC.activeThrowable.y = this.player.pos.y;
     }
   }
 
@@ -282,7 +284,7 @@ export default class PlayerController {
       for (let playerID in collidedSpearPositions) {
         for (let spearID in collidedSpearPositions[playerID]) {
           let spearData = collidedSpearPositions[playerID][spearID];
-          this.game.ThrowWEPC.handleCollidedSpearData(Number(playerID), {...spearData, id: Number(spearID)});
+          this.game.ThrowWEPC.handleCollidedthrowableData(Number(playerID), {...spearData, id: Number(spearID)});
         }
       }
       this.sentPos = {x: data[id].pos.x, y: data[id].pos.y};
