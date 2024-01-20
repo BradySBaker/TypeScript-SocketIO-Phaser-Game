@@ -17,4 +17,4 @@ type EnvObj = 'stickyFern' | 'stone';
 
 type Throwable = 'stone' | 'spear';
 type Tool = 'spear' | 'grapple' | 'stone';
-type Drop = 'bone' | 'stone' | 'goo';
+type Drop = 'bone' | 'stone' | 'goo' | 'spear';

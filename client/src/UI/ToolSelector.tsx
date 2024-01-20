@@ -32,7 +32,7 @@ const ToolSelector: React.FC<{numKeyPress: string, setNumKeyPress: Function ,new
         let newIndex = findIndexOf('');
         tools[newIndex] = {name: 'stone', count: 1};
       } else {
-        if (!global.pickups[3]) {
+        if (!global.inventory[3]) {
           if (global.equiped === 'stone') {
             global.equiped = '';
             setCurIcon('');
@@ -41,7 +41,7 @@ const ToolSelector: React.FC<{numKeyPress: string, setNumKeyPress: Function ,new
           setNumKeyPress('');
           return;
         }
-        tools[stoneIndex] = {name: 'stone', count: global.pickups[3].count}
+        tools[stoneIndex] = {name: 'stone', count: global.inventory[3].count}
         setUpdate(update => !update);
       }
     }

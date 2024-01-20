@@ -20,14 +20,14 @@ let minMaxPlayerPosX: {min: number, max: number} = {min: 0, max: 0};
 let playerCount: number = 0;
 
 let mobInfo = {goat: {health: 5, dropMax: 0, dropType: 0, dropMin: 1}, skug: {health: 2, dropMax: 3, dropMin: 1, dropType: 1}};
-let envObjDrops = {stickyFern: 2, stone: 3};
+
+let objDrops: {[type in Throwable | EnvObj]: number} = {stickyFern: 2, stone: 3, spear: 4};
 
 let projectileCount: number = 0;
 
 let playerPosData: { [playerId: number]: { pos: GameObject, grapplePos: GameObject | undefined } } = {};
 let projectilePositions: { [playerId: number]: { direction: string, pos: GameObject, startPos: GameObject, playerId: number } } = {};
-let throwablePositions: { [playerId: number]: { [throwableID: number]: { pos: GameObject, angle: number } } } = {};
-let collidedThrowablePositions: { [playerId: number]: { [ThrowableID: number]: { stuckPos: GameObject, angle: number, collidedInfo: { type: string, id: number } } } } = {};
+let collidedThrowablePositions: { [ThrowableID: number]: { stuckPos: GameObject, type: Throwable, angle: number, collidedInfo?: { type: string, id: number } } } = {};
 
 let playerInventoryData: {[playerId: number]: { [itemID: string | number]: number }} = {};
 let recentDrops: {[itemId: string]: number} = {};
@@ -81,17 +81,13 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
-  socket.on('updateThrowablePositions', (playerId: number, ThrowableData: { [id: number]: { pos: GameObject, angle: number } }) => {
-    throwablePositions[playerId] = ThrowableData;
-    socket.broadcast.emit('updateThrowablePositions', playerId, ThrowableData);
+  socket.on('updateThrowablePositions', (ThrowableData: { [id: number]: { pos: GameObject, angle: number } }) => {
+    socket.broadcast.emit('updateThrowablePositions', ThrowableData);
   });
 
-  socket.on('updateCollidedThrowable', (playerId: number, ThrowableData: { id: number, stuckPos: GameObject, angle: number, collidedInfo: { type: string, id: number } }) => {
-    if (!collidedThrowablePositions[playerId]) {
-      collidedThrowablePositions[playerId] = {};
-    }
-    collidedThrowablePositions[playerId][ThrowableData.id] = ThrowableData;
-    socket.broadcast.emit('updateCollidedThrowable', playerId, ThrowableData);
+  socket.on('newCollidedThrowable', (ThrowableData: { id: number, type: Throwable, stuckPos: GameObject, angle: number, collidedInfo?: { type: string, id: number }}) => {
+    collidedThrowablePositions[ThrowableData.id] = ThrowableData;
+    io.emit('newCollidedThrowable', ThrowableData);
   });
 
 
@@ -156,17 +152,18 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
-  socket.on('pickupEnvObj', (playerId: number, id: number) => {
+  socket.on('pickupObj', (playerId: number, id: number, type: 'throwable' | 'envObj') => {
     if (!playerInventoryData[playerId]) {
       playerInventoryData[playerId] = {};
     }
-    if (curEnvObjects[id]) {
-      let dropType = envObjDrops[curEnvObjects[id].type];
+    let objStorage = type === 'envObj' ? curEnvObjects : collidedThrowablePositions;
+    if (objStorage[id]) {
+      let dropType = objDrops[objStorage[id].type];
 
       let curAmount = playerInventoryData[playerId][dropType];
       playerInventoryData[playerId][dropType] = !curAmount ? 1 : curAmount + 1;
-      delete curEnvObjects[id];
-      io.emit('deleteEnvObj', id);
+      delete objStorage[id];
+      io.emit('deletePickupableObj', id, type);
       socket.emit('pickupVerified', dropType, 1);
     }
   });

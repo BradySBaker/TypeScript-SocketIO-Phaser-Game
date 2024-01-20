@@ -96,7 +96,7 @@ export default class Game extends Phaser.Scene {
     this.deltaTime = delta / (1000 / 60);
     this.PlayerController.handleMovement();
     this.PlayerController.interpolatePlayerPositions();
-    this.ThrowWEPC.handleOtherCollidedThrowables();
+    this.ThrowWEPC.handleAttatchedCollidedThrowables();
     this.GrappleHandler.drawRopes();
     this.handleBackgrounds();
     this.TerrainHandler.spawnChunks();

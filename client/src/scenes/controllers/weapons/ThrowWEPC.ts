@@ -20,8 +20,9 @@ export default class ThrowWEPC {
   curThrownObjData: {[id: number| string]: {pos: GameObject, angle: number, type: Throwable}} = {};
   curThrownObjs: {[id: number| string]: throwableObj} = {};
 
-  otherThrownObjs: {[playerID: number]: {[objID: number]: Phaser.GameObjects.Sprite}} = {};
-  otherCollidedObjs: {[playerID: number]: {[objID: number]: {collidedInfo?: {type: string, id: number}, stuckPos?: GameObject, obj: Phaser.GameObjects.Sprite, particles?: Phaser.GameObjects.Particles.ParticleEmitter}}} = {};
+  otherThrownObjs: {[ThrowableID: number]: Phaser.GameObjects.Sprite} = {};
+  groundThrowableObjs: {[ThrowableID: number]: Phaser.GameObjects.Sprite} = {};
+  attatchedThrowableObjs: {[ThrowableID: number]: {collidedInfo: {type: string, id: number}, stuckPos?: GameObject, obj: Phaser.GameObjects.Sprite, particles?: Phaser.GameObjects.Particles.ParticleEmitter}} = {};
   curThrowableID = 0;
   throwableGroup!: Phaser.GameObjects.Group;
   socket: Socket;
@@ -101,30 +102,28 @@ export default class ThrowWEPC {
       const launchAngleInRadians = Phaser.Math.DegToRad(this.activeThrowable.angle);
 
       let collider = this.game.add.rectangle(this.activeThrowable.x, this.activeThrowable.y, 10, 10);
-      collider.name = this.curThrowableID.toString();
+      let id = global.curPlayerData.id + this.curThrowableID.toString()
+      collider.name = id;
       this.activeThrowable.setDepth(0);
-      this.curThrownObjs[this.curThrowableID] = {obj: this.activeThrowable, vel: {x: 0, y: 0}, collider};
+      this.curThrownObjs[id] = {obj: this.activeThrowable, vel: {x: 0, y: 0}, collider};
 
       let type: Throwable = this.activeThrowable.getData('type');
 
-      this.curThrownObjData[this.curThrowableID] = {pos: {x: this.activeThrowable.x, y: this.activeThrowable.y}, angle: this.activeThrowable.angle, type};
+      this.curThrownObjData[id] = {pos: {x: this.activeThrowable.x, y: this.activeThrowable.y}, angle: this.activeThrowable.angle, type};
 
       this.activeThrowable = undefined;
 
-      const throwingForce = Math.abs(Math.floor((player.pos.x - this.curThrownObjs[this.curThrowableID].obj.x)/WeaponSettings[type].fallSpeedModifer));
-      this.curThrownObjs[this.curThrowableID].vel.x = throwingForce * Math.cos(launchAngleInRadians);
-      this.curThrownObjs[this.curThrowableID].vel.y = throwingForce * Math.sin(launchAngleInRadians);
+      const throwingForce = Math.abs(Math.floor((player.pos.x - this.curThrownObjs[id].obj.x)/WeaponSettings[type].fallSpeedModifer));
+      this.curThrownObjs[id].vel.x = throwingForce * Math.cos(launchAngleInRadians);
+      this.curThrownObjs[id].vel.y = throwingForce * Math.sin(launchAngleInRadians);
       this.curThrowableID++;
 
       let itemType = 3;
       this.socket.emit('updatePickup', {type: itemType, count: -1}); //fix 3
       externalSetPickup({type: itemType, count: -1});
-      if (global.pickups[itemType] && global.pickups[itemType].count === 1) {
-        delete global.pickups[itemType];
-      } else if (global.pickups[itemType]) {
-        global.pickups[itemType].count--;
+      if (global.inventory[itemType]) {
+        global.inventory[itemType].count--;
       }
-      console.log(global.pickups[itemType])
     }
     this.handleThrownObjs();
   }
@@ -150,51 +149,33 @@ export default class ThrowWEPC {
   }
 
 
-  handleCollidedThrowable(thrownObj: throwableObj, id: number|string, groundCollision: boolean) { // ==================
-    if (groundCollision) { //If throwable touches ground
-      delete this.curThrownObjData[id];
-      delete this.curThrownObjs[id];
-      this.throwableGroup.remove(thrownObj.collider);
-      thrownObj.collider.destroy();
-      this.socket.emit('updateCollidedThrowable', global.curPlayerData.id, {id: id, stuckPos: {x: thrownObj.obj.x, y: thrownObj.obj.y }, angle: thrownObj.obj.angle, collidedPlayerID: undefined});
-      return
-    }
+  handleNewCollidedThrowable(thrownObj: throwableObj, id: number|string, groundCollision: boolean) { // ==================
+    let weaponType = this.curThrownObjData[id].type;
+    let pos = thrownObj.stuckPos ? thrownObj.stuckPos : {x: thrownObj.obj.x, y: thrownObj.obj.y};
+    this.socket.emit('newCollidedThrowable', {id: id, stuckPos: pos, angle: thrownObj.obj.angle, collidedInfo: thrownObj.collidedInfo, type: weaponType});
 
-    let gameObject = this.getGameObject(thrownObj.collidedInfo!); //If throwable touched gameobject
-    if (!gameObject) {
-      this.throwableGroup.remove(thrownObj.collider);
-      thrownObj.collider.destroy();
-      thrownObj.obj.destroy();
-      if (thrownObj.particles) {
-        thrownObj.particles.destroy();
-      }
-      delete this.curThrownObjData[id];
+    delete this.curThrownObjData[id];
+    delete this.curThrownObjs[id];
+    thrownObj.obj.destroy();
+    this.throwableGroup.remove(thrownObj.collider);
+    thrownObj.collider.destroy();
+
+    if (groundCollision) {
       return;
     }
-
+    let gameObject = this.getGameObject(thrownObj.collidedInfo!); //If throwable touched gameobject
+    if(!gameObject) {
+      return;
+    }
     let targetObject: any = gameObject.body;
 
     if (gameObject.getData('type') === 'player') {
       targetObject = gameObject;
     }
 
-    thrownObj.obj.x = targetObject.x - thrownObj.stuckPos!.x;
-    thrownObj.obj.y = targetObject.y - thrownObj.stuckPos!.y;
-
-    if (!thrownObj.particles) {
-      let type = gameObject.getData('type')
-      if (type === 'goat' || type === 'skug') {
-        this.game.MobController.damage(gameObject.getData('id'), {type, pos: targetObject.position, weaponType: thrownObj.obj.getData('type')});
-      }
-    }
-
-    thrownObj.particles = this.handleBlood(thrownObj.obj, thrownObj.particles);
-
-    if (this.curThrownObjData[id]) {
-      delete this.curThrownObjData[id];
-      this.throwableGroup.remove(thrownObj.collider);
-      thrownObj.collider.destroy();
-      this.socket.emit('updateCollidedThrowable', global.curPlayerData.id, {id: id, stuckPos: {x: thrownObj.stuckPos!.x, y: thrownObj.stuckPos!.y}, angle: thrownObj.obj.angle, collidedInfo: thrownObj.collidedInfo});
+    let type = gameObject.getData('type');
+    if (type === 'goat' || type === 'skug') {
+      this.game.MobController.damage(gameObject.getData('id'), {type, pos: targetObject.position, weaponType});
     }
   }               //=========================
 
@@ -219,7 +200,7 @@ export default class ThrowWEPC {
       const groundCollision = this.game.physics.overlap(thrownObj.collider, this.game.TerrainHandler.blockGroup);
 
       if (groundCollision || thrownObj.collidedInfo) {
-        this.handleCollidedThrowable(thrownObj, id, groundCollision);
+        this.handleNewCollidedThrowable(thrownObj, id, groundCollision);
         continue;
       }
 
@@ -279,34 +260,29 @@ export default class ThrowWEPC {
 
 
 
-  handleOtherCollidedThrowables() {
-    for (let playerID in this.otherCollidedObjs) {
-      for (let objID in this.otherCollidedObjs[playerID]) {
-        let throwableData = this.otherCollidedObjs[playerID][objID];
-        if (throwableData.collidedInfo === undefined) { //handle ground obj
-          continue;
+  handleAttatchedCollidedThrowables() {
+    for (let id in this.attatchedThrowableObjs) {
+      let throwableData = this.attatchedThrowableObjs[id];
+      let gameObject = this.getGameObject(throwableData.collidedInfo);
+      if (!gameObject) { //Handle gameObject destroyed
+        throwableData.obj.destroy();
+        if (throwableData.particles) {
+          throwableData.particles.destroy();
         }
-        let gameObject = this.getGameObject(throwableData.collidedInfo);
-        if (!gameObject) { //Handle gameObject destroyed
-          throwableData.obj.destroy();
-          if (throwableData.particles) {
-            throwableData.particles.destroy();
-          }
-          delete this.otherCollidedObjs[playerID][objID];
-          continue;
-        }
-
-        let targetObject: any = gameObject.body;
-
-        if (gameObject.getData('type') === 'player') {
-          targetObject = gameObject;
-        }
-
-        throwableData.obj.x = targetObject.x - throwableData.stuckPos!.x;
-        throwableData.obj.y = targetObject.y - throwableData.stuckPos!.y;
-
-        throwableData.particles = this.handleBlood(throwableData.obj, throwableData.particles);
+        delete this.attatchedThrowableObjs[id];
+        continue;
       }
+
+      let targetObject: any = gameObject.body;
+
+      if (gameObject.getData('type') === 'player') {
+        targetObject = gameObject;
+      }
+
+      throwableData.obj.x = targetObject.x - throwableData.stuckPos!.x;
+      throwableData.obj.y = targetObject.y - throwableData.stuckPos!.y;
+
+      throwableData.particles = this.handleBlood(throwableData.obj, throwableData.particles);
     }
   }
 
@@ -319,46 +295,49 @@ export default class ThrowWEPC {
 
 
   handleIncomingThrowableData() {
-    this.socket.on('updateThrowablePositions', (playerID: number, thrownObjsData: {[id: number]: {pos: GameObject, angle: number}}) => {
+    this.socket.on('updateThrowablePositions', (ThrowableID: number, thrownObjsData: {[id: number]: {pos: GameObject, angle: number, type: Throwable}}) => {
       for (let objID in thrownObjsData) {
-        let curthrowableData = thrownObjsData[objID];
+        let curThrowableData = thrownObjsData[objID];
         let thrownObjs = this.otherThrownObjs;
-        if (!thrownObjs[playerID]) {
-          thrownObjs[playerID] = {};
-        }
-        if (!thrownObjs[playerID][objID]) {
-          thrownObjs[playerID][objID] = this.game.add.sprite(curthrowableData.pos.x, curthrowableData.pos.y, global.equiped).setOrigin(0, .5).setDepth(0);
-          thrownObjs[playerID][objID].angle = curthrowableData.angle;
+        if (!thrownObjs[ThrowableID]) {
+          thrownObjs[ThrowableID] = this.game.add.sprite(curThrowableData.pos.x, curThrowableData.pos.y, curThrowableData.type).setOrigin(0, .5).setDepth(0);
+          thrownObjs[ThrowableID].angle = curThrowableData.angle;
         } else {
-          let thrownObj = thrownObjs[playerID][objID];
-            thrownObj.x = curthrowableData.pos.x;
-            thrownObj.y = curthrowableData.pos.y;
-            thrownObj.angle = curthrowableData.angle;
+          let thrownObj = thrownObjs[ThrowableID];
+            thrownObj.x = curThrowableData.pos.x;
+            thrownObj.y = curThrowableData.pos.y;
+            thrownObj.angle = curThrowableData.angle;
         }
       }
     });
 
-    this.socket.on('updateCollidedThrowable', (playerID: number, throwableData: {id: number, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) => {
-      this.handleCollidedthrowableData(playerID, throwableData);
+    this.socket.on('newCollidedThrowable', (throwableData: {id: number, type: Throwable, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) => {
+      this.handleCollidedthrowableData(throwableData);
     });
   }
 
-  handleCollidedthrowableData(playerID: number, throwableData: {id: number, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) {
-    if (!this.otherCollidedObjs[playerID]) {
-      this.otherCollidedObjs[playerID] = {};
-    }
-    if (this.otherThrownObjs[playerID] && this.otherCollidedObjs[playerID][throwableData.id]) {
-      this.otherThrownObjs[playerID][throwableData.id].destroy();
-      delete this.otherThrownObjs[playerID][throwableData.id];
+  handleCollidedthrowableData(throwableData: {id: number, type: Throwable, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) {
+    console.log(throwableData);
+    if (this.otherThrownObjs[throwableData.id] && this.otherThrownObjs[throwableData.id]) {
+      this.otherThrownObjs[throwableData.id].destroy();
+      delete this.otherThrownObjs[throwableData.id];
     }
     let x = 500;
     let y = 500;
-    if (throwableData.collidedInfo === undefined) {
+    if (throwableData.collidedInfo === undefined) { //Ground collision
       x = throwableData.stuckPos.x;
       y = throwableData.stuckPos.y;
     }
-    this.otherCollidedObjs[playerID][throwableData.id] = {...throwableData, obj: this.game.add.sprite(x, y, global.equiped).setOrigin(0, .5).setDepth(0)};
-    this.otherCollidedObjs[playerID][throwableData.id].obj.angle = throwableData.angle;
+
+    let obj = this.game.add.sprite(x, y, throwableData.type).setOrigin(0, .5).setDepth(0).setScale(WeaponSettings[throwableData.type].size);
+    obj.setData({'objType': 'throwable', id: throwableData.id}); //This is labeled for pickup
+    if (throwableData.collidedInfo === undefined) {
+      this.groundThrowableObjs[throwableData.id] = obj;
+      this.game.EnvironmentController.envObjGroup.add(obj); //Makes only ground objects pickupable
+    } else {
+      this.attatchedThrowableObjs[throwableData.id] = {...throwableData, obj};
+    }
+    obj.angle = throwableData.angle;
   }
 
 }
