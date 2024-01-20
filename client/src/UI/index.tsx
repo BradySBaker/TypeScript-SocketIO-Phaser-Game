@@ -15,6 +15,7 @@ const UI: React.FC<{}> = () => {
   const [newPickup, setNewPickup] = useState({count: 0, type: 0});
   const [usePos, setUsePos] = useState<{x: number | undefined, y: number | undefined}>({x: undefined, y: undefined});
   const [useKeyDownTime, setUseKeyDownTime] = useState(0);
+  const [numKeyPress, setNumKeyPress] = useState('');
   externalSetUsePos = setUsePos;
   externalSetPickup = setNewPickup;
 
@@ -25,6 +26,9 @@ const UI: React.FC<{}> = () => {
     }
     if (event.key === 'e') {
       setUseKeyDownTime(prevState => prevState + 1);
+    }
+    if (!isNaN(Number(event.key))) {
+      setNumKeyPress(event.key);
     }
     setKeyPress(event.key);
   };
@@ -51,7 +55,7 @@ const UI: React.FC<{}> = () => {
     <div id="app">
       <DisplayPickup newPickup={newPickup}/>
       <Inventory inventoryToggle={inventoryToggle} newPickup={newPickup}/>
-      <ToolSelector keyPress={keyPress}/>
+      <ToolSelector numKeyPress={numKeyPress} newPickup={newPickup}/>
       {usePos.x !== undefined && usePos.y !== undefined ? <DisplayUse useKeyDownTime={useKeyDownTime} usePos={usePos}/> : null}
     </div>
   )

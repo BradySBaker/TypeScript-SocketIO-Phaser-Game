@@ -55,15 +55,8 @@ export default class Game extends Phaser.Scene {
     global.EnvImages.forEach((curName) => {
       this.load.image(curName, `./assets/env/${curName}.png`);
     })
-    global.DropImages.forEach((curName) => {
-      this.load.image(curName, `./assets/drops/${curName}.png`);
-    });
-    global.ToolImages.forEach((curName) => {
-      this.load.image(curName, `./assets/tools/${curName}.png`);
-    });
-
-    global.DropImages.forEach(() => {
-
+    global.ItemImages.forEach((curName) => {
+      this.load.image(curName, `./assets/items/${curName}.png`);
     });
 
     this.load.on('complete', () => {

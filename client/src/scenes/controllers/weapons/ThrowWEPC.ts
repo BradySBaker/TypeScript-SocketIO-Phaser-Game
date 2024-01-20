@@ -6,6 +6,7 @@ import global from '../../global.js';
 import createParticles from "../Particles.js";
 
 import WeaponSettings from "./WeaponSettings.js";
+import {externalSetPickup} from "../../../UI/index.js";
 
 type throwableObj = {obj: Phaser.GameObjects.Sprite, vel: GameObject, collidedInfo?: {type: string, id: number}, stuckPos?: GameObject, collider: Phaser.GameObjects.Rectangle, particles?: Phaser.GameObjects.Particles.ParticleEmitter};
 
@@ -96,7 +97,7 @@ export default class ThrowWEPC {
       } else {
         this.activeThrowable.y += (this.activeThrowable.y < player.pos.y ? throwableReadySpeed : -throwableReadySpeed) * this.game.deltaTime;
       }
-    } else if (this.activeThrowable && this.activeThrowable.x !== player.pos.x && global.Throwables[global.equiped]) { //Throw obj
+    } else if (this.activeThrowable && this.activeThrowable.x !== player.pos.x && global.Throwables[global.equiped]) { //Throw obj [fix verify drop at some point]
       const launchAngleInRadians = Phaser.Math.DegToRad(this.activeThrowable.angle);
 
       let collider = this.game.add.rectangle(this.activeThrowable.x, this.activeThrowable.y, 10, 10);
@@ -113,8 +114,17 @@ export default class ThrowWEPC {
       const throwingForce = Math.abs(Math.floor((player.pos.x - this.curThrownObjs[this.curThrowableID].obj.x)/WeaponSettings[type].fallSpeedModifer));
       this.curThrownObjs[this.curThrowableID].vel.x = throwingForce * Math.cos(launchAngleInRadians);
       this.curThrownObjs[this.curThrowableID].vel.y = throwingForce * Math.sin(launchAngleInRadians);
-
       this.curThrowableID++;
+
+      let itemType = 3;
+      this.socket.emit('updatePickup', {type: itemType, count: -1}); //fix 3
+      externalSetPickup({type: itemType, count: -1});
+      if (global.pickups[itemType] && global.pickups[itemType].count === 1) {
+        delete global.pickups[itemType];
+      } else if (global.pickups[itemType]) {
+        global.pickups[itemType].count--;
+      }
+      console.log(global.pickups[itemType])
     }
     this.handleThrownObjs();
   }

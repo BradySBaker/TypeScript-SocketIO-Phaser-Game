@@ -10,7 +10,7 @@ const envObj_RENDER_DISTANCE = 2000; //should be 2000!
 
 let prevPlayerAreaX: undefined | number;
 
-let envObjRates: {[type in EnvObj]: number} = {'stickyFern': .5, 'stone': .5}; //must add up to 100
+let envObjSettings: {[type in EnvObj]: {rate: number, size: number, randomRotation: boolean}} = {stickyFern: {rate: .5, size: 3, randomRotation: false}, stone: {rate: .5, size: 1.5, randomRotation: true}}; //rates must add up to 100
 let envObjs: {[id: number | string]: Phaser.GameObjects.Sprite} = {};
 let allEnvObjectData: {[areaX: number]: {[id: number | string]: {type: EnvObj, pos: GameObject}}} = {}; //Will house objects based on areaX to + 2000
 
@@ -38,7 +38,13 @@ export default class EnvironmentController {
   }
 
   spawnEnvObj(envObjData: envObjData) {
-    let newEnvObj = this.game.add.sprite(envObjData.pos.x, envObjData.pos.y, envObjData.type).setScale(3);
+    let settings = envObjSettings[envObjData.type];
+    let newEnvObj = this.game.add.sprite(envObjData.pos.x, envObjData.pos.y, envObjData.type).setScale(settings.size);
+    if (settings.randomRotation) {
+      let randomAngle = Math.floor(Math.random() * 361) - 180;
+      newEnvObj.angle = randomAngle;
+      newEnvObj.y += 10;
+    }
     newEnvObj.setData('id', envObjData.id);
     newEnvObj.y -= (newEnvObj.height * 3)/2;
     envObjs[envObjData.id] = newEnvObj;
@@ -52,9 +58,9 @@ export default class EnvironmentController {
     let randomNumber = Math.random();
     let accumulatedProbability = 0;
 
-    for (let type in envObjRates) {
+    for (let type in envObjSettings) {
       const envObjType = type as EnvObj;
-      accumulatedProbability += envObjRates[envObjType];
+      accumulatedProbability += envObjSettings[envObjType].rate;
 
       if (randomNumber <= accumulatedProbability) {
         this.socket.emit('newEnvObj', type, pos);

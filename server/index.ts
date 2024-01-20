@@ -137,15 +137,22 @@ io.on('connection', (socket: Socket) => {
 
 
 
-  socket.on('pickup', (playerId: number, info: {dropType: number, count: number, id: number}) => { //Verify position [fix]
+  socket.on('pickupUpdate', (playerId: number, info: {dropType: number, count: number, id: number}) => { //Verify position [fix]
     if (recentDrops[info.dropType] >= info.count) {
       if (!playerInventoryData[playerId]) {
+        if (info.count < 0) {
+          return;
+        }
         playerInventoryData[playerId] = {};
       }
-      playerInventoryData[playerId][info.dropType] = info.count;
-      recentDrops[info.dropType] -= info.count;
-      socket.broadcast.emit('deleteDrop', info.id);
-      socket.emit('pickupVerified', info.dropType, info.count);
+      playerInventoryData[playerId][info.dropType] += info.count;
+      if (info.count > 0) {
+        recentDrops[info.dropType] -= info.count;
+        socket.broadcast.emit('deleteDrop', info.id);
+        socket.emit('pickupVerified', info.dropType, info.count);
+      } else {
+        socket.emit('throwItemVerify', info.dropType, info.count);
+      }
     }
   });
 

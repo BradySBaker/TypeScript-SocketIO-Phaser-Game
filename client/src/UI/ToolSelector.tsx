@@ -1,29 +1,58 @@
 import React, { useEffect, useState } from "react";
 
 import global from "../scenes/global";
-let tools: string[] = new Array(6);
-tools.fill('');
+let tools: {name: string, count: number}[] = new Array(6);
+tools.fill({name: '', count: 0});
 
-tools[0] = 'spear';
-tools[1] = 'grapple';
-
-const ToolSelector: React.FC<{keyPress: string}> = ({keyPress}) => {
-  const [curIcon, setCurIcon] = useState('spear');
-  useEffect(() => {
-    let selected = tools[Number(keyPress) - 1];
-    if (selected) {
-      setCurIcon(selected);
-      global.equiped = selected;
+let findIndexOf = (name: string): number => {
+  for (let i = 0; i < tools.length; i++) {
+    if (tools[i].name === name) {
+      return i;
     }
-  }, [keyPress]);
+  }
+  return -1;
+}
+
+const ToolSelector: React.FC<{numKeyPress: string, newPickup: {count: number, type: number}}> = ({numKeyPress, newPickup}) => {
+  const [curIcon, setCurIcon] = useState('');
+  const [update, setUpdate] = useState(false);
+
+  useEffect(() => {
+    let selected = tools[Number(numKeyPress) - 1];
+    if (selected) {
+      setCurIcon(selected.name);
+      global.equiped = selected.name;
+    }
+  }, [numKeyPress]);
+
+  useEffect(() => { //--fix make modular
+    if (newPickup.type == 3) {
+      let stoneIndex = findIndexOf('stone');
+      if (stoneIndex === -1) {
+        let newIndex = findIndexOf('');
+        tools[newIndex] = {name: 'stone', count: 1};
+      } else {
+        if (!global.pickups[3]) {
+          if (global.equiped === 'stone') {
+            global.equiped = '';
+            setCurIcon('');
+          }
+          tools[stoneIndex] = {name: '', count: 0};
+          return;
+        }
+        tools[stoneIndex] = {name: 'stone', count: global.pickups[3].count}
+        setUpdate(update => !update);
+      }
+    }
+  }, [newPickup]);
 
   return (
     <div id="toolSelector">
       {
-        tools.map((curTool) => {
+        tools.map((curTool, idx) => {
           return(
-            <div className="selection-box" style={curIcon === curTool ? {backgroundColor: 'rgba(255, 215, 0, 0.5)'} : {}}>
-              {curTool !== '' ?  <img className="selection-icon" src={`./assets/tools/${curTool}.png`}/> : null}
+            <div key={idx} className="selection-box" style={curIcon === curTool.name && curIcon !== '' ? {backgroundColor: 'rgba(255, 215, 0, 0.5)' } : {}}>
+              {curTool.name !== '' ?  <><img className="selection-icon" src={`./assets/items/${curTool.name}.png`}/><div>{curTool.count}</div></> : null}
             </div>
           )
         })
