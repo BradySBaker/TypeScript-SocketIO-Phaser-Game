@@ -13,7 +13,7 @@ let findIndexOf = (name: string): number => {
   return -1;
 }
 
-const ToolSelector: React.FC<{numKeyPress: string, newPickup: {count: number, type: number}}> = ({numKeyPress, newPickup}) => {
+const ToolSelector: React.FC<{numKeyPress: string, setNumKeyPress: Function ,newPickup: {count: number, type: number}}> = ({numKeyPress, setNumKeyPress, newPickup}) => {
   const [curIcon, setCurIcon] = useState('');
   const [update, setUpdate] = useState(false);
 
@@ -38,6 +38,7 @@ const ToolSelector: React.FC<{numKeyPress: string, newPickup: {count: number, ty
             setCurIcon('');
           }
           tools[stoneIndex] = {name: '', count: 0};
+          setNumKeyPress('');
           return;
         }
         tools[stoneIndex] = {name: 'stone', count: global.pickups[3].count}

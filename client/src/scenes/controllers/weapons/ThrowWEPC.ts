@@ -17,7 +17,7 @@ export default class ThrowWEPC {
   activeThrowable?: Phaser.GameObjects.Sprite
 
   playerGroup!: Phaser.GameObjects.Group;
-  curThrownObjData: {[id: number| string]: {pos: GameObject, angle: number, type: Throwable}} = {}
+  curThrownObjData: {[id: number| string]: {pos: GameObject, angle: number, type: Throwable}} = {};
   curThrownObjs: {[id: number| string]: throwableObj} = {};
 
   otherThrownObjs: {[playerID: number]: {[objID: number]: Phaser.GameObjects.Sprite}} = {};
