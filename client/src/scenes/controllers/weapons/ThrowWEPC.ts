@@ -8,7 +8,7 @@ import createParticles from "../Particles.js";
 import WeaponSettings from "./WeaponSettings.js";
 import {externalSetPickup} from "../../../UI/index.js";
 
-type throwableObj = {obj: Phaser.GameObjects.Sprite, vel: GameObject, collidedInfo?: {type: string, id: number}, stuckPos?: GameObject, collider: Phaser.GameObjects.Rectangle, particles?: Phaser.GameObjects.Particles.ParticleEmitter};
+type throwableObj = {obj: Phaser.GameObjects.Sprite, vel: GameObject, collidedInfo?: {type: string, id: number}, stuckPos?: GameObject, collider: Phaser.GameObjects.Rectangle, particles?: Phaser.GameObjects.Particles.ParticleEmitter, damagedEnemy: boolean};
 
 let throwableReadySpeed = 2;
 
@@ -105,7 +105,7 @@ export default class ThrowWEPC {
       let id = global.curPlayerData.id + this.curThrowableID.toString()
       collider.name = id;
       this.activeThrowable.setDepth(0);
-      this.curThrownObjs[id] = {obj: this.activeThrowable, vel: {x: 0, y: 0}, collider};
+      this.curThrownObjs[id] = {obj: this.activeThrowable, vel: {x: 0, y: 0}, collider, damagedEnemy: false};
 
       let name: Throwable = this.activeThrowable.getData('name');
 
@@ -152,32 +152,42 @@ export default class ThrowWEPC {
 
   handleNewCollidedThrowable(thrownObj: throwableObj, id: number|string, groundCollision: boolean) { // ==================
     let weaponName = this.curThrownObjData[id].name;
+
+    let gameObject: Phaser.GameObjects.GameObject | false = false;
+    if (!groundCollision) {
+      gameObject = this.getGameObject(thrownObj.collidedInfo!); //If throwable touched gameobject
+    }
+
+    if(gameObject) {
+      let targetObject: any = gameObject.body;
+
+      if (gameObject.getData('type') === 'player') {
+        targetObject = gameObject;
+      }
+
+      let type = gameObject.getData('type');
+      if ((type === 'goat' || type === 'skug') && !thrownObj.damagedEnemy /* Prevents repeated damage glitch */) {
+        thrownObj.damagedEnemy = true;
+        this.game.MobController.damage(gameObject.getData('id'), {type, pos: targetObject.position, weaponName});
+      }
+    }
+
+    let stick = WeaponSettings[weaponName as Throwable].stick;
+
+    if (!stick && !groundCollision) {
+      thrownObj.vel.x = -thrownObj.vel.x/1.2; //Bounce
+      thrownObj.collidedInfo = undefined;
+      thrownObj.stuckPos = undefined;
+      return;
+    }
+
     let pos = thrownObj.stuckPos ? thrownObj.stuckPos : {x: thrownObj.obj.x, y: thrownObj.obj.y};
     this.socket.emit('newCollidedThrowable', {id: id, stuckPos: pos, angle: thrownObj.obj.angle, collidedInfo: thrownObj.collidedInfo, name: weaponName});
-
-    delete this.curThrownObjData[id];
     delete this.curThrownObjs[id];
+    delete this.curThrownObjData[id];
     thrownObj.obj.destroy();
     this.throwableGroup.remove(thrownObj.collider);
     thrownObj.collider.destroy();
-
-    if (groundCollision) {
-      return;
-    }
-    let gameObject = this.getGameObject(thrownObj.collidedInfo!); //If throwable touched gameobject
-    if(!gameObject) {
-      return;
-    }
-    let targetObject: any = gameObject.body;
-
-    if (gameObject.getData('type') === 'player') {
-      targetObject = gameObject;
-    }
-
-    let type = gameObject.getData('type');
-    if (type === 'goat' || type === 'skug') {
-      this.game.MobController.damage(gameObject.getData('id'), {type, pos: targetObject.position, weaponName});
-    }
   }               //=========================
 
 
@@ -202,7 +212,9 @@ export default class ThrowWEPC {
 
       if (groundCollision || thrownObj.collidedInfo) {
         this.handleNewCollidedThrowable(thrownObj, id, groundCollision);
-        continue;
+        if (!this.curThrownObjs[id]) { //If object stuck
+          continue;
+        }
       }
 
 
