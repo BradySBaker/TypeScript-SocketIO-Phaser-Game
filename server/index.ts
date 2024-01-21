@@ -1,5 +1,4 @@
 import { Socket, Server } from 'socket.io';
-// import dropTypesAndCrafting from '../dropTypesAndCrafting.js';
 
 type MobTypes = 'goat' | 'skug';
 type EnvObj = 'stickyFern' | 'stone';
@@ -19,20 +18,20 @@ let minMaxPlayerPosX: {min: number, max: number} = {min: 0, max: 0};
 
 let playerCount: number = 0;
 
-let mobInfo = {goat: {health: 5, dropMax: 0, dropType: 0, dropMin: 1}, skug: {health: 2, dropMax: 3, dropMin: 1, dropType: 1}};
+let mobInfo = {goat: {health: 5, dropMax: 0, dropName: 'bone', dropMin: 1}, skug: {health: 2, dropMax: 3, dropMin: 1, dropName: 'bone'}};
 
-let objDrops: {[type in Throwable | EnvObj]: number} = {stickyFern: 2, stone: 3, spear: 4};
+let objDrops: {[name in Throwable | EnvObj]: string} = {stickyFern: 'goo', stone: 'stone', spear: 'spear'};
 
 let projectileCount: number = 0;
 
 let playerPosData: { [playerId: number]: { pos: GameObject, grapplePos: GameObject | undefined } } = {};
 let projectilePositions: { [playerId: number]: { direction: string, pos: GameObject, startPos: GameObject, playerId: number } } = {};
-let collidedThrowablePositions: { [ThrowableID: number]: { stuckPos: GameObject, type: Throwable, angle: number, collidedInfo?: { type: string, id: number } } } = {};
+let collidedThrowablePositions: { [ThrowableID: number]: { stuckPos: GameObject, name: Throwable, angle: number, collidedInfo?: { type: string, id: number } } } = {};
 
 let playerInventoryData: {[playerId: number]: { [itemID: string | number]: number }} = {};
-let recentDrops: {[itemId: string]: number} = {};
+let recentDrops: {[dropName: string]: number} = {};
 
-let curEnvObjects: {[EnvObjId: string | number]: {type: EnvObj, pos: GameObject}} = {};
+let curEnvObjects: {[EnvObjId: string | number]: {name: EnvObj, pos: GameObject}} = {};
 
 let connectedClients: string[] = [];
 
@@ -85,7 +84,7 @@ io.on('connection', (socket: Socket) => {
     socket.broadcast.emit('updateThrowablePositions', ThrowableData);
   });
 
-  socket.on('newCollidedThrowable', (ThrowableData: { id: number, type: Throwable, stuckPos: GameObject, angle: number, collidedInfo?: { type: string, id: number }}) => {
+  socket.on('newCollidedThrowable', (ThrowableData: { id: number, name: Throwable, stuckPos: GameObject, angle: number, collidedInfo?: { type: string, id: number }}) => {
     collidedThrowablePositions[ThrowableData.id] = ThrowableData;
     io.emit('newCollidedThrowable', ThrowableData);
   });
@@ -110,21 +109,21 @@ io.on('connection', (socket: Socket) => {
     socket.broadcast.emit('updateMobs', mobData);;
   });
 
-  socket.on('damageMob', (id: number | string, info: {type: MobTypes, pos: GameObject, weaponType: Throwable}) => { //verify if this mob exists [fix]
+  socket.on('damageMob', (id: number | string, info: {type: MobTypes, pos: GameObject, weaponName: Throwable}) => { //verify if this mob exists [fix]
     if (!mobHealths[id]) {
-      mobHealths[id] = mobInfo[info.type].health - throwableDamage[info.weaponType];
+      mobHealths[id] = mobInfo[info.type].health - throwableDamage[info.weaponName];
     } else {
-      mobHealths[id] -= throwableDamage[info.weaponType];
+      mobHealths[id] -= throwableDamage[info.weaponName];
     }
     if (mobHealths[id] <= 0) {
       let count = Math.floor(Math.random() * mobInfo[info.type].dropMax) + mobInfo[info.type].dropMin;
-      let dropType = mobInfo[info.type].dropType;
-      if (!recentDrops[dropType]) {
-        recentDrops[dropType] = count;
+      let dropName = mobInfo[info.type].dropName;
+      if (!recentDrops[dropName]) {
+        recentDrops[dropName] = count;
       }
-      recentDrops[dropType] += count;
+      recentDrops[dropName] += count;
       io.emit('mobDied', id);
-      io.emit('drop', {pos: info.pos, count, dropType, id: dropId});
+      io.emit('drop', {pos: info.pos, count, dropName, id: dropId});
       dropId++;
       delete mobHealths[id];
     }
@@ -133,21 +132,22 @@ io.on('connection', (socket: Socket) => {
 
 
 
-  socket.on('pickupUpdate', (playerId: number, info: {dropType: number, count: number, id: number}) => { //Verify position [fix]
-    if (recentDrops[info.dropType] >= info.count) {
+  socket.on('updatePickup', (playerId: number, info: {itemName: string, count: number, id: number}) => { //Verify position [fix]
+    console.log(info);
+    if (recentDrops[info.itemName] >= info.count) {
       if (!playerInventoryData[playerId]) {
         if (info.count < 0) {
           return;
         }
         playerInventoryData[playerId] = {};
       }
-      playerInventoryData[playerId][info.dropType] += info.count;
+      playerInventoryData[playerId][info.itemName] += info.count;
       if (info.count > 0) {
-        recentDrops[info.dropType] -= info.count;
+        recentDrops[info.itemName] -= info.count;
         socket.broadcast.emit('deleteDrop', info.id);
-        socket.emit('pickupVerified', info.dropType, info.count);
+        socket.emit('pickupVerified', info.itemName, info.count);
       } else {
-        socket.emit('throwItemVerify', info.dropType, info.count);
+        socket.emit('throwItemVerify', info.itemName, info.count);
       }
     }
   });
@@ -158,13 +158,13 @@ io.on('connection', (socket: Socket) => {
     }
     let objStorage = type === 'envObj' ? curEnvObjects : collidedThrowablePositions;
     if (objStorage[id]) {
-      let dropType = objDrops[objStorage[id].type];
+      let dropName = objDrops[objStorage[id].name];
 
-      let curAmount = playerInventoryData[playerId][dropType];
-      playerInventoryData[playerId][dropType] = !curAmount ? 1 : curAmount + 1;
+      let curAmount = playerInventoryData[playerId][dropName];
+      playerInventoryData[playerId][dropName] = !curAmount ? 1 : curAmount + 1;
       delete objStorage[id];
       io.emit('deletePickupableObj', id, type);
-      socket.emit('pickupVerified', dropType, 1);
+      socket.emit('pickupVerified', dropName, 1);
     }
   });
 
@@ -183,15 +183,15 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
-  socket.on('newEnvObj', (type: EnvObj, pos: GameObject) => {
+  socket.on('newEnvObj', (name: EnvObj, pos: GameObject) => {
     if (pos.x > minMaxPlayerPosX.max || pos.x < minMaxPlayerPosX.min) {
       if (pos.x > minMaxPlayerPosX.max) {
         minMaxPlayerPosX.max = pos.x;
       } else {
         minMaxPlayerPosX.min = pos.x
       }
-      curEnvObjects[envObjCreateCount] = {type, pos};
-      io.emit('newEnvObj', {id: envObjCreateCount, type, pos});
+      curEnvObjects[envObjCreateCount] = {name, pos};
+      io.emit('newEnvObj', {id: envObjCreateCount, name, pos});
       envObjCreateCount++;
     }
   });

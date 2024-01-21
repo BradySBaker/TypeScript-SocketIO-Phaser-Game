@@ -17,7 +17,7 @@ export default class ThrowWEPC {
   activeThrowable?: Phaser.GameObjects.Sprite
 
   playerGroup!: Phaser.GameObjects.Group;
-  curThrownObjData: {[id: number| string]: {pos: GameObject, angle: number, type: Throwable}} = {};
+  curThrownObjData: {[id: number| string]: {pos: GameObject, angle: number, name: Throwable}} = {};
   curThrownObjs: {[id: number| string]: throwableObj} = {};
 
   otherThrownObjs: {[ThrowableID: string]: Phaser.GameObjects.Sprite} = {};
@@ -85,7 +85,7 @@ export default class ThrowWEPC {
       this.activeThrowable = this.game.add.sprite(player.pos.x, player.pos.y, global.equiped).setOrigin(0, .5).setDepth(1);
       this.activeThrowable.setScale(WeaponSettings[global.equiped as Throwable].size);
 
-      this.activeThrowable.setData('type', global.equiped);
+      this.activeThrowable.setData('name', global.equiped);
       if (player.direction === 'left') {
         this.activeThrowable.setFlipY(true);
       }
@@ -107,22 +107,23 @@ export default class ThrowWEPC {
       this.activeThrowable.setDepth(0);
       this.curThrownObjs[id] = {obj: this.activeThrowable, vel: {x: 0, y: 0}, collider};
 
-      let type: Throwable = this.activeThrowable.getData('type');
+      let name: Throwable = this.activeThrowable.getData('name');
 
-      this.curThrownObjData[id] = {pos: {x: this.activeThrowable.x, y: this.activeThrowable.y}, angle: this.activeThrowable.angle, type};
+      this.curThrownObjData[id] = {pos: {x: this.activeThrowable.x, y: this.activeThrowable.y}, angle: this.activeThrowable.angle, name};
 
       this.activeThrowable = undefined;
 
-      const throwingForce = Math.abs(Math.floor((player.pos.x - this.curThrownObjs[id].obj.x)/WeaponSettings[type].fallSpeedModifer));
+      const throwingForce = Math.abs(Math.floor((player.pos.x - this.curThrownObjs[id].obj.x)/WeaponSettings[name].fallSpeedModifer));
       this.curThrownObjs[id].vel.x = throwingForce * Math.cos(launchAngleInRadians);
       this.curThrownObjs[id].vel.y = throwingForce * Math.sin(launchAngleInRadians);
       this.curThrowableID++;
 
-      let itemType = 3;
-      this.socket.emit('updatePickup', {type: itemType, count: -1}); //fix 3
-      externalSetPickup({type: itemType, count: -1});
-      if (global.inventory[itemType]) {
-        global.inventory[itemType].count--;
+      let itemName = this.curThrownObjData[id].name;
+
+      // this.socket.emit('updatePickup', global.curPlayerData.id,{itemName, count: -1}); //fix if spawned in
+      externalSetPickup({itemName, count: -1});
+      if (global.inventory[itemName]) {
+        global.inventory[itemName].count--;
       }
     }
     this.handleThrownObjs();
@@ -150,9 +151,9 @@ export default class ThrowWEPC {
 
 
   handleNewCollidedThrowable(thrownObj: throwableObj, id: number|string, groundCollision: boolean) { // ==================
-    let weaponType = this.curThrownObjData[id].type;
+    let weaponName = this.curThrownObjData[id].name;
     let pos = thrownObj.stuckPos ? thrownObj.stuckPos : {x: thrownObj.obj.x, y: thrownObj.obj.y};
-    this.socket.emit('newCollidedThrowable', {id: id, stuckPos: pos, angle: thrownObj.obj.angle, collidedInfo: thrownObj.collidedInfo, type: weaponType});
+    this.socket.emit('newCollidedThrowable', {id: id, stuckPos: pos, angle: thrownObj.obj.angle, collidedInfo: thrownObj.collidedInfo, name: weaponName});
 
     delete this.curThrownObjData[id];
     delete this.curThrownObjs[id];
@@ -175,7 +176,7 @@ export default class ThrowWEPC {
 
     let type = gameObject.getData('type');
     if (type === 'goat' || type === 'skug') {
-      this.game.MobController.damage(gameObject.getData('id'), {type, pos: targetObject.position, weaponType});
+      this.game.MobController.damage(gameObject.getData('id'), {type, pos: targetObject.position, weaponName});
     }
   }               //=========================
 
@@ -295,12 +296,12 @@ export default class ThrowWEPC {
 
 
   handleIncomingThrowableData() {
-    this.socket.on('updateThrowablePositions', (thrownObjsData: {[id: number]: {pos: GameObject, angle: number, type: Throwable}}) => {
+    this.socket.on('updateThrowablePositions', (thrownObjsData: {[id: number]: {pos: GameObject, angle: number, name: Throwable}}) => {
       for (let objID in thrownObjsData) {
         let curThrowableData = thrownObjsData[objID];
         let thrownObjs = this.otherThrownObjs;
         if (!thrownObjs[objID]) {
-          thrownObjs[objID] = this.game.add.sprite(curThrowableData.pos.x, curThrowableData.pos.y, curThrowableData.type).setOrigin(0, .5).setDepth(0);
+          thrownObjs[objID] = this.game.add.sprite(curThrowableData.pos.x, curThrowableData.pos.y, curThrowableData.name).setOrigin(0, .5).setDepth(0);
           thrownObjs[objID].angle = curThrowableData.angle;
         } else {
           let thrownObj = thrownObjs[objID];
@@ -311,12 +312,12 @@ export default class ThrowWEPC {
       }
     });
 
-    this.socket.on('newCollidedThrowable', (throwableData: {id: string, type: Throwable, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) => {
+    this.socket.on('newCollidedThrowable', (throwableData: {id: string, name: Throwable, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) => {
       this.handleCollidedthrowableData(throwableData);
     });
   }
 
-  handleCollidedthrowableData(throwableData: {id: string, type: Throwable, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) {
+  handleCollidedthrowableData(throwableData: {id: string, name: Throwable, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) {
     console.log(throwableData);
     if (this.otherThrownObjs[throwableData.id] && this.otherThrownObjs[throwableData.id]) {
       this.otherThrownObjs[throwableData.id].destroy();
@@ -329,7 +330,7 @@ export default class ThrowWEPC {
       y = throwableData.stuckPos.y;
     }
 
-    let obj = this.game.add.sprite(x, y, throwableData.type).setOrigin(0, .5).setDepth(0).setScale(WeaponSettings[throwableData.type].size);
+    let obj = this.game.add.sprite(x, y, throwableData.name).setOrigin(0, .5).setDepth(0).setScale(WeaponSettings[throwableData.name].size);
     obj.setData({'objType': 'throwable', id: throwableData.id}); //This is labeled for pickup
     if (throwableData.collidedInfo === undefined) {
       this.groundThrowableObjs[throwableData.id] = obj;

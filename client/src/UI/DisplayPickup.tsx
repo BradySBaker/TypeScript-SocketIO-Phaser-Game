@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 
-import dropTypesAndCrafting from '../../../dropTypesAndCrafting';
+// import dropTypesAndCrafting from '../../../dropTypesAndCrafting';
 
-const DisplayPickup: React.FC<{newPickup: {count: number, type: number}}> = ({newPickup}) => {
+const DisplayPickup: React.FC<{newPickup: {count: number, itemName: string}}> = ({newPickup}) => {
 
   useEffect(() => {
-    if (!newPickup.type) {
+    if (!newPickup.itemName) {
       return;
     }
     let pickup = document.getElementById('pickup');
@@ -25,7 +25,7 @@ const DisplayPickup: React.FC<{newPickup: {count: number, type: number}}> = ({ne
         + {newPickup.count}x
       </div>
       <div id='pickup-name'>
-        {dropTypesAndCrafting[newPickup.type]}
+        {newPickup.itemName}
       </div>
     </div>
   )

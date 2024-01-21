@@ -44,8 +44,8 @@ export default class MobController {
 
 
 
-  damage(id: number | string, info: {type: string, pos: GameObject, weaponType: Throwable}) {
-    this.socket.emit('damageMob', id, {pos: {x: Math.round(info.pos.x), y: Math.round(info.pos.y)}, type: info.type, weaponType: info.weaponType});
+  damage(id: number | string, info: {type: string, pos: GameObject, weaponName: Throwable}) {
+    this.socket.emit('damageMob', id, {pos: {x: Math.round(info.pos.x), y: Math.round(info.pos.y)}, type: info.type, weaponName: info.weaponName});
   }
 
   handleMovement(mob: Mob, id: number | string) {

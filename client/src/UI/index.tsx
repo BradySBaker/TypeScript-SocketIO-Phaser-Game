@@ -5,6 +5,7 @@ import DisplayPickup from './DisplayPickup.jsx';
 import ToolSelector from './ToolSelector.jsx';
 import Inventory from './Inventory.js';
 import {DisplayUse} from './DisplayUse.js';
+import SpawnItem from './SpawnItem.js';
 
 let externalSetPickup!: Function;
 let externalSetUsePos!: Function;
@@ -12,7 +13,7 @@ let externalSetUsePos!: Function;
 const UI: React.FC<{}> = () => {
   const [inventoryToggle, setInventoryToggle] = useState(false);
   const [keyPress, setKeyPress] = useState('');
-  const [newPickup, setNewPickup] = useState({count: 0, type: 0});
+  const [newPickup, setNewPickup] = useState({count: 0, itemName: ''});
   const [usePos, setUsePos] = useState<{x: number | undefined, y: number | undefined}>({x: undefined, y: undefined});
   const [useKeyDownTime, setUseKeyDownTime] = useState(0);
   const [numKeyPress, setNumKeyPress] = useState('');
@@ -56,6 +57,7 @@ const UI: React.FC<{}> = () => {
       <DisplayPickup newPickup={newPickup}/>
       <Inventory inventoryToggle={inventoryToggle} newPickup={newPickup}/>
       <ToolSelector numKeyPress={numKeyPress} setNumKeyPress={setNumKeyPress} newPickup={newPickup}/>
+      <SpawnItem setNewPickup={setNewPickup}/>
       {usePos.x !== undefined && usePos.y !== undefined ? <DisplayUse useKeyDownTime={useKeyDownTime} usePos={usePos}/> : null}
     </div>
   )

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 
 import global from "../scenes/global";
+// import dropTypesAndCrafting from "../../../dropTypesAndCrafting";
+
 let tools: {name: string, count: number}[] = new Array(6);
 tools.fill({name: '', count: 0});
 
@@ -13,7 +15,7 @@ let findIndexOf = (name: string): number => {
   return -1;
 }
 
-const ToolSelector: React.FC<{numKeyPress: string, setNumKeyPress: Function ,newPickup: {count: number, type: number}}> = ({numKeyPress, setNumKeyPress, newPickup}) => {
+const ToolSelector: React.FC<{numKeyPress: string, setNumKeyPress: Function , newPickup: {count: number, itemName: string}}> = ({numKeyPress, setNumKeyPress, newPickup}) => {
   const [curIcon, setCurIcon] = useState('');
   const [update, setUpdate] = useState(false);
 
@@ -26,22 +28,24 @@ const ToolSelector: React.FC<{numKeyPress: string, setNumKeyPress: Function ,new
   }, [numKeyPress]);
 
   useEffect(() => { //--fix make modular
-    if (newPickup.type == 3) {
-      let stoneIndex = findIndexOf('stone');
-      if (stoneIndex === -1) {
+    if (newPickup.itemName === 'spear' || newPickup.itemName === 'stone') {
+      let itemName = newPickup.itemName;
+      let itemIndex = findIndexOf(itemName);
+      if (itemIndex === -1) {
         let newIndex = findIndexOf('');
-        tools[newIndex] = {name: 'stone', count: 1};
+        tools[newIndex] = {name: itemName, count: 1};
+        setUpdate(update => !update);
       } else {
-        if (!global.inventory[3]) {
-          if (global.equiped === 'stone') {
+        if (!global.inventory[newPickup.itemName]) {
+          if (global.equiped === itemName) {
             global.equiped = '';
             setCurIcon('');
           }
-          tools[stoneIndex] = {name: '', count: 0};
+          tools[itemIndex] = {name: '', count: 0};
           setNumKeyPress('');
           return;
         }
-        tools[stoneIndex] = {name: 'stone', count: global.inventory[3].count}
+        tools[itemIndex] = {name: itemName, count: global.inventory[newPickup.itemName].count};
         setUpdate(update => !update);
       }
     }
