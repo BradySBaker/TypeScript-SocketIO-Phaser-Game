@@ -2,7 +2,6 @@ import Game from '../game.js';
 import { Socket } from "socket.io-client";
 
 import global from '../global.js';
-import { cpuUsage } from 'process';
 
 export default class PlayerController {
   move = {vy: 0, vx: 0, g: .9};
@@ -283,10 +282,8 @@ export default class PlayerController {
         this.player.pos.y = data[playerId].pos.y;
       }
       for (let throwableID in collidedThrowableData) {
-        for (let spearID in collidedThrowableData[throwableID]) {
-          let throwableData = collidedThrowableData[throwableID];
-          this.game.ThrowWEPC.handleCollidedthrowableData({...throwableData, id: Number(spearID)});
-        }
+        let throwableData = collidedThrowableData[throwableID];
+        this.game.ThrowWEPC.handleCollidedthrowableData({...throwableData, id: throwableID});
       }
       this.sentPos = {x: data[id].pos.x, y: data[id].pos.y};
       global.curPlayerData = {...global.playersData[id], id};

@@ -20,9 +20,9 @@ export default class ThrowWEPC {
   curThrownObjData: {[id: number| string]: {pos: GameObject, angle: number, type: Throwable}} = {};
   curThrownObjs: {[id: number| string]: throwableObj} = {};
 
-  otherThrownObjs: {[ThrowableID: number]: Phaser.GameObjects.Sprite} = {};
-  groundThrowableObjs: {[ThrowableID: number]: Phaser.GameObjects.Sprite} = {};
-  attatchedThrowableObjs: {[ThrowableID: number]: {collidedInfo: {type: string, id: number}, stuckPos?: GameObject, obj: Phaser.GameObjects.Sprite, particles?: Phaser.GameObjects.Particles.ParticleEmitter}} = {};
+  otherThrownObjs: {[ThrowableID: string]: Phaser.GameObjects.Sprite} = {};
+  groundThrowableObjs: {[ThrowableID: string]: Phaser.GameObjects.Sprite} = {};
+  attatchedThrowableObjs: {[ThrowableID:string]: {collidedInfo: {type: string, id: number}, stuckPos?: GameObject, obj: Phaser.GameObjects.Sprite, particles?: Phaser.GameObjects.Particles.ParticleEmitter}} = {};
   curThrowableID = 0;
   throwableGroup!: Phaser.GameObjects.Group;
   socket: Socket;
@@ -295,15 +295,15 @@ export default class ThrowWEPC {
 
 
   handleIncomingThrowableData() {
-    this.socket.on('updateThrowablePositions', (ThrowableID: number, thrownObjsData: {[id: number]: {pos: GameObject, angle: number, type: Throwable}}) => {
+    this.socket.on('updateThrowablePositions', (thrownObjsData: {[id: number]: {pos: GameObject, angle: number, type: Throwable}}) => {
       for (let objID in thrownObjsData) {
         let curThrowableData = thrownObjsData[objID];
         let thrownObjs = this.otherThrownObjs;
-        if (!thrownObjs[ThrowableID]) {
-          thrownObjs[ThrowableID] = this.game.add.sprite(curThrowableData.pos.x, curThrowableData.pos.y, curThrowableData.type).setOrigin(0, .5).setDepth(0);
-          thrownObjs[ThrowableID].angle = curThrowableData.angle;
+        if (!thrownObjs[objID]) {
+          thrownObjs[objID] = this.game.add.sprite(curThrowableData.pos.x, curThrowableData.pos.y, curThrowableData.type).setOrigin(0, .5).setDepth(0);
+          thrownObjs[objID].angle = curThrowableData.angle;
         } else {
-          let thrownObj = thrownObjs[ThrowableID];
+          let thrownObj = thrownObjs[objID];
             thrownObj.x = curThrowableData.pos.x;
             thrownObj.y = curThrowableData.pos.y;
             thrownObj.angle = curThrowableData.angle;
@@ -311,12 +311,12 @@ export default class ThrowWEPC {
       }
     });
 
-    this.socket.on('newCollidedThrowable', (throwableData: {id: number, type: Throwable, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) => {
+    this.socket.on('newCollidedThrowable', (throwableData: {id: string, type: Throwable, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) => {
       this.handleCollidedthrowableData(throwableData);
     });
   }
 
-  handleCollidedthrowableData(throwableData: {id: number, type: Throwable, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) {
+  handleCollidedthrowableData(throwableData: {id: string, type: Throwable, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) {
     console.log(throwableData);
     if (this.otherThrownObjs[throwableData.id] && this.otherThrownObjs[throwableData.id]) {
       this.otherThrownObjs[throwableData.id].destroy();
