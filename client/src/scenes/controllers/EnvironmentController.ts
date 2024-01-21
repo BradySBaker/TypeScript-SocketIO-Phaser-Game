@@ -175,7 +175,7 @@ export default class EnvironmentController {
     }
     if (this.overlapFalseTime < 4) {
       let camera = this.game.cameras.main
-      externalSetUsePos({x: ((this.overlapObj.x - camera.worldView.x) * camera.zoom) - this.overlapObj.width/1.3, y: ((this.overlapObj.y - camera.worldView.y) * camera.zoom) - this.overlapObj.height/2});
+      externalSetUsePos({x: ((this.overlapObj.x - camera.worldView.x) * camera.zoom) - this.overlapObj.height/2, y: ((this.overlapObj.y - camera.worldView.y) * camera.zoom) - this.overlapObj.height/2});
 
       if (prevUseComplete === useComplete) {
         this.overlap = false;

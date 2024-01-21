@@ -347,6 +347,14 @@ export default class ThrowWEPC {
     if (throwableData.collidedInfo === undefined) {
       this.groundThrowableObjs[throwableData.id] = obj;
       this.game.EnvironmentController.envObjGroup.add(obj); //Makes only ground objects pickupable
+      // @ts-ignore
+      obj.body!.setSize(obj.width/2, obj.width/2);
+      let objWidth = obj.width/2;
+      let angleRad = Phaser.Math.DegToRad(throwableData.angle); //Position collider to center
+      const colliderOffsetX = objWidth * Math.cos(angleRad);
+      const colliderOffsetY = objWidth * Math.sin(angleRad);
+      // @ts-ignore
+      obj.body!.setOffset(colliderOffsetX, colliderOffsetY);
     } else {
       this.attatchedThrowableObjs[throwableData.id] = {...throwableData, obj};
     }
