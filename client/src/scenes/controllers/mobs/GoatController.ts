@@ -8,8 +8,6 @@ export default class GoatController {
   speed = 5;
   bodyYOffset = 0;
 
-  destroyedGoats: {[id: number|string]: boolean} = {};
-
   constructor(game: Game) {
       this.game = game;
   }
@@ -68,6 +66,10 @@ export default class GoatController {
       leg1.angle = 0;
       leg2.angle = 0;
     }
+  }
+
+  handleDamage(mob: Mob) {
+
   }
 
 }

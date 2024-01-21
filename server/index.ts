@@ -109,23 +109,25 @@ io.on('connection', (socket: Socket) => {
     socket.broadcast.emit('updateMobs', mobData);;
   });
 
-  socket.on('damageMob', (id: number | string, info: {type: MobTypes, pos: GameObject, weaponName: Throwable}) => { //verify if this mob exists [fix]
-    if (!mobHealths[id]) {
-      mobHealths[id] = mobInfo[info.type].health - throwableDamage[info.weaponName];
+  socket.on('damageMob', (mobId: number | string, info: {type: MobTypes, pos: GameObject, weaponName: Throwable, playerId: number | string}) => { //verify if this mob exists [fix]
+    if (!mobHealths[mobId]) {
+      mobHealths[mobId] = mobInfo[info.type].health - throwableDamage[info.weaponName];
     } else {
-      mobHealths[id] -= throwableDamage[info.weaponName];
+      mobHealths[mobId] -= throwableDamage[info.weaponName];
     }
-    if (mobHealths[id] <= 0) {
+    if (mobHealths[mobId] <= 0) {
       let count = Math.floor(Math.random() * mobInfo[info.type].dropMax) + mobInfo[info.type].dropMin;
       let dropName = mobInfo[info.type].dropName;
       if (!recentDrops[dropName]) {
         recentDrops[dropName] = count;
       }
       recentDrops[dropName] += count;
-      io.emit('mobDied', id);
+      io.emit('mobDied', mobId);
       io.emit('drop', {pos: info.pos, count, dropName, id: dropId});
       dropId++;
-      delete mobHealths[id];
+      delete mobHealths[mobId];
+    } else {
+      io.emit('damagedMob', mobId, info.playerId);
     }
   });
 
@@ -133,7 +135,6 @@ io.on('connection', (socket: Socket) => {
 
 
   socket.on('updatePickup', (playerId: number, info: {itemName: string, count: number, id: number}) => { //Verify position [fix]
-    console.log(info);
     if (recentDrops[info.itemName] >= info.count) {
       if (!playerInventoryData[playerId]) {
         if (info.count < 0) {

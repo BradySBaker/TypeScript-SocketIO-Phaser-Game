@@ -25,7 +25,7 @@ export default class PlayerController {
 
   sliding = false;
 
-  speed = 20;
+  speed = 8;
 
   // @ts-ignore
   constructor(game: Game, socket: Socket) {
