@@ -136,4 +136,8 @@ canvas {
   transform: translate(-50%, -50%);
 }
 
+#spawn-item-container {
+  pointer-events: all;
+}
+
 /*# sourceMappingURL=index.49297165.css.map */

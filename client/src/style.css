@@ -138,5 +138,8 @@ canvas {
   background-color: white;
 }
 
+#spawn-item-container {
+  pointer-events: all;
+}
 
 /* ======= */
