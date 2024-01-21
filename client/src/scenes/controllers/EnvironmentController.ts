@@ -25,7 +25,7 @@ export default class EnvironmentController {
   socket: Socket;
   envObjGroup!: Phaser.GameObjects.Group;
   overlap = false;
-  overlapId = 0;
+  overlapObj!: Phaser.GameObjects.Sprite;
   overlapFalseTime = 10;
   constructor(game: Game, socket: Socket) {
      this.game = game;
@@ -45,7 +45,7 @@ export default class EnvironmentController {
       newEnvObj.angle = randomAngle;
       newEnvObj.y += 10;
     }
-    newEnvObj.setData('id', envObjData.id);
+    newEnvObj.setData({id: envObjData.id, objType: 'envObj'}); //Obj type is labeled for pickup
     newEnvObj.y -= (newEnvObj.height * 3)/2;
     envObjs[envObjData.id] = newEnvObj;
     this.envObjGroup.add(newEnvObj);
@@ -93,13 +93,28 @@ export default class EnvironmentController {
       }
     });
 
-    this.socket.on('deleteEnvObj', (id: number) => {
-      if (envObjs[id]) {
-        this.deleteEnvObj(id);
-      }
-      for (let area in allEnvObjectData) {
-        if (allEnvObjectData[area][id]) {
-          delete allEnvObjectData[area][id];
+    this.socket.on('deletePickupableObj', (id: number, type: 'throwable' | 'envObj') => {
+      if (type === 'envObj') {
+        if (envObjs[id]) {
+          this.deleteEnvObj(id);
+        }
+        for (let area in allEnvObjectData) {
+          if (allEnvObjectData[area][id]) {
+            delete allEnvObjectData[area][id];
+          }
+        }
+      } else {
+        let obj: Phaser.GameObjects.Sprite | undefined;
+        if (this.game.ThrowWEPC.attatchedThrowableObjs[id]) {
+          obj = this.game.ThrowWEPC.attatchedThrowableObjs[id].obj;
+          delete this.game.ThrowWEPC.attatchedThrowableObjs[id];
+        } else if (this.game.ThrowWEPC.groundThrowableObjs[id]) {
+          obj = this.game.ThrowWEPC.groundThrowableObjs[id];
+          delete this.game.ThrowWEPC.groundThrowableObjs[id];
+        }
+        if (obj !== undefined) {
+          this.envObjGroup.remove(obj);
+          obj.destroy();
         }
       }
       if (requestingPickup[id]) {
@@ -144,14 +159,13 @@ export default class EnvironmentController {
     }
   }
 
-  handleOverlap(hoverDetector: Phaser.Types.Physics.Arcade.GameObjectWithBody, envObj: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
-    let id = envObj.getData('id')
-    this.game.EnvironmentController.overlapId = id; //this = HoverDetectionController
+  handleOverlap(hoverDetector: Phaser.Types.Physics.Arcade.GameObjectWithBody, obj: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
+    this.game.EnvironmentController.overlapObj = obj; //this = HoverDetectionController
     this.game.EnvironmentController.overlap = true;
   };
 
   handleDisplayUI() {
-    if (!externalSetUsePos || !envObjs[this.overlapId]) {
+    if (!externalSetUsePos) {
       return;
     }
     if (!this.overlap) {
@@ -161,8 +175,7 @@ export default class EnvironmentController {
     }
     if (this.overlapFalseTime < 4) {
       let camera = this.game.cameras.main
-      let envObj = envObjs[this.overlapId];
-      externalSetUsePos({x: ((envObj.x - camera.worldView.x) * camera.zoom) - envObj.width/1.3, y: ((envObj.y - camera.worldView.y) * camera.zoom) - envObj.height/2});
+      externalSetUsePos({x: ((this.overlapObj.x - camera.worldView.x) * camera.zoom) - this.overlapObj.width/1.3, y: ((this.overlapObj.y - camera.worldView.y) * camera.zoom) - this.overlapObj.height/2});
 
       if (prevUseComplete === useComplete) {
         this.overlap = false;
@@ -171,7 +184,7 @@ export default class EnvironmentController {
       prevUseComplete = useComplete;
 
       if (useComplete) { //Picked up
-        this.pickupEnvObj(this.overlapId);
+        this.pickupEnvObj(this.overlapObj.getData('id'), this.overlapObj.getData('objType'));
       }
     } else {
       this.overlap = false;
@@ -180,8 +193,8 @@ export default class EnvironmentController {
     this.overlap = false;
   };
 
-  pickupEnvObj(id: number) {
-    this.socket.emit('pickupEnvObj', global.curPlayerData.id, id);
+  pickupEnvObj(id: number, type: 'throwable' | 'envObj') {
+    this.socket.emit('pickupObj', global.curPlayerData.id, id, type);
     externalSetUsePos(false);
   }
 

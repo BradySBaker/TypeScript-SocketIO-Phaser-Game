@@ -270,7 +270,7 @@ export default class PlayerController {
     });
 
 
-    this.socket.on('playerData', (data: {[id: number]: {pos: GameObject, grapplingPos: GameObject | undefined}}, id: number, collidedSpearPositions: {[playerId: number]: {[spearID: number]: {stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}}}) => { //Recieved personal player data
+    this.socket.on('playerData', (data: {[id: number]: {pos: GameObject, grapplingPos: GameObject | undefined}}, id: number, collidedThrowableData: {[ThrowableID: number]: {stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}, type: Throwable}}) => { //Recieved personal player data
       for (let playerId in data) {
         global.playersData[playerId] = {body: this.game.add.rectangle(data[playerId].pos.x, data[playerId].pos.y, 50, 100, 0xfffff).setDepth(1), grapplingPos: data[playerId].grapplingPos};
         let body = global.playersData[playerId].body;
@@ -281,11 +281,9 @@ export default class PlayerController {
         this.player.pos.x = data[playerId].pos.x;
         this.player.pos.y = data[playerId].pos.y;
       }
-      for (let playerID in collidedSpearPositions) {
-        for (let spearID in collidedSpearPositions[playerID]) {
-          let spearData = collidedSpearPositions[playerID][spearID];
-          this.game.ThrowWEPC.handleCollidedthrowableData(Number(playerID), {...spearData, id: Number(spearID)});
-        }
+      for (let throwableID in collidedThrowableData) {
+        let throwableData = collidedThrowableData[throwableID];
+        this.game.ThrowWEPC.handleCollidedthrowableData({...throwableData, id: throwableID});
       }
       this.sentPos = {x: data[id].pos.x, y: data[id].pos.y};
       global.curPlayerData = {...global.playersData[id], id};

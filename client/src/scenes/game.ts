@@ -96,7 +96,7 @@ export default class Game extends Phaser.Scene {
     this.deltaTime = delta / (1000 / 60);
     this.PlayerController.handleMovement();
     this.PlayerController.interpolatePlayerPositions();
-    this.ThrowWEPC.handleOtherCollidedThrowables();
+    this.ThrowWEPC.handleAttatchedCollidedThrowables();
     this.GrappleHandler.drawRopes();
     this.handleBackgrounds();
     this.TerrainHandler.spawnChunks();
@@ -154,7 +154,7 @@ export default class Game extends Phaser.Scene {
   handleSendData() {
     setInterval(() => {
       if (this.ThrowWEPC.curThrowableID !== 0) {
-        socket.emit('updateThrowablePositions', global.curPlayerData.id, this.ThrowWEPC.curThrownObjData);
+        socket.emit('updateThrowablePositions', this.ThrowWEPC.curThrownObjData);
       }
       const PC = this.PlayerController;
       if (global.curPlayerData && (Math.abs(PC.player.pos.x - PC.sentPos.x) > 5 || Math.abs(PC.player.pos.y - PC.sentPos.y) > 5)) {

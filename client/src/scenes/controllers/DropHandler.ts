@@ -58,11 +58,10 @@ export default class DropHandler {
 
 
       this.socket.on('pickupVerified', (type: number, count: number) => {
-        console.log(type, count)
-        if (!global.pickups[type]) {
-          global.pickups[type] = {count: 0, pos: {x: -1, y: -1}}
+        if (!global.inventory[type]) {
+          global.inventory[type] = {count: 0, pos: {x: -1, y: -1}}
         }
-        global.pickups[type].count += count;
+        global.inventory[type].count += count;
         externalSetPickup({type, count});
       });
 

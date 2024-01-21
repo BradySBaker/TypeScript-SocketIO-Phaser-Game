@@ -18,17 +18,22 @@ const Inventory: React.FC<{inventoryToggle: boolean, newPickup: {count: number, 
 
   useEffect(() => {
     let newBoxElements = [...boxElements];
-    for (let type in global.pickups) {
-      let curPickups = global.pickups[type];
-      if (curPickups.pos.x === -1) {
+    for (let type in global.inventory) {
+      if (global.inventory[type].count < 1) {
+        newBoxElements[global.inventory[type].pos.x][global.inventory[type].pos.y] = undefined;
+        delete global.inventory[type];
+        return;
+      }
+      let curinventory = global.inventory[type];
+      if (curinventory.pos.x === -1) {
         let newPos = findFirstUndefinedPosition(newBoxElements)
         if (!newPos) {
           return;
         }
-        curPickups.pos.x = newPos.x;
-        curPickups.pos.y = newPos.y;
+        curinventory.pos.x = newPos.x;
+        curinventory.pos.y = newPos.y;
       }
-      newBoxElements[curPickups.pos.x][curPickups.pos.y] = {type, count: curPickups.count};
+      newBoxElements[curinventory.pos.x][curinventory.pos.y] = {type, count: curinventory.count};
     }
     setBoxElements(newBoxElements);
   }, [newPickup]);
