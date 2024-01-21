@@ -23,7 +23,6 @@ export default class ProjectileController {
 
 
   createProjectile(player: {direction: string, pos: GameObject, id: number}) {
-    console.log(player.id);
     this.socket.emit('newProjectile', player.pos, player.direction, player.id);
   }
 

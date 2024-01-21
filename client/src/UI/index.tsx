@@ -13,7 +13,7 @@ let externalSetUsePos!: Function;
 const UI: React.FC<{}> = () => {
   const [inventoryToggle, setInventoryToggle] = useState(false);
   const [keyPress, setKeyPress] = useState('');
-  const [newPickup, setNewPickup] = useState({count: 0, type: 0});
+  const [newPickup, setNewPickup] = useState({count: 0, itemName: ''});
   const [usePos, setUsePos] = useState<{x: number | undefined, y: number | undefined}>({x: undefined, y: undefined});
   const [useKeyDownTime, setUseKeyDownTime] = useState(0);
   const [numKeyPress, setNumKeyPress] = useState('');

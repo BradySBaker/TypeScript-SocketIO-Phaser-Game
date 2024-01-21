@@ -4,15 +4,15 @@ import global from "../global";
 import {externalSetUsePos} from "../../UI/index";
 import { useComplete } from "../../UI/DisplayUse";
 
-type envObjData = {id: number | string, type: EnvObj, pos: GameObject};
+type envObjData = {id: number | string, name: EnvObj, pos: GameObject};
 
 const envObj_RENDER_DISTANCE = 2000; //should be 2000!
 
 let prevPlayerAreaX: undefined | number;
 
-let envObjSettings: {[type in EnvObj]: {rate: number, size: number, randomRotation: boolean}} = {stickyFern: {rate: .5, size: 3, randomRotation: false}, stone: {rate: .5, size: 1.5, randomRotation: true}}; //rates must add up to 100
+let envObjSettings: {[name in EnvObj]: {rate: number, size: number, randomRotation: boolean}} = {stickyFern: {rate: .5, size: 3, randomRotation: false}, stone: {rate: .5, size: 1.5, randomRotation: true}}; //rates must add up to 100
 let envObjs: {[id: number | string]: Phaser.GameObjects.Sprite} = {};
-let allEnvObjectData: {[areaX: number]: {[id: number | string]: {type: EnvObj, pos: GameObject}}} = {}; //Will house objects based on areaX to + 2000
+let allEnvObjectData: {[areaX: number]: {[id: number | string]: {name: EnvObj, pos: GameObject}}} = {}; //Will house objects based on areaX to + 2000
 
 let requestingPickup: {[id: number | string]: boolean} = {};
 
@@ -38,14 +38,14 @@ export default class EnvironmentController {
   }
 
   spawnEnvObj(envObjData: envObjData) {
-    let settings = envObjSettings[envObjData.type];
-    let newEnvObj = this.game.add.sprite(envObjData.pos.x, envObjData.pos.y, envObjData.type).setScale(settings.size);
+    let settings = envObjSettings[envObjData.name];
+    let newEnvObj = this.game.add.sprite(envObjData.pos.x, envObjData.pos.y, envObjData.name).setScale(settings.size);
     if (settings.randomRotation) {
       let randomAngle = Math.floor(Math.random() * 361) - 180;
       newEnvObj.angle = randomAngle;
       newEnvObj.y += 10;
     }
-    newEnvObj.setData({id: envObjData.id, objType: 'envObj'}); //Obj type is labeled for pickup
+    newEnvObj.setData({id: envObjData.id, objtype: 'envObj'}); //Obj type is labeled for pickup
     newEnvObj.y -= (newEnvObj.height * 3)/2;
     envObjs[envObjData.id] = newEnvObj;
     this.envObjGroup.add(newEnvObj);
@@ -59,8 +59,8 @@ export default class EnvironmentController {
     let accumulatedProbability = 0;
 
     for (let type in envObjSettings) {
-      const envObjType = type as EnvObj;
-      accumulatedProbability += envObjSettings[envObjType].rate;
+      const envObjtype = type as EnvObj;
+      accumulatedProbability += envObjSettings[envObjtype].rate;
 
       if (randomNumber <= accumulatedProbability) {
         this.socket.emit('newEnvObj', type, pos);
@@ -75,7 +75,7 @@ export default class EnvironmentController {
     if (!allEnvObjectData[areaX]) {
      allEnvObjectData[areaX] = {};
     }
-    allEnvObjectData[areaX][envObjData.id] = {type: envObjData.type, pos: envObjData.pos};
+    allEnvObjectData[areaX][envObjData.id] = {name: envObjData.name, pos: envObjData.pos};
     return areaX;
   }
 
@@ -87,9 +87,9 @@ export default class EnvironmentController {
       }
     });
 
-    this.socket.on('EnvObjects', (curEnvObjects: {[envObjId: string | number]: {type: EnvObj, pos: GameObject}}) => {
+    this.socket.on('EnvObjects', (curEnvObjects: {[envObjId: string | number]: {name: EnvObj, pos: GameObject}}) => {
       for (let id in curEnvObjects) {
-        this.addToEnvObjData({id, type: curEnvObjects[id].type, pos: curEnvObjects[id].pos});
+        this.addToEnvObjData({id, name: curEnvObjects[id].name, pos: curEnvObjects[id].pos});
       }
     });
 
@@ -154,7 +154,7 @@ export default class EnvironmentController {
           continue;
         }
 
-        this.spawnEnvObj({id, type: envObjDataAtArea[id].type, pos: envObjDataAtArea[id].pos});
+        this.spawnEnvObj({id, name: envObjDataAtArea[id].name, pos: envObjDataAtArea[id].pos});
       }
     }
   }
@@ -184,7 +184,7 @@ export default class EnvironmentController {
       prevUseComplete = useComplete;
 
       if (useComplete) { //Picked up
-        this.pickupEnvObj(this.overlapObj.getData('id'), this.overlapObj.getData('objType'));
+        this.pickupEnvObj(this.overlapObj.getData('id'), this.overlapObj.getData('objtype'));
       }
     } else {
       this.overlap = false;
