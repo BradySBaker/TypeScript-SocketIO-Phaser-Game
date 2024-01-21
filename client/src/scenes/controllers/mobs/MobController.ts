@@ -36,7 +36,7 @@ export default class MobController {
     let id = global.mobCount + '' + global.curPlayerData.id;
     let container = this.controllers[type].create(pos, id);
 
-    global.curMobs[id] = {container, vx: 1, randomTimer: 300};
+    global.curMobs[id] = {container, vx: 1, curMovementTimer: 300, onGround: false};
     global.curMobData[id] = {pos: {x: pos.x, y: pos.y}, type};
 
     global.mobCount++;
@@ -45,49 +45,58 @@ export default class MobController {
 
 
   damage(id: number | string, info: {type: string, pos: GameObject, weaponName: Throwable}) {
-    this.socket.emit('damageMob', id, {pos: {x: Math.round(info.pos.x), y: Math.round(info.pos.y)}, type: info.type, weaponName: info.weaponName});
+    this.socket.emit('damageMob', id, {pos: {x: Math.round(info.pos.x), y: Math.round(info.pos.y)}, type: info.type, weaponName: info.weaponName, playerId: global.curPlayerData.id});
   }
 
-  handleMovement(mob: Mob, id: number | string) {
-    let type: MobTypes = mob.container.getData('type')
-    let goatMove = {x: 0, y: 0};
+  handleGround(mob: Mob, type: MobTypes) {
     let blockY: number;
     let groundCollision = this.game.physics.overlap(mob.container, this.game.TerrainHandler.blockGroup, (object1, object2) => {
-    let block = object2 as Phaser.GameObjects.Rectangle;
-    let mobContainer = object1 as Phaser.GameObjects.Container;
+      let block = object2 as Phaser.GameObjects.Rectangle;
+      let mobContainer = object1 as Phaser.GameObjects.Container;
 
-    let curBlockY = block.y - block.height/2 - (mobContainer.body as Phaser.Physics.Arcade.Body)!.height/2 + this.controllers[type].bodyYOffset;
-    if (block.x > mobContainer.x && mob.vx > 0) {
-      blockY = curBlockY;
-    } else if (block.x < mobContainer.x && mob.vx < 0) {
-      blockY = curBlockY;
-    } else if (!blockY) {
-      blockY = curBlockY;
-    }
-  });
-    if (groundCollision) {
-      mob.container.y = blockY!;
-      if (mob.vx + mob.container.x < 320) { //stop mob at edge
-        return;
+      let curBlockY = block.y - block.height/2 - (mobContainer.body as Phaser.Physics.Arcade.Body)!.height/2 + this.controllers[type].bodyYOffset;
+      if (block.x > mobContainer.x && mob.vx > 0) {
+        blockY = curBlockY;
+      } else if (block.x < mobContainer.x && mob.vx < 0) {
+        blockY = curBlockY;
+      } else if (!blockY) {
+        blockY = curBlockY;
       }
-      goatMove.x = mob.vx * this.game.deltaTime;
+    });
+
+    if (groundCollision) {
+      mob.onGround = true;
+      mob.container.y = blockY!;
     } else {
-      goatMove.y = 4 * this.game.deltaTime;
+      mob.onGround = false;
     }
-    this.controllers[type].handleLimbs(mob.container, {x: goatMove.x + mob.container.x, y: goatMove.y + mob.container.y});
-    mob.container.x += goatMove.x;
-    mob.container.y += goatMove.y;
+  }
+
+  handleMovement(mob: Mob, type: MobTypes, id: string) {
+    let mobMove = {x: 0, y: 0};
+    if (!mob.onGround) {
+      mob.vx = mob.vx /2;
+      mobMove.y = 20 * this.game.deltaTime;
+    }
+    if (mob.vx + mob.container.x < 320) { //stop mob at edge
+      mob.vx = 0;
+    }
+    mobMove.x = mob.vx * this.game.deltaTime;
+
+    this.controllers[type].handleLimbs(mob.container, {x: mobMove.x + mob.container.x, y: mobMove.y + mob.container.y});
+    mob.container.x += mobMove.x;
+    mob.container.y += mobMove.y;
     global.curMobData[id].pos.x = mob.container.x;
     global.curMobData[id].pos.y = mob.container.y;
   }
 
-  handleRandom(mob: Mob) {
-    let type: MobTypes = mob.container.getData('type');
-    if (mob.randomTimer >= 300) {
-      mob.randomTimer = 0;
+
+  handleWander(mob: Mob, type: MobTypes) {
+    if (mob.curMovementTimer >= 300) {
+      mob.curMovementTimer = 0;
       mob.vx = Math.floor((Math.random() * this.controllers[type].speed) - (this.controllers[type].speed - 3));
     } else {
-      mob.randomTimer += 1 * this.game.deltaTime;
+      mob.curMovementTimer += this.game.deltaTime;
     }
   }
 
@@ -104,8 +113,14 @@ export default class MobController {
   handleMobs() {
     for (const id in global.curMobs) {
       const curMob = global.curMobs[id];
-      this.handleRandom(curMob);
-      this.handleMovement(curMob, id);
+      let type = global.curMobData[id].type;
+      this.handleGround(curMob, type);
+      if (curMob.damagedByPlayer !== undefined) {
+        this.controllers[type].handleDamage(curMob);
+      } else {
+        this.handleWander(curMob, type);
+      }
+      this.handleMovement(curMob, type, id);
       if (!this.mobInRenderDistance(curMob.container)) { //despawn goat
         this.handleUnassignMob(id);
       };
@@ -118,7 +133,6 @@ export default class MobController {
     this.socket.emit('unassignMob', id, global.curMobData[id]);
     this.deleteMob(id);
   }
-
 
   deleteMob(id: number | string) {
     if (global.otherMobs[id]) {
@@ -165,17 +179,26 @@ export default class MobController {
 
 
     this.socket.on('mobAssignment', (id: string, mobData: {pos: GameObject, assigned: boolean, type: MobTypes}) => {
-      console.log(id);
+      console.log('assignedMob', id)
       if (global.curMobData[id]) {return;}
       let container = this.controllers[mobData.type].create(mobData.pos, id);
       global.curMobData[id] = {pos: mobData.pos, type: mobData.type};
-      global.curMobs[id] = {container, vx: 0, randomTimer: 300};
+      global.curMobs[id] = {container, vx: 0, curMovementTimer: 300, onGround: false};
     });
 
 
     this.socket.on('mobDied', (id: number | string) => {
-      console.log(id)
+      console.log(id, 'mob died');
       this.deleteMob(id);
+    });
+
+    this.socket.on('damagedMob', (mobId: string, playerId: number | string) => {
+      if (!global.curMobData[mobId]) {
+        return;
+      }
+      let mob = global.curMobs[mobId];
+      mob.damagedByPlayer = playerId;
+      mob.curMovementTimer = 0;
     });
 
     this.socket.on('unassignedMobs', (mobData: {[id: number | string]: {pos: GameObject, type: MobTypes}}) => {

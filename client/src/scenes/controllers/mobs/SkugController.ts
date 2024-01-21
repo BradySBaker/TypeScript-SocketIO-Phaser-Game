@@ -1,4 +1,5 @@
 import Game from "../../game";
+import global from "../../global";
 
 export default class SkugController {
   game: Game;
@@ -6,8 +7,6 @@ export default class SkugController {
   size = 1.5;
   speed = 5;
   bodyYOffset = -20
-
-  destroyedGoats: {[id: number|string]: boolean} = {};
 
   constructor(game: Game) {
       this.game = game;
@@ -50,7 +49,7 @@ export default class SkugController {
     const leg1 = container.getByName('leg1') as Phaser.GameObjects.Sprite;
     const leg2 = container.getByName('leg2') as Phaser.GameObjects.Sprite;
     let changeInX = newPos.x - container.x;
-    let goatSpeed = Math.abs(changeInX);
+    let skugSpeed = Math.abs(changeInX);
     if (changeInX > 0) { //Handle flip
       if (container.scaleX < 0 && container.body) {
         container.setScale(this.size, this.size);
@@ -62,26 +61,46 @@ export default class SkugController {
         this.setOffset(container, 1)
       }
     }
-    if (goatSpeed > 0) {
+    if (skugSpeed > 0) {
+      let leg1AngleAdd = 0;
+      let leg2AngleAdd = 0;
+      let headAngleAdd = 0;
       if (container.getData('frontLegForward')) {
-        head.angle += goatSpeed/2 * this.game.deltaTime;
-        leg1.angle += goatSpeed * this.game.deltaTime;
-        leg2.angle -= goatSpeed * this.game.deltaTime;
-        if (leg1.angle >= goatSpeed * 30) {
-          container.setData('frontLegForward', false);
-        }
+        headAngleAdd = skugSpeed/2;
+        leg1AngleAdd = skugSpeed;
+        leg2AngleAdd = -skugSpeed;
       } else {
-        head.angle -= goatSpeed/2 * this.game.deltaTime;
-        leg1.angle -= goatSpeed * this.game.deltaTime;
-        leg2.angle += goatSpeed * this.game.deltaTime;
-        if (leg2.angle >= goatSpeed * 30) {
-          container.setData('frontLegForward', true);
-        }
+        headAngleAdd = -skugSpeed/2;
+        leg1AngleAdd = -skugSpeed;
+        leg2AngleAdd = skugSpeed;
+      }
+      leg1.angle += leg1AngleAdd * this.game.deltaTime;
+      leg2.angle += leg2AngleAdd * this.game.deltaTime;
+      head.angle += headAngleAdd * this.game.deltaTime;
+      if (leg2.angle >= skugSpeed * 30) {
+        container.setData('frontLegForward', true);
+      }
+      if (leg1.angle >= skugSpeed * 30) {
+        container.setData('frontLegForward', false);
       }
     } else {
       leg1.angle = 0;
       leg2.angle = 0;
+      head.angle = 0;
     }
+  }
+
+  handleDamage(mob: Mob) {
+    let damagingPlayer = global.playersData[mob.damagedByPlayer!];
+    if (!damagingPlayer || mob.curMovementTimer >= 800) {
+      mob.damagedByPlayer = undefined;
+      mob.curMovementTimer = 0;
+      mob.vx = 0;
+      return;
+    }
+    let xDist = mob.container.x - damagingPlayer.body.x;
+    mob.vx = xDist > 0 ? this.speed * 1.5 : -this.speed * 1.5;
+    mob.curMovementTimer += this.game.deltaTime;
   }
 
 }
