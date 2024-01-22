@@ -13,7 +13,7 @@ export default class SkugController {
   }
 
   setOffset(container: Phaser.GameObjects.Container, direction = -1) {
-    (container.body as Phaser.Physics.Arcade.Body).setOffset(20 * direction, this.bodyYOffset);
+    (container.body as Phaser.Physics.Arcade.Body).setOffset(20 * direction, this.bodyYOffset); //[fix] make more modular
   }
 
 
@@ -34,7 +34,7 @@ export default class SkugController {
 
     this.game.MobController.mobGroup.add(container);
     this.setOffset(container);
-    (container.body as Phaser.Physics.Arcade.Body).setSize(2 * 20, 2 * 35);
+    (container.body as Phaser.Physics.Arcade.Body).setSize(40, 70);//[fix] make more modular
 
 
 

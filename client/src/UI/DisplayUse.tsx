@@ -1,6 +1,6 @@
 import React from "react";
 
-let useSpeed = 5;
+let useSpeed = 10;
 let useComplete = false;
 
 const DisplayUse: React.FC<{useKeyDownTime: number, usePos: {x: number, y: number}}> = ({useKeyDownTime, usePos}) => {

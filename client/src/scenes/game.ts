@@ -1,5 +1,5 @@
 import Phaser, { GameObjects } from "phaser";
-import ProjectileController from './controllers/ProjectileController.js';
+import ProjectileController from './controllers/weapons/ProjectileController.js';
 import PlayerController from './controllers/PlayerController.js';
 import ThrowWEPC from "./controllers/weapons/ThrowWEPC.js";
 import GrappleHandler from "./controllers/GrappleHandler.js";
@@ -48,9 +48,12 @@ export default class Game extends Phaser.Scene {
     this.load.image('grass', './assets/grass.png');
     this.load.image('bloodDrop', './assets/bloodDrop.png');
 
-    this.load.image('skugBody', './assets/skug/skugBody.png');
-    this.load.image('skugHead', './assets/skug/skugHead.png');
-    this.load.image('skugLeg', './assets/skug/skugLeg.png');
+    this.load.image('skugBody', './assets/mobs/skug/body.png');
+    this.load.image('skugHead', './assets/mobs/skug/head.png');
+    this.load.image('skugLeg', './assets/mobs/skug/leg.png');
+    this.load.image('quilFluffBody', './assets/mobs/quilFluff/body.png');
+    this.load.image('quilFluffLeg', './assets/mobs/quilFluff/leg.png');
+
 
     global.EnvImages.forEach((curName) => {
       this.load.image(curName, `./assets/env/${curName}.png`);
@@ -105,7 +108,7 @@ export default class Game extends Phaser.Scene {
     this.EnvironmentController.handleDisplayUI();
     if (this.PlayerController.spaceKey.isDown) {
       if (global.mobCount < 3) {
-        this.MobController.spawn(global.curPlayerData.body, 'skug');
+        this.MobController.spawn(global.curPlayerData.body, 'quilFluff');
       }
     }
     this.HoverDetectionController.positionColliderToMouse();

@@ -133,7 +133,7 @@ export default class ThrowWEPC {
 
   getGameObject(info: {type: string, id: number | string}): Phaser.GameObjects.GameObject | false {
     let gameObject: Phaser.GameObjects.GameObject | false = false;
-    if (info.type === 'goat' || info.type === 'skug') {
+    if (info.type === 'goat' || info.type === 'skug' || info.type === 'quilFluff') {
       if (global.curMobs[info.id]) {
         if (global.curMobs[info.id]) {
           gameObject = global.curMobs[info.id].container;
@@ -166,7 +166,7 @@ export default class ThrowWEPC {
       }
 
       let type = gameObject.getData('type');
-      if ((type === 'goat' || type === 'skug') && !thrownObj.damagedEnemy /* Prevents repeated damage glitch */) {
+      if ((type === 'goat' || type === 'skug' || type === 'quilFluff') && !thrownObj.damagedEnemy /* Prevents repeated damage glitch */) {
         thrownObj.damagedEnemy = true;
         this.game.MobController.damage(gameObject.getData('id'), {type, pos: targetObject.position, weaponName});
       }

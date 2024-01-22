@@ -1,6 +1,6 @@
 import { Socket, Server } from 'socket.io';
 
-type MobTypes = 'goat' | 'skug';
+type MobTypes = 'goat' | 'skug' | 'quilFluff';
 type EnvObj = 'stickyFern' | 'stone';
 type Throwable = 'stone' | 'spear';
 
@@ -18,7 +18,7 @@ let minMaxPlayerPosX: {min: number, max: number} = {min: 0, max: 0};
 
 let playerCount: number = 0;
 
-let mobInfo = {goat: {health: 5, dropMax: 0, dropName: 'bone', dropMin: 1}, skug: {health: 2, dropMax: 3, dropMin: 1, dropName: 'bone'}};
+let mobInfo = {goat: {health: 5, dropMax: 0, dropName: 'bone', dropMin: 1}, skug: {health: 10, dropMax: 3, dropMin: 1, dropName: 'bone'}, quilFluff: {health: 3, dropMax: 1, dropMin: 0, dropName: 'bone'}};
 
 let objDrops: {[name in Throwable | EnvObj]: string} = {stickyFern: 'goo', stone: 'stone', spear: 'spear'};
 
@@ -110,13 +110,14 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('damageMob', (mobId: number | string, info: {type: MobTypes, pos: GameObject, weaponName: Throwable, playerId: number | string}) => { //verify if this mob exists [fix]
+    console.log(mobId, info);
     if (!mobHealths[mobId]) {
       mobHealths[mobId] = mobInfo[info.type].health - throwableDamage[info.weaponName];
     } else {
       mobHealths[mobId] -= throwableDamage[info.weaponName];
     }
     if (mobHealths[mobId] <= 0) {
-      let count = Math.floor(Math.random() * mobInfo[info.type].dropMax) + mobInfo[info.type].dropMin;
+      let count = Math.floor(Math.random() * (mobInfo[info.type].dropMax - mobInfo[info.type].dropMin + 1)) + mobInfo[info.type].dropMin;
       let dropName = mobInfo[info.type].dropName;
       if (!recentDrops[dropName]) {
         recentDrops[dropName] = count;
