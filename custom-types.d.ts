@@ -10,9 +10,9 @@ declare type Player = {
 
 declare type Rect = Phaser.GameObjects.Rectangle;
 
-type Mob = {container: Phaser.GameObjects.Container, vx: number, curMovementTimer: number, onGround: boolean, damagedByPlayer?: number | string};
+type Mob = {container: Phaser.GameObjects.Container, move: {vx, vy}, curMovementTimer: number, onGround: boolean, damagedByPlayer?: number | string};
 
-type MobTypes = 'goat' | 'skug';
+type MobTypes = 'goat' | 'skug' | 'quilFluff';
 type EnvObj = 'stickyFern' | 'stone';
 
 type Throwable = 'stone' | 'spear';
