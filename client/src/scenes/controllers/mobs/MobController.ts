@@ -83,7 +83,14 @@ export default class MobController {
     let moveX = mob.move.vx;
     if (!mob.onGround) {
       moveX = mob.move.vx /1.3; //Slow down in air
-      mob.move.vy *= 1.1 ** this.game.deltaTime;
+      if (mob.move.vy > 0) {
+        mob.move.vy *= 1.1 ** this.game.deltaTime;
+      } else if (mob.move.vy < 0) {
+        mob.move.vy /= 1.1 ** this.game.deltaTime;
+        if (mob.move.vy > -1) {
+          mob.move.vy = 1;
+        }
+      }
       if (mob.move.vy === 0) {
         mob.move.vy = 1;
       }

@@ -88,6 +88,10 @@ export default class QuilFluffController {
     }
     let xDist = mob.container.x - damagingPlayer.body.x;
     mob.move.vx = xDist > 0 ? this.speed * 4 : -this.speed * 4;
+    if (mob.curMovementTimer === 0) { //firt iteration
+      mob.container.y -= 10;
+      mob.move.vy = -5;
+    }
     mob.curMovementTimer += this.game.deltaTime;
   }
 }
