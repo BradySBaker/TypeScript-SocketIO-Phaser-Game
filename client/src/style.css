@@ -63,20 +63,56 @@ canvas {
   right: 5%;
 }
 
-.selection-box, .inventory-box {
-  width: 1.2vw;
-  height: 1.2vw;
-  min-width: 30px;
-  min-height: 30px;
-  background-color: rgba(128, 128, 128, 0.462);
-  margin-right: 5px;
+
+
+/* Progress Circle */
+
+#use-circle-container {
+  position: absolute;
+  width: 30px;
+  height: 30px;
 }
 
-#inventory {
+#circular-progress {
+  position: relative;
+  height: 100%;
+  width: 100%;
+  border-radius: 50%;
+}
+
+#middle-circle {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  height: 70%;
+  width: 70%;
+  border-radius: 50%;
+  background-color: white;
+}
+
+#spawn-item-container {
+  pointer-events: all;
+}
+
+/* =========== Inventory Boxes ==========*/
+.selection-box, .inventory-box {
+  background-color: rgba(128, 128, 128, 0.462);
+  margin-right: 5px;
+}
+
+.inventory-box {
+  min-width: 80px;
+  min-height: 80px;
+}
+
+.selection-box {
+  width: 40px;
+  height:  40px;
+}
+
+#inventory {
+  z-index: 1;
 }
 
 .inventory-box-row {
@@ -110,36 +146,58 @@ canvas {
   width: 50%;
   height: 50%;
 }
+/* =============================*/
 
 
-/* Progress Circle */
 
-#use-circle-container {
+
+/* ========= Inventory Menu ===========*/
+#inventory-menu, #inventory-backdrop {
   position: absolute;
-  width: 30px;
-  height: 30px;
-}
-
-#circular-progress {
-  position: relative;
-  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
   width: 100%;
-  border-radius: 50%;
+  height: 100%;
+}
+#inventory-backdrop {
+  z-index: 0;
+  background-color: rgba(255, 0, 0, 0.501);
+}
+#inventory-topBar {
+  z-index: 1;
+  width: 15vw;
+  background-color: black;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 30px;
+  border-radius: 10px;
+  margin-bottom: 20px;
 }
 
-#middle-circle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  height: 70%;
-  width: 70%;
-  border-radius: 50%;
-  background-color: white;
-}
-
-#spawn-item-container {
+#inventory-topBar button {
   pointer-events: all;
+  background-color: transparent;
+  color: white;
+  border: 1px solid rgba(245, 222, 179, 0.466);
+  padding: 0px 20px;
+  border-radius: 10%;
+  margin: 0 20%;
 }
 
-/* ======= */
+/* ========================= */
+
+
+
+/* ======== Crafting Menu ========= */
+
+
+
+
+
+
+
+/* ========================*/
