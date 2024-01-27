@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Inventory from './Inventory.js';
+import CraftingMenu from "./CraftingMenu.js";
 
 const InventoryMenu: React.FC <{newPickup: {count: number, itemName: string}}> = ({newPickup}) => {
   const [inventoryToggle, setInventoryToggle] = useState(true);
@@ -11,6 +12,7 @@ const InventoryMenu: React.FC <{newPickup: {count: number, itemName: string}}> =
         <button style={!inventoryToggle ? {color: "gold"} : {}} onClick={() => setInventoryToggle(false)}>Crafting</button>
       </div>
       {inventoryToggle ? <Inventory newPickup={newPickup}/> : null}
+      {!inventoryToggle ? <CraftingMenu newPickup={newPickup}/> : null}
       <div id='inventory-backdrop' />
     </div>
   )

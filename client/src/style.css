@@ -163,10 +163,11 @@ canvas {
 }
 #inventory-backdrop {
   z-index: 0;
-  background-color: rgba(255, 0, 0, 0.501);
+  background-color: rgba(255, 200, 0, 0.227);
 }
 #inventory-topBar {
   z-index: 1;
+  min-width: 370px;
   width: 15vw;
   background-color: black;
   color: white;
@@ -200,4 +201,4 @@ canvas {
 
 
 
-/* ========================*/
+/* ===================*/

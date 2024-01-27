@@ -3,8 +3,7 @@
 // 3: 'stone',
 // 4: 'spear'
 
-let recipe: {[result in Drop]?: {[item in Drop]?: number}} = {
-  'bone_pickaxe': {'bone': 1},
-
+let recipes: {[result in Drop]?: {[item in Drop]?: number}} = {
+  'bone_pickaxe': {'bone': 2, 'goo': 2},
 }
-export default recipe;
+export default recipes;

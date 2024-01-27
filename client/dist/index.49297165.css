@@ -155,7 +155,7 @@ canvas {
 
 #inventory-backdrop {
   z-index: 0;
-  background-color: #ff000080;
+  background-color: #ffc8003a;
 }
 
 #inventory-topBar {
@@ -166,6 +166,7 @@ canvas {
   justify-content: center;
   align-items: center;
   width: 15vw;
+  min-width: 370px;
   height: 30px;
   margin-bottom: 20px;
   display: flex;
