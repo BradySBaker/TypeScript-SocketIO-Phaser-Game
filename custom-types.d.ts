@@ -16,5 +16,5 @@ type MobTypes = 'goat' | 'skug' | 'quilFluff';
 type EnvObj = 'stickyFern' | 'stone';
 
 type Throwable = 'stone' | 'spear';
-type Tool = 'spear' | 'grapple' | 'stone';
-type Drop = 'bone' | 'stone' | 'goo' | 'spear';
+type Tool = 'spear' | 'grapple' | 'stone' | 'bone_pickaxe';
+type Drop = 'bone' | 'stone' | 'goo' | 'spear' | 'bone_pickaxe';
