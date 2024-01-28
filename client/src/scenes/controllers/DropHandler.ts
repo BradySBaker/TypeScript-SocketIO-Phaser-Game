@@ -1,18 +1,15 @@
 import global from "../global";
 import Game from "../game";
-import { Socket } from "socket.io-client";
 
 import { externalSetPickup } from "../../UI/index.js";
 
 export default class DropHandler {
   game: Game;
-  socket: Socket;
   dropGroup!: Phaser.GameObjects.Group;
   dropData: {[id: number]: Phaser.GameObjects.Container} = {};
 
-    constructor(game: Game, socket: Socket) {
+    constructor(game: Game) {
       this.game = game;
-      this.socket = socket;
       this.dropGroup = game.physics.add.group({
         classType: Phaser.GameObjects.Container,
       });
@@ -21,7 +18,7 @@ export default class DropHandler {
     }
 
     handleDrops() {
-      this.socket.on('drop', (info: {pos: GameObject, count: number, dropName: string, id: number}) => {
+      global.socket.on('drop', (info: {pos: GameObject, count: number, dropName: string, id: number}) => {
         if (!info.dropName || info.count < 1) {
           return;
         }
@@ -56,7 +53,7 @@ export default class DropHandler {
       });
 
 
-      this.socket.on('pickupVerified', (itemName: string, count: number) => {
+      global.socket.on('pickupVerified', (itemName: string, count: number) => {
         if (!global.inventory[itemName]) {
           global.inventory[itemName] = {count: 0, pos: {x: -1, y: -1}}
         }
@@ -64,7 +61,7 @@ export default class DropHandler {
         externalSetPickup({itemName, count});
       });
 
-      this.socket.on('deleteDrop', (id) => {
+      global.socket.on('deleteDrop', (id) => {
         this.deleteDrop(id);
       });
 
@@ -80,7 +77,7 @@ export default class DropHandler {
 
     handlePickup(player: Phaser.Types.Physics.Arcade.GameObjectWithBody, drop: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
       let id = drop.getData('id')
-      this.socket.emit('updatePickup', global.curPlayerData.id, {itemName: drop.getData('name'), count: drop.getData('count'), id});
+      // global.socket.emit('updatePickup', global.curPlayerData.id, {itemName: drop.getData('name'), count: drop.getData('count'), id});
       this.game.DropHandler.deleteDrop(id); //this is PlayerController not DropHandler
     };
 

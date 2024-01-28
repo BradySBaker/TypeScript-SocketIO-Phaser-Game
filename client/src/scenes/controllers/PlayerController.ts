@@ -1,6 +1,4 @@
 import Game from '../game.js';
-import { Socket } from "socket.io-client";
-
 import global from '../global.js';
 
 export default class PlayerController {
@@ -14,7 +12,6 @@ export default class PlayerController {
   player: Player;
   playerGroup!: Phaser.GameObjects.Group;
 
-  socket: Socket;
   sentPos: GameObject= {x: 0, y: 0};
   game: Game;
 
@@ -28,9 +25,8 @@ export default class PlayerController {
   speed = 8;
 
   // @ts-ignore
-  constructor(game: Game, socket: Socket) {
+  constructor(game: Game) {
     this.game = game;
-    this.socket = socket;
     this.player = {direction: 'right', pos: {x: 500, y: 0}};
     // @ts-ignore
     this.spaceKey = game.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
@@ -242,7 +238,7 @@ export default class PlayerController {
 
 
   retrievePlayerData() {
-    this.socket.on('updatePosition', (data: {pos: GameObject, grapplePos: GameObject | undefined}, id: number) => { //Handle player update
+    global.socket.on('updatePosition', (data: {pos: GameObject, grapplePos: GameObject | undefined}, id: number) => { //Handle player update
         this.playersToMove[id] = data.pos;
         let ropes = this.game.GrappleHandler.ropes;
         if (data.grapplePos) {
@@ -252,13 +248,13 @@ export default class PlayerController {
         }
     });
 
-    this.socket.on('deletePlayer', (id) => { //Player left
+    global.socket.on('deletePlayer', (id) => { //Player left
       global.playersData[id].body.destroy();
       delete global.playersData[id];
       delete this.playersToMove[id];
     });
 
-    this.socket.on('newPlayer', (id: string, data: {pos: GameObject, grapplingPos: GameObject | undefined}) => { //New player joined
+    global.socket.on('newPlayer', (id: string, data: {pos: GameObject, grapplingPos: GameObject | undefined}) => { //New player joined
       if (id === global.curPlayerData.id) {
         return;
       }
@@ -270,7 +266,7 @@ export default class PlayerController {
     });
 
 
-    this.socket.on('playerData', (data: {[id: number]: {pos: GameObject, grapplingPos: GameObject | undefined}}, id: number, collidedThrowableData: {[ThrowableID: number]: {stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}, name: Throwable}}) => { //Recieved personal player data
+    global.socket.on('playerData', (data: {[id: number]: {pos: GameObject, grapplingPos: GameObject | undefined}}, id: number, collidedThrowableData: {[ThrowableID: number]: {stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}, name: Throwable}}) => { //Recieved personal player data
       for (let playerId in data) {
         global.playersData[playerId] = {body: this.game.add.rectangle(data[playerId].pos.x, data[playerId].pos.y, 50, 100, 0xfffff).setDepth(1), grapplingPos: data[playerId].grapplingPos};
         let body = global.playersData[playerId].body;

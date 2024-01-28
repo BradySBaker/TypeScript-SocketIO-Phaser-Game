@@ -1,5 +1,3 @@
-import { Socket } from "socket.io-client";
-
 import Game from '../../game.js';
 
 import global from '../../global.js';
@@ -25,11 +23,9 @@ export default class ThrowWEPC {
   attatchedThrowableObjs: {[ThrowableID:string]: {collidedInfo: {type: string, id: number}, stuckPos?: GameObject, obj: Phaser.GameObjects.Sprite, particles?: Phaser.GameObjects.Particles.ParticleEmitter}} = {};
   curThrowableID = 0;
   throwableGroup!: Phaser.GameObjects.Group;
-  socket: Socket;
 
 
-  constructor(game: Game, socket: Socket, playerGroup: Phaser.GameObjects.Group) {
-    this.socket = socket;
+  constructor(game: Game, playerGroup: Phaser.GameObjects.Group) {
     this.game = game;
     this.playerGroup = playerGroup;
     this.throwableGroup = game.physics.add.group({classType: Phaser.GameObjects.Sprite,});
@@ -120,7 +116,7 @@ export default class ThrowWEPC {
 
       let itemName = this.curThrownObjData[id].name;
 
-      // this.socket.emit('updatePickup', global.curPlayerData.id,{itemName, count: -1}); //fix if spawned in
+      // global.socket.emit('updatePickup', global.curPlayerData.id,{itemName, count: -1}); //fix if spawned in
       externalSetPickup({itemName, count: -1});
       if (global.inventory[itemName]) {
         global.inventory[itemName].count--;
@@ -182,7 +178,7 @@ export default class ThrowWEPC {
     }
 
     let pos = thrownObj.stuckPos ? thrownObj.stuckPos : {x: thrownObj.obj.x, y: thrownObj.obj.y};
-    this.socket.emit('newCollidedThrowable', {id: id, stuckPos: pos, angle: thrownObj.obj.angle, collidedInfo: thrownObj.collidedInfo, name: weaponName});
+    global.socket.emit('newCollidedThrowable', {id: id, stuckPos: pos, angle: thrownObj.obj.angle, collidedInfo: thrownObj.collidedInfo, name: weaponName});
     delete this.curThrownObjs[id];
     delete this.curThrownObjData[id];
     thrownObj.obj.destroy();
@@ -308,7 +304,7 @@ export default class ThrowWEPC {
 
 
   handleIncomingThrowableData() {
-    this.socket.on('updateThrowablePositions', (thrownObjsData: {[id: number]: {pos: GameObject, angle: number, name: Throwable}}) => {
+    global.socket.on('updateThrowablePositions', (thrownObjsData: {[id: number]: {pos: GameObject, angle: number, name: Throwable}}) => {
       for (let objID in thrownObjsData) {
         let curThrowableData = thrownObjsData[objID];
         let thrownObjs = this.otherThrownObjs;
@@ -324,7 +320,7 @@ export default class ThrowWEPC {
       }
     });
 
-    this.socket.on('newCollidedThrowable', (throwableData: {id: string, name: Throwable, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) => {
+    global.socket.on('newCollidedThrowable', (throwableData: {id: string, name: Throwable, stuckPos: GameObject, angle: number, collidedInfo: {type: string, id: number}}) => {
       this.handleCollidedthrowableData(throwableData);
     });
   }

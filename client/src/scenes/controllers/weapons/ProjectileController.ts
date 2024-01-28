@@ -1,20 +1,16 @@
 import Game from '../../game.js';
 
-import { Socket } from "socket.io-client";
-
 import global from '../../global.js';
 
 export default class ProjectileController {
   line: Phaser.GameObjects.Graphics;
   projectileObj: {[id: number]: Phaser.GameObjects.Ellipse} = {};
-  socket: Socket;
   playerGroup!: Phaser.GameObjects.Group;
   game: Game;
 
-  constructor(game: Game, socket: Socket, playerGroup: Phaser.GameObjects.Group) {
+  constructor(game: Game, playerGroup: Phaser.GameObjects.Group) {
 
     this.game = game;
-    this.socket = socket;
     this.line = this.game.add.graphics();
     this.playerGroup = playerGroup;
   }
@@ -23,7 +19,7 @@ export default class ProjectileController {
 
 
   createProjectile(player: {direction: string, pos: GameObject, id: number}) {
-    this.socket.emit('newProjectile', player.pos, player.direction, player.id);
+    global.socket.emit('newProjectile', player.pos, player.direction, player.id);
   }
 
   deleteProjectile(id: number) {
@@ -36,7 +32,7 @@ export default class ProjectileController {
     this.playerGroup.getChildren().forEach((player: any) => {
       if (player.name != playerId) {
         if (Phaser.Geom.Intersects.LineToRectangle(line, player.getBounds())) {
-          this.socket.emit('playerHit', player.name);
+          global.socket.emit('playerHit', player.name);
         }
       }
     });

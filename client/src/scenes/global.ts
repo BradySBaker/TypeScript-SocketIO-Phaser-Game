@@ -1,4 +1,7 @@
+import { Socket } from "socket.io-client"
+
 export default {
+  socket: {} as Socket, //Initialized in game.ts
   ground: 900,
   playersData: {} as { [id: number | string]: {body: Phaser.GameObjects.Rectangle, grapplingPos: GameObject | undefined} },
   equiped: '',

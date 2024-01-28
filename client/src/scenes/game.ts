@@ -1,3 +1,5 @@
+import * as socketClient from 'socket.io-client';
+
 import Phaser, { GameObjects } from "phaser";
 import ProjectileController from './controllers/weapons/ProjectileController.js';
 import PlayerController from './controllers/PlayerController.js';
@@ -14,10 +16,6 @@ import EnvironmentController from "./controllers/EnvironmentController.js";
 import global from './global.js';
 
 import {startUI} from '../UI/index.js';
-
-import * as socketClient from 'socket.io-client';
-let socket: socketClient.Socket;
-
 
 export default class Game extends Phaser.Scene {
   deltaTime: number = 0;
@@ -63,7 +61,7 @@ export default class Game extends Phaser.Scene {
     });
 
     this.load.on('complete', () => {
-      socket = socketClient.io('http://localhost:3000');
+      global.socket = socketClient.io('http://localhost:3000');
     });
   }
 
@@ -72,15 +70,15 @@ export default class Game extends Phaser.Scene {
     this.gameHeight = this.sys.game.canvas.height;
 		this.createBackgrounds();
 
-    this.DropHandler = new DropHandler(this, socket);
-    this.PlayerController = new PlayerController(this, socket);
+    this.DropHandler = new DropHandler(this);
+    this.PlayerController = new PlayerController(this);
     this.PlayerController.setupPlayer();
-    this.MobController = new MobController(this, socket);
-    this.EnvironmentController = new EnvironmentController(this, socket);
+    this.MobController = new MobController(this);
+    this.EnvironmentController = new EnvironmentController(this);
 
-    this.ThrowWEPC = new ThrowWEPC(this, socket, this.PlayerController.playerGroup);
+    this.ThrowWEPC = new ThrowWEPC(this, this.PlayerController.playerGroup);
     this.GrappleHandler = new GrappleHandler(this);
-    this.ProjectileController = new ProjectileController(this, socket, this.PlayerController.playerGroup);
+    this.ProjectileController = new ProjectileController(this, this.PlayerController.playerGroup);
     this.TerrainHandler = new TerrainHandler(this);
 
     this.HoverDetectionController = new HoverDetectionController(this);
@@ -89,7 +87,7 @@ export default class Game extends Phaser.Scene {
     this.handleSendData();
 
     window.addEventListener('unload', () => {
-      socket.emit('disconnectClient', global.curMobData); //Handle disconnect and send data
+      global.socket.emit('disconnectClient', global.curMobData); //Handle disconnect and send data
     });
 
   }
@@ -157,17 +155,17 @@ export default class Game extends Phaser.Scene {
   handleSendData() {
     setInterval(() => {
       if (this.ThrowWEPC.curThrowableID !== 0) {
-        socket.emit('updateThrowablePositions', this.ThrowWEPC.curThrownObjData);
+        global.socket.emit('updateThrowablePositions', this.ThrowWEPC.curThrownObjData);
       }
       const PC = this.PlayerController;
       if (global.curPlayerData && (Math.abs(PC.player.pos.x - PC.sentPos.x) > 5 || Math.abs(PC.player.pos.y - PC.sentPos.y) > 5)) {
         let grapplingPont = this.GrappleHandler.grappling ? this.GrappleHandler.grapplePoint : undefined;
-        socket.emit('updatePosition', {pos: PC.player.pos, grapplePos: grapplingPont});
+        global.socket.emit('updatePosition', {pos: PC.player.pos, grapplePos: grapplingPont});
         PC.sentPos.x = PC.player.pos.x;
         PC.sentPos.y = PC.player.pos.y;
       }
       if (Object.keys(global.curMobData).length > 0) {
-        socket.emit('updateMobs', global.curMobData, false);
+        global.socket.emit('updateMobs', global.curMobData, false);
       }
     }, 10);
   }

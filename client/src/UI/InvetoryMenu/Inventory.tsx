@@ -4,7 +4,7 @@ import global from "../../scenes/global";
 
 const Inventory: React.FC <{newPickup: {count: number, itemName: string}}> = ({newPickup}) => {
   const [boxElements, setBoxElements] = useState(() =>Array.from({ length: 5 }, () => Array(5).fill(undefined)));
-
+  // this.socket.emit('updatePickup', global.curPlayerData.id, {itemName: drop.getData('name'), count: drop.getData('count'), id});
   const findFirstUndefinedPosition = (newBoxElements: any[][]) => {
     for (let i = 0; i < newBoxElements.length; i++) {
       const columnIndex = newBoxElements[i].indexOf(undefined);
