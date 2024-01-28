@@ -10,8 +10,7 @@ export default {
   curMobData: {} as {[id: string]: {pos: GameObject, type: MobTypes}}, //For sending to server
   otherMobs: {} as {[id: string]: Phaser.GameObjects.Container}, //Recieved mobs
   mobCount: 0 as number,
-  inventory: {} as {[itemName: string]: {count: number, pos: GameObject}},
-
+  inventory: {} as {[itemName: string]: number},
   Throwables: {'stone': true, 'spear': true} as {[type: string]: boolean},
   //This is for finding images only [for example stone is a tool and an env element] [this should be depending on where the image is located]
   EnvImages: ['stickyFern'] as EnvObj[],

@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 
 import global from "../../scenes/global";
-
+let inventoryPos: {[id: string]: GameObject} = {};
 const Inventory: React.FC <{newPickup: {count: number, itemName: string}}> = ({newPickup}) => {
   const [boxElements, setBoxElements] = useState(() =>Array.from({ length: 5 }, () => Array(5).fill(undefined)));
-  // this.socket.emit('updatePickup', global.curPlayerData.id, {itemName: drop.getData('name'), count: drop.getData('count'), id});
   const findFirstUndefinedPosition = (newBoxElements: any[][]) => {
     for (let i = 0; i < newBoxElements.length; i++) {
       const columnIndex = newBoxElements[i].indexOf(undefined);
@@ -18,21 +17,20 @@ const Inventory: React.FC <{newPickup: {count: number, itemName: string}}> = ({n
   useEffect(() => {
     let newBoxElements = [...boxElements];
     for (let itemName in global.inventory) {
-      if (global.inventory[itemName].count < 1) {
-        newBoxElements[global.inventory[itemName].pos.x][global.inventory[itemName].pos.y] = undefined;
-        delete global.inventory[itemName];
-        return;
-      }
-      let curinventory = global.inventory[itemName];
-      if (curinventory.pos.x === -1) {
-        let newPos = findFirstUndefinedPosition(newBoxElements)
+      if (!inventoryPos[itemName]) {
+        let newPos = findFirstUndefinedPosition(newBoxElements);
         if (!newPos) {
           return;
         }
-        curinventory.pos.x = newPos.x;
-        curinventory.pos.y = newPos.y;
+        inventoryPos[itemName] = newPos;
       }
-      newBoxElements[curinventory.pos.x][curinventory.pos.y] = {itemName, count: curinventory.count};
+      if (global.inventory[itemName] < 1) {
+        newBoxElements[inventoryPos[itemName].x][inventoryPos[itemName].y] = undefined;
+        delete inventoryPos[itemName];
+        delete global.inventory[itemName];
+      }
+      let count = global.inventory[itemName];
+      newBoxElements[inventoryPos[itemName].x][inventoryPos[itemName].y] = {itemName, count};
     }
     setBoxElements(newBoxElements);
   }, [newPickup]);

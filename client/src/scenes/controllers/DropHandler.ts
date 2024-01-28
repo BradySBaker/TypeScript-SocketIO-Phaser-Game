@@ -55,9 +55,9 @@ export default class DropHandler {
 
       global.socket.on('pickupVerified', (itemName: string, count: number) => {
         if (!global.inventory[itemName]) {
-          global.inventory[itemName] = {count: 0, pos: {x: -1, y: -1}}
+          global.inventory[itemName] = 0;
         }
-        global.inventory[itemName].count += count;
+        global.inventory[itemName] += count;
         externalSetPickup({itemName, count});
       });
 
@@ -77,7 +77,7 @@ export default class DropHandler {
 
     handlePickup(player: Phaser.Types.Physics.Arcade.GameObjectWithBody, drop: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
       let id = drop.getData('id')
-      // global.socket.emit('updatePickup', global.curPlayerData.id, {itemName: drop.getData('name'), count: drop.getData('count'), id});
+      global.socket.emit('updatePickup', global.curPlayerData.id, {itemName: drop.getData('name'), count: drop.getData('count'), id});
       this.game.DropHandler.deleteDrop(id); //this is PlayerController not DropHandler
     };
 

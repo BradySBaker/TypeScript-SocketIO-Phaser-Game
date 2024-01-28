@@ -1,16 +1,11 @@
 import React, {useEffect, useState} from "react";
 import global from "../scenes/global";
 
-const SpawnItem: React.FC <{setNewPickup: Function}> = ({setNewPickup}) => { //Fix send data to server
+const SpawnItem = () => { //Fix send data to server
   const [spawnButtons, setSpawnButtons] = useState<React.ReactNode[]>([]);
 
   const handleSpawn = (itemName: string) => {
-    if (global.inventory[itemName]) {
-      global.inventory[itemName].count++;
-    } else {
-      global.inventory[itemName] = {count: 1, pos: {x: -1, y: -1}};
-    }
-    setNewPickup({itemName, count: 1});
+    global.socket.emit('updatePickup', global.curPlayerData.id, {itemName, count: 1}, true);
   };
 
   useEffect(() => {

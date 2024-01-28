@@ -119,7 +119,7 @@ export default class ThrowWEPC {
       // global.socket.emit('updatePickup', global.curPlayerData.id,{itemName, count: -1}); //fix if spawned in
       externalSetPickup({itemName, count: -1});
       if (global.inventory[itemName]) {
-        global.inventory[itemName].count--;
+        global.inventory[itemName]--;
       }
     }
     this.handleThrownObjs();
