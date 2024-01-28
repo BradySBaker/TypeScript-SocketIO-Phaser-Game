@@ -1,10 +1,7 @@
 import * as socketClient from 'socket.io-client';
 
 import Phaser, { GameObjects } from "phaser";
-import ProjectileController from './controllers/weapons/ProjectileController.js';
 import PlayerController from './controllers/PlayerController.js';
-import ThrowWEPC from "./controllers/weapons/ThrowWEPC.js";
-import GrappleHandler from "./controllers/GrappleHandler.js";
 import TerrainHandler from "./objects/TerrainHandler.js";
 
 import HoverDetectionController from "./controllers/HoverDetectionController.js";
@@ -12,6 +9,8 @@ import HoverDetectionController from "./controllers/HoverDetectionController.js"
 import DropHandler from "./controllers/DropHandler.js";
 import MobController from "./controllers/mobs/MobController.js";
 import EnvironmentController from "./controllers/EnvironmentController.js";
+
+import ToolController from './controllers/tools/ToolController.js';
 
 import global from './global.js';
 
@@ -23,11 +22,9 @@ export default class Game extends Phaser.Scene {
   gameHeight: any
   backgrounds: { ratioX: number; sprite: GameObjects.TileSprite;}[] = [];
   PlayerController!: PlayerController;
-  ProjectileController!: ProjectileController;
-  ThrowWEPC!: ThrowWEPC;
-  GrappleHandler!: GrappleHandler;
   TerrainHandler!: TerrainHandler;
   DropHandler!: DropHandler;
+  ToolController!: ToolController;
 
   spawnCounter: number = 0;
 
@@ -74,11 +71,9 @@ export default class Game extends Phaser.Scene {
     this.PlayerController = new PlayerController(this);
     this.PlayerController.setupPlayer();
     this.MobController = new MobController(this);
+    this.ToolController = new ToolController(this); //Must be after mob controller
     this.EnvironmentController = new EnvironmentController(this);
 
-    this.ThrowWEPC = new ThrowWEPC(this, this.PlayerController.playerGroup);
-    this.GrappleHandler = new GrappleHandler(this);
-    this.ProjectileController = new ProjectileController(this, this.PlayerController.playerGroup);
     this.TerrainHandler = new TerrainHandler(this);
 
     this.HoverDetectionController = new HoverDetectionController(this);
@@ -97,8 +92,8 @@ export default class Game extends Phaser.Scene {
     this.deltaTime = delta / (1000 / 60);
     this.PlayerController.handleMovement();
     this.PlayerController.interpolatePlayerPositions();
-    this.ThrowWEPC.handleAttatchedCollidedThrowables();
-    this.GrappleHandler.drawRopes();
+    this.ToolController.handleTools();
+
     this.handleBackgrounds();
     this.TerrainHandler.spawnChunks();
     this.MobController.handleMobs();
@@ -154,12 +149,12 @@ export default class Game extends Phaser.Scene {
 
   handleSendData() {
     setInterval(() => {
-      if (this.ThrowWEPC.curThrowableID !== 0) {
-        global.socket.emit('updateThrowablePositions', this.ThrowWEPC.curThrownObjData);
+      if (this.ToolController.ThrowWEPC.curThrowableID !== 0) {
+        global.socket.emit('updateThrowablePositions', this.ToolController.ThrowWEPC.curThrownObjData);
       }
       const PC = this.PlayerController;
       if (global.curPlayerData && (Math.abs(PC.player.pos.x - PC.sentPos.x) > 5 || Math.abs(PC.player.pos.y - PC.sentPos.y) > 5)) {
-        let grapplingPont = this.GrappleHandler.grappling ? this.GrappleHandler.grapplePoint : undefined;
+        let grapplingPont = this.ToolController.GrappleHandler.grappling ? this.ToolController.GrappleHandler.grapplePoint : undefined;
         global.socket.emit('updatePosition', {pos: PC.player.pos, grapplePos: grapplingPont});
         PC.sentPos.x = PC.player.pos.x;
         PC.sentPos.y = PC.player.pos.y;

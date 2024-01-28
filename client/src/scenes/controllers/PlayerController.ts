@@ -96,32 +96,6 @@ export default class PlayerController {
 
   handleMovement() {
     this.handleGround();
-    //Handle equips ==
-    const grappleHook = this.game.GrappleHandler.grappleHook;
-
-    if (global.Throwables[global.equiped]) {
-      if (this.game.ThrowWEPC.activeThrowable) {
-        this.game.ThrowWEPC.handleWeaponRotation(this.game.ThrowWEPC.activeThrowable, this.player);
-      }
-    } else if (global.equiped === 'grapple') {
-      if (grappleHook) {
-        this.game.GrappleHandler.handleGrapple();
-      }
-      this.game.GrappleHandler.handlePosition(global.curPlayerData.id);
-      if (!this.game.GrappleHandler.grappling) {
-        this.game.ThrowWEPC.handleWeaponRotation(grappleHook, this.player);
-      }
-    }
-    if (grappleHook && global.equiped !== 'grapple') {
-      grappleHook.setActive(false);
-      grappleHook.setVisible(false);
-    }
-    this.game.ThrowWEPC.handleObjThrow(this.player);
-    // ==
-
-    if (this.game.GrappleHandler.grappling) {
-      return;
-    }
 
     if (!this.ground) { //Handle fall ==
       if (this.move.vy < -1) { //going up
@@ -162,10 +136,6 @@ export default class PlayerController {
     }
     this.setPosition(this.move.vx, this.move.vy, true)
 
-    if (this.game.ThrowWEPC?.activeThrowable) { //Set throwable position
-      this.game.ThrowWEPC.activeThrowable.x += this.move.vx * this.game.deltaTime;
-      this.game.ThrowWEPC.activeThrowable.y = this.player.pos.y;
-    }
   }
 
 
@@ -193,9 +163,6 @@ export default class PlayerController {
       global.curPlayerData.body.y = blockY!+5;
       this.player.pos.y = blockY!+5;
       this.move.vy = 0;
-      if (this.game.GrappleHandler.grappling) { //Cancel grapple
-        this.game.GrappleHandler.grappling = false;
-      }
     } else {
       this.ground = false;
     }
@@ -240,7 +207,7 @@ export default class PlayerController {
   retrievePlayerData() {
     global.socket.on('updatePosition', (data: {pos: GameObject, grapplePos: GameObject | undefined}, id: number) => { //Handle player update
         this.playersToMove[id] = data.pos;
-        let ropes = this.game.GrappleHandler.ropes;
+        let ropes = this.game.ToolController.GrappleHandler.ropes;
         if (data.grapplePos) {
           ropes[id] = {pos: data.pos, grapplePos: data.grapplePos};
         } else if (ropes[id]) {
@@ -279,7 +246,7 @@ export default class PlayerController {
       }
       for (let throwableID in collidedThrowableData) {
         let throwableData = collidedThrowableData[throwableID];
-        this.game.ThrowWEPC.handleCollidedthrowableData({...throwableData, id: throwableID});
+        this.game.ToolController.ThrowWEPC.handleCollidedthrowableData({...throwableData, id: throwableID});
       }
       this.sentPos = {x: data[id].pos.x, y: data[id].pos.y};
       global.curPlayerData = {...global.playersData[id], id};
