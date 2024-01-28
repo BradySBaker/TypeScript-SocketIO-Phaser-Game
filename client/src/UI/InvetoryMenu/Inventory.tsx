@@ -25,6 +25,7 @@ const Inventory: React.FC <{newPickup: {count: number, itemName: string}}> = ({n
         inventoryPos[itemName] = newPos;
       }
       if (global.inventory[itemName] < 1) {
+        console.log(itemName);
         newBoxElements[inventoryPos[itemName].x][inventoryPos[itemName].y] = undefined;
         delete inventoryPos[itemName];
         delete global.inventory[itemName];

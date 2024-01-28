@@ -151,7 +151,10 @@ io.on('connection', (socket: Socket) => {
         delete newInventory[requiredItem];
       }
     }
-    newInventory[itemName] = 1;
+    if (!newInventory[itemName]) {
+      newInventory[itemName] = 0;
+    }
+    newInventory[itemName]++;
     playerInventoryData[playerId] = newInventory;
     socket.emit('craftVerified', newInventory, {itemName, count: 1});
   });
