@@ -55,7 +55,7 @@ const UI: React.FC<{}> = () => {
   return (
     <div id="app">
       <DisplayPickup newPickup={newPickup}/>
-      {inventoryMenuToggle ? <InventoryMenu newPickup={newPickup}/> : null}
+      {inventoryMenuToggle ? <InventoryMenu newPickup={newPickup} setNewPickup={setNewPickup}/> : null}
       <ToolSelector numKeyPress={numKeyPress} setNumKeyPress={setNumKeyPress} newPickup={newPickup}/>
       <SpawnItem setNewPickup={setNewPickup}/>
       {usePos.x !== undefined && usePos.y !== undefined ? <DisplayUse useKeyDownTime={useKeyDownTime} usePos={usePos}/> : null}

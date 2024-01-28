@@ -182,4 +182,28 @@ canvas {
   padding: 0 20px;
 }
 
+#crafting-menu {
+  pointer-events: all;
+  background-color: #8080801d;
+  width: 40%;
+  height: 53%;
+}
+
+#recipe-box {
+  color: #25a900;
+  text-align: center;
+  cursor: grab;
+  -webkit-user-select: none;
+  user-select: none;
+  background-color: #000;
+  border-radius: 5px;
+  font-weight: bold;
+}
+
+#recipe-box p {
+  color: red;
+  margin-right: 10px;
+  display: inline;
+}
+
 /*# sourceMappingURL=index.49297165.css.map */
