@@ -86,6 +86,14 @@ export default class ToolController {
     }
   }
 
+  handleFlipXDirection() {
+    if (this.PlayerController.player.direction === 'right' && this.curCollectionTool!.flipX) {
+      this.curCollectionTool!.setFlipX(false);
+    } else if (this.PlayerController.player.direction === 'left' && !this.curCollectionTool!.flipX) {
+      this.curCollectionTool!.angle = -this.toolStartAngle;
+      this.curCollectionTool!.setFlipX(true);
+    }
+  }
 
   handleCollectionTools() {
     let toolXOffset = this.PlayerController.player.direction === 'right' ? 15 : -15;
@@ -96,12 +104,7 @@ export default class ToolController {
         this.curCollectionTool.angle = this.toolStartAngle;
       } else {
         this.curCollectionTool.setPosition(this.PlayerController.player.pos.x + toolXOffset, this.PlayerController.player.pos.y - toolYOffset);
-        if (this.PlayerController.player.direction === 'right' && this.curCollectionTool.flipX) {
-          this.curCollectionTool.setFlipX(false);
-        } else if (this.PlayerController.player.direction === 'left' && !this.curCollectionTool.flipX) {
-          this.curCollectionTool.angle = -this.toolStartAngle;
-          this.curCollectionTool.setFlipX(true);
-        }
+        this.handleFlipXDirection();
       }
       if (this.game.input.activePointer.isDown) {
         this.handleToolHit();
