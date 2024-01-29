@@ -6,27 +6,29 @@ import global from "../../scenes/global.js";
 const CraftingMenu: React.FC <{newPickup: {count: number, itemName: string}, setNewPickup: Function}> = ({newPickup, setNewPickup}) => {
   const [recipeBoxes, setRecipeBoxes] = useState<React.JSX.Element[]>([]);
 
-  const handleRecipeClick = (craftingItem: Drop) => { //Fix authenticate with server
-    let newInventory = global.inventory;
+  useEffect(() => {
+    global.socket.on('craftVerified', (inventory: {[itemName: string]: number}, info: {itemName: Drop, count: number}) => {
+      setNewPickup({count: info.count, itemName: info.itemName});
+      global.inventory = inventory;
+    });
+  }, []);
+
+
+  const handleRecipeClick = (craftingItem: Drop) => {
+    let newInventory = {...global.inventory};
     let recipe = craftingRecipes[craftingItem];
-    for (let requiredItem in recipe) {
+    for (let requiredItem in recipe) { //Verify Client side
       let requiredCount = recipe[requiredItem as Drop];
-      if (!newInventory[requiredItem] || newInventory[requiredItem].count - requiredCount!) {
+      if (!newInventory[requiredItem] || newInventory[requiredItem] - requiredCount! < 0) {
         console.log('missing: ' + requiredItem);
         return;
       }
-      newInventory[requiredItem].count -= requiredCount!;
-      if (newInventory[requiredItem].count < 1) {
+      newInventory[requiredItem] -= requiredCount!;
+      if (newInventory[requiredItem] < 1) {
         delete newInventory[requiredItem];
       }
     }
-    if (!newInventory[craftingItem]) {
-      newInventory[craftingItem] = {count: 1, pos: {x: -1, y: -1}};
-    } else {
-      newInventory[craftingItem].count++;
-    }
-    setNewPickup({count: 1, itemName: craftingItem});
-    global.inventory = newInventory;
+    global.socket.emit('craftItem', global.curPlayerData.id, craftingItem); //Verify server side
   };
 
   useEffect(() => {

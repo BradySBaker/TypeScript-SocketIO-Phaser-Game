@@ -1,4 +1,7 @@
 import { Socket, Server } from 'socket.io';
+import craftingRecipes from '../craftingRecipes';
+
+type Drop = 'bone' | 'stone' | 'goo' | 'spear' | 'bone_pickaxe';
 
 type MobTypes = 'goat' | 'skug' | 'quilFluff';
 type EnvObj = 'stickyFern' | 'stone';
@@ -132,10 +135,46 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
+  socket.on('craftItem', (playerId: number, itemName: Drop) => {
+    console.log('crafting', playerId, itemName);
+    let newInventory = {...playerInventoryData[playerId]};
+    let recipe = craftingRecipes[itemName];
+    console.log(newInventory);
+    for (let requiredItem in recipe) {
+      let requiredCount = recipe[requiredItem as Drop];
+      if (!newInventory[requiredItem] || newInventory[requiredItem] - requiredCount! < 0) {
+        console.log('missing: ' + requiredItem);
+        return;
+      }
+      newInventory[requiredItem] -= requiredCount!;
+      if (newInventory[requiredItem] < 1) {
+        delete newInventory[requiredItem];
+      }
+    }
+    if (!newInventory[itemName]) {
+      newInventory[itemName] = 0;
+    }
+    newInventory[itemName]++;
+    playerInventoryData[playerId] = newInventory;
+    socket.emit('craftVerified', newInventory, {itemName, count: 1});
+  });
 
 
+  socket.on('updatePickup', (playerId: number, info: {itemName: string, count: number, id: number | undefined}, admin: true | undefined) => { //Verify position [fix]
+    console.log('pickedUp', playerId, info);
+    if (admin) { //Temporary
+      if (!playerInventoryData[playerId]) {
+        playerInventoryData[playerId] = {};
+      }
+      if (!playerInventoryData[playerId][info.itemName]) {
+        playerInventoryData[playerId][info.itemName] = 0;
+      }
+      //===========
 
-  socket.on('updatePickup', (playerId: number, info: {itemName: string, count: number, id: number}) => { //Verify position [fix]
+      playerInventoryData[playerId][info.itemName] += info.count;
+      socket.emit('pickupVerified', info.itemName, info.count);
+      return;
+    }
     if (recentDrops[info.itemName] >= info.count) {
       if (!playerInventoryData[playerId]) {
         if (info.count < 0) {
@@ -144,6 +183,9 @@ io.on('connection', (socket: Socket) => {
         playerInventoryData[playerId] = {};
       }
       playerInventoryData[playerId][info.itemName] += info.count;
+      if (info.id === undefined) {
+        return;
+      }
       if (info.count > 0) {
         recentDrops[info.itemName] -= info.count;
         socket.broadcast.emit('deleteDrop', info.id);

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 
 import global from "../scenes/global";
 // import dropTypesAndCrafting from "../../../dropTypesAndCrafting";
-
 let tools: {name: string, count: number}[] = new Array(6);
 tools.fill({name: '', count: 0});
 
@@ -27,8 +26,8 @@ const ToolSelector: React.FC<{numKeyPress: string, setNumKeyPress: Function , ne
     }
   }, [numKeyPress]);
 
-  useEffect(() => { //--fix make modular
-    if (newPickup.itemName === 'spear' || newPickup.itemName === 'stone') {
+  useEffect(() => {
+    if (global.Tools[newPickup.itemName]) {
       let itemName = newPickup.itemName;
       let itemIndex = findIndexOf(itemName);
       if (itemIndex === -1) {
@@ -45,7 +44,7 @@ const ToolSelector: React.FC<{numKeyPress: string, setNumKeyPress: Function , ne
           setNumKeyPress('');
           return;
         }
-        tools[itemIndex] = {name: itemName, count: global.inventory[newPickup.itemName].count};
+        tools[itemIndex] = {name: itemName, count: global.inventory[newPickup.itemName]};
         setUpdate(update => !update);
       }
     }

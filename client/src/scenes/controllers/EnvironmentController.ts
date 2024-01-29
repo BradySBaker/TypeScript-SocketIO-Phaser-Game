@@ -1,5 +1,4 @@
 import Game from "../game";
-import { Socket } from "socket.io-client";
 import global from "../global";
 import {externalSetUsePos} from "../../UI/index";
 import { useComplete } from "../../UI/DisplayUse";
@@ -22,14 +21,12 @@ let spawnProb = .2;
 
 export default class EnvironmentController {
   game: Game;
-  socket: Socket;
   envObjGroup!: Phaser.GameObjects.Group;
   overlap = false;
   overlapObj!: Phaser.GameObjects.Sprite;
   overlapFalseTime = 10;
-  constructor(game: Game, socket: Socket) {
+  constructor(game: Game) {
      this.game = game;
-     this.socket = socket;
      this.envObjGroup = game.physics.add.group({
       classType: Phaser.GameObjects.Sprite,
      });
@@ -63,7 +60,7 @@ export default class EnvironmentController {
       accumulatedProbability += envObjSettings[envObjtype].rate;
 
       if (randomNumber <= accumulatedProbability) {
-        this.socket.emit('newEnvObj', type, pos);
+        global.socket.emit('newEnvObj', type, pos);
         return;
       }
     }
@@ -80,20 +77,20 @@ export default class EnvironmentController {
   }
 
   handleIncomingEnvObjData() {
-    this.socket.on('newEnvObj', (envObjData: envObjData) => {
+    global.socket.on('newEnvObj', (envObjData: envObjData) => {
       let areaX = this.addToEnvObjData(envObjData);
       if (areaX === prevPlayerAreaX) { //Re-Render if new envObjs in player area
         prevPlayerAreaX = undefined;
       }
     });
 
-    this.socket.on('EnvObjects', (curEnvObjects: {[envObjId: string | number]: {name: EnvObj, pos: GameObject}}) => {
+    global.socket.on('EnvObjects', (curEnvObjects: {[envObjId: string | number]: {name: EnvObj, pos: GameObject}}) => {
       for (let id in curEnvObjects) {
         this.addToEnvObjData({id, name: curEnvObjects[id].name, pos: curEnvObjects[id].pos});
       }
     });
 
-    this.socket.on('deletePickupableObj', (id: number, type: 'throwable' | 'envObj') => {
+    global.socket.on('deletePickupableObj', (id: number, type: 'throwable' | 'envObj') => {
       if (type === 'envObj') {
         if (envObjs[id]) {
           this.deleteEnvObj(id);
@@ -194,7 +191,7 @@ export default class EnvironmentController {
   };
 
   pickupEnvObj(id: number, type: 'throwable' | 'envObj') {
-    this.socket.emit('pickupObj', global.curPlayerData.id, id, type);
+    global.socket.emit('pickupObj', global.curPlayerData.id, id, type);
     externalSetUsePos(false);
   }
 

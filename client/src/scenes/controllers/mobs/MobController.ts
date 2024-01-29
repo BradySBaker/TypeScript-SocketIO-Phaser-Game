@@ -1,4 +1,3 @@
-import { Socket } from "socket.io-client";
 import Game from "../../game";
 import global from "../../global";
 
@@ -7,7 +6,6 @@ import SkugController from "./SkugController";
 import QuilFluffController from "./QuilFluffController";
 
 export default class MobController {
-  socket: Socket;
   game: Game;
   mobGroup!: Phaser.GameObjects.Group;
   controllers!: {'goat': GoatController, 'skug': SkugController, 'quilFluff': QuilFluffController};
@@ -16,7 +14,7 @@ export default class MobController {
 
 
 
-  constructor(game: Game, socket: Socket) {
+  constructor(game: Game) {
     this.controllers = {
       goat: new GoatController(game),
       skug: new SkugController(game),
@@ -24,7 +22,6 @@ export default class MobController {
     };
 
     this.game = game;
-    this.socket = socket;
 
     this.mobGroup = this.game.physics.add.group({
       classType: Phaser.GameObjects.Rectangle,
@@ -47,7 +44,7 @@ export default class MobController {
 
 
   damage(id: number | string, info: {type: string, pos: GameObject, weaponName: Throwable}) {
-    this.socket.emit('damageMob', id, {pos: {x: Math.round(info.pos.x), y: Math.round(info.pos.y)}, type: info.type, weaponName: info.weaponName, playerId: global.curPlayerData.id});
+    global.socket.emit('damageMob', id, {pos: {x: Math.round(info.pos.x), y: Math.round(info.pos.y)}, type: info.type, weaponName: info.weaponName, playerId: global.curPlayerData.id});
   }
 
   handleGround(mob: Mob, type: MobTypes) {
@@ -146,7 +143,7 @@ export default class MobController {
 
 
   handleUnassignMob(id: number | string) {
-    this.socket.emit('unassignMob', id, global.curMobData[id]);
+    global.socket.emit('unassignMob', id, global.curMobData[id]);
     this.deleteMob(id);
   }
 
@@ -168,7 +165,7 @@ export default class MobController {
   }
 
   handleData() {
-    this.socket.on('updateMobs', (mobData: {[goatId: number]: {pos: GameObject, assigned: boolean, type: MobTypes}}) => {
+    global.socket.on('updateMobs', (mobData: {[goatId: number]: {pos: GameObject, assigned: boolean, type: MobTypes}}) => {
       for (let id in mobData) {
         if (this.destroyedMobs[id]) {
           delete this.destroyedMobs[id];
@@ -194,7 +191,7 @@ export default class MobController {
     })
 
 
-    this.socket.on('mobAssignment', (id: string, mobData: {pos: GameObject, assigned: boolean, type: MobTypes}) => {
+    global.socket.on('mobAssignment', (id: string, mobData: {pos: GameObject, assigned: boolean, type: MobTypes}) => {
       if (global.curMobData[id]) {return;}
       let container = this.controllers[mobData.type].create(mobData.pos, id);
       global.curMobData[id] = {pos: mobData.pos, type: mobData.type};
@@ -202,12 +199,12 @@ export default class MobController {
     });
 
 
-    this.socket.on('mobDied', (id: number | string) => {
+    global.socket.on('mobDied', (id: number | string) => {
       console.log(id, 'mob died');
       this.deleteMob(id);
     });
 
-    this.socket.on('damagedMob', (mobId: string, playerId: number | string) => {
+    global.socket.on('damagedMob', (mobId: string, playerId: number | string) => {
       if (!global.curMobData[mobId]) {
         return;
       }
@@ -216,12 +213,12 @@ export default class MobController {
       mob.curMovementTimer = 0;
     });
 
-    this.socket.on('unassignedMobs', (mobData: {[id: number | string]: {pos: GameObject, type: MobTypes}}) => {
+    global.socket.on('unassignedMobs', (mobData: {[id: number | string]: {pos: GameObject, type: MobTypes}}) => {
       for (let id in mobData) {
         let curMob = mobData[id];
         this.deleteMob(id);
         if (this.mobInRenderDistance(curMob.pos)) {
-          this.socket.emit('requestMobAssignment', id, curMob);
+          global.socket.emit('requestMobAssignment', id, curMob);
         }
       }
     });
