@@ -14,7 +14,7 @@ export default {
   Throwables: {'stone': true, 'spear': true} as {[type: string]: boolean},
   Tools: {'stone': true, 'spear': true, 'bone_pickaxe': true} as {[type: string]: boolean},
   //This is for finding images only [for example stone is a tool and an env element] [this should be depending on where the image is located]
-  EnvImages: ['stickyFern'] as EnvObj[],
+  EnvImages: ['stickyFern', 'rock'] as EnvObj[],
   ItemImages: ['bone' , 'goo', 'stone', 'grapple', 'spear', 'bone_pickaxe'] as Drop[]
 
 }

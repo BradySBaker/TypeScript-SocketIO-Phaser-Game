@@ -65,7 +65,7 @@ canvas {
 
 
 
-/* Progress Circle */
+/*=========== Progress Circle ========= */
 
 #use-circle-container {
   position: absolute;
@@ -94,6 +94,8 @@ canvas {
 #spawn-item-container {
   pointer-events: all;
 }
+
+/* ========= */
 
 /* =========== Inventory Boxes ==========*/
 .selection-box, .inventory-box {

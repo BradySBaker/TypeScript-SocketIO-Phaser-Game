@@ -80,6 +80,7 @@ export default class ToolController {
     // Ensure the angle doesn't exceed the end angle
     if (Math.abs(this.curCollectionTool!.angle) > endAngle) {
       this.toolForward = false;
+      this.game.EnvironmentController.toolHit();
     } else if ((this.curCollectionTool!.angle < this.toolStartAngle && !this.curCollectionTool!.flipX) || (this.curCollectionTool!.angle > -this.toolStartAngle && this.curCollectionTool!.flipX)) {
       this.curCollectionTool!.angle = this.curCollectionTool!.flipX ? -this.toolStartAngle : this.toolStartAngle;
       this.toolForward = true;

@@ -4,7 +4,7 @@ import craftingRecipes from '../craftingRecipes';
 type Drop = 'bone' | 'stone' | 'goo' | 'spear' | 'bone_pickaxe';
 
 type MobTypes = 'goat' | 'skug' | 'quilFluff';
-type EnvObj = 'stickyFern' | 'stone';
+type EnvObj = 'stickyFern' | 'stone' | 'rock';
 type Throwable = 'stone' | 'spear';
 
 type GameObject = {
@@ -23,18 +23,19 @@ let playerCount: number = 0;
 
 let mobInfo = {goat: {health: 5, dropMax: 0, dropName: 'bone', dropMin: 1}, skug: {health: 10, dropMax: 3, dropMin: 1, dropName: 'bone'}, quilFluff: {health: 3, dropMax: 1, dropMin: 0, dropName: 'bone'}};
 
-let objDrops: {[name in Throwable | EnvObj]: string} = {stickyFern: 'goo', stone: 'stone', spear: 'spear'};
+let objDrops: {[name in Throwable | EnvObj]: Drop} = {stickyFern: 'goo', stone: 'stone', spear: 'spear', rock: 'stone'};
 
 let projectileCount: number = 0;
 
-let playerPosData: { [playerId: number]: { pos: GameObject, grapplePos: GameObject | undefined } } = {};
-let projectilePositions: { [playerId: number]: { direction: string, pos: GameObject, startPos: GameObject, playerId: number } } = {};
+let playerPosData: { [playerID: number]: { pos: GameObject, grapplePos: GameObject | undefined } } = {};
+let projectilePositions: { [playerID: number]: { direction: string, pos: GameObject, startPos: GameObject, playerID: number } } = {};
 let collidedThrowablePositions: { [ThrowableID: number]: { stuckPos: GameObject, name: Throwable, angle: number, collidedInfo?: { type: string, id: number } } } = {};
 
-let playerInventoryData: {[playerId: number]: { [itemID: string | number]: number }} = {};
+let playerInventoryData: {[playerID: number ]: { [itemID: string | number]: number }} = {};
 let recentDrops: {[dropName: string]: number} = {};
 
-let curEnvObjects: {[EnvObjId: string | number]: {name: EnvObj, pos: GameObject}} = {};
+let curEnvObjects: {[EnvObjId: string | number]: {name: EnvObj, pos: GameObject, health?: number}} = {};
+let mineableObjectDetails: {[name in EnvObj]?: {startHealth: number, breakHealthIncrement: number /* how much health to shrink */, lootCount: number}} = {'rock': {startHealth: 9, breakHealthIncrement: 3, lootCount: 1 /* Multiplied by pickaxe strength */}};
 
 let connectedClients: string[] = [];
 
@@ -59,20 +60,20 @@ io.on('connection', (socket: Socket) => {
   console.log(socket.id + 'connected');
   connectedClients.push(socket.id);
 
-  let playerId = playerCount;
-  playerPosData[playerId] = { pos: { x: 500, y: 100 }, grapplePos: undefined };
+  let playerID = playerCount;
+  playerPosData[playerID] = { pos: { x: 500, y: 100 }, grapplePos: undefined };
   io.to(socket.id).emit('EnvObjects', curEnvObjects);
-  io.to(socket.id).emit('playerData', playerPosData, playerId, collidedThrowablePositions);
-  io.emit('newPlayer', playerId, playerPosData[playerId]);
+  io.to(socket.id).emit('playerData', playerPosData, playerID, collidedThrowablePositions);
+  io.emit('newPlayer', playerID, playerPosData[playerID]);
   playerCount++;
 
   socket.on('updatePosition', (data: { pos: GameObject, grapplePos: GameObject | undefined }) => { //recieved Game Object position and sends it to all clients
-    playerPosData[playerId] = data;
-    io.emit('updatePosition', data, playerId);
+    playerPosData[playerID] = data;
+    io.emit('updatePosition', data, playerID);
   })
 
-  socket.on('newProjectile', (pos: GameObject, direction: string, playerId: number) => {
-    projectilePositions[projectileCount] = { direction: direction, pos: { x: direction === 'left' ? pos.x - 25 : pos.x + 20, y: pos.y }, startPos: pos, playerId };
+  socket.on('newProjectile', (pos: GameObject, direction: string, playerID: number) => {
+    projectilePositions[projectileCount] = { direction: direction, pos: { x: direction === 'left' ? pos.x - 25 : pos.x + 20, y: pos.y }, startPos: pos, playerID };
     projectileCount++;
   });
 
@@ -112,7 +113,7 @@ io.on('connection', (socket: Socket) => {
     socket.broadcast.emit('updateMobs', mobData);;
   });
 
-  socket.on('damageMob', (mobId: number | string, info: {type: MobTypes, pos: GameObject, weaponName: Throwable, playerId: number | string}) => { //verify if this mob exists [fix]
+  socket.on('damageMob', (mobId: number | string, info: {type: MobTypes, pos: GameObject, weaponName: Throwable, playerID: number | string}) => { //verify if this mob exists [fix]
     console.log(mobId, info);
     if (!mobHealths[mobId]) {
       mobHealths[mobId] = mobInfo[info.type].health - throwableDamage[info.weaponName];
@@ -131,13 +132,13 @@ io.on('connection', (socket: Socket) => {
       dropId++;
       delete mobHealths[mobId];
     } else {
-      io.emit('damagedMob', mobId, info.playerId);
+      io.emit('damagedMob', mobId, info.playerID);
     }
   });
 
-  socket.on('craftItem', (playerId: number, itemName: Drop) => {
-    console.log('crafting', playerId, itemName);
-    let newInventory = {...playerInventoryData[playerId]};
+  socket.on('craftItem', (playerID: number, itemName: Drop) => {
+    console.log('crafting', playerID, itemName);
+    let newInventory = {...playerInventoryData[playerID]};
     let recipe = craftingRecipes[itemName];
     console.log(newInventory);
     for (let requiredItem in recipe) {
@@ -155,34 +156,33 @@ io.on('connection', (socket: Socket) => {
       newInventory[itemName] = 0;
     }
     newInventory[itemName]++;
-    playerInventoryData[playerId] = newInventory;
+    playerInventoryData[playerID] = newInventory;
     socket.emit('craftVerified', newInventory, {itemName, count: 1});
   });
 
 
-  socket.on('updatePickup', (playerId: number, info: {itemName: string, count: number, id: number | undefined}, admin: true | undefined) => { //Verify position [fix]
-    console.log('pickedUp', playerId, info);
+  socket.on('updatePickup', (playerID: number, info: {itemName: string, count: number, id: number | undefined}, admin: true | undefined) => { //Verify position [fix]
     if (admin) { //Temporary
-      if (!playerInventoryData[playerId]) {
-        playerInventoryData[playerId] = {};
+      if (!playerInventoryData[playerID]) {
+        playerInventoryData[playerID] = {};
       }
-      if (!playerInventoryData[playerId][info.itemName]) {
-        playerInventoryData[playerId][info.itemName] = 0;
+      if (!playerInventoryData[playerID][info.itemName]) {
+        playerInventoryData[playerID][info.itemName] = 0;
       }
       //===========
 
-      playerInventoryData[playerId][info.itemName] += info.count;
+      playerInventoryData[playerID][info.itemName] += info.count;
       socket.emit('pickupVerified', info.itemName, info.count);
       return;
     }
     if (recentDrops[info.itemName] >= info.count) {
-      if (!playerInventoryData[playerId]) {
+      if (!playerInventoryData[playerID]) {
         if (info.count < 0) {
           return;
         }
-        playerInventoryData[playerId] = {};
+        playerInventoryData[playerID] = {};
       }
-      playerInventoryData[playerId][info.itemName] += info.count;
+      playerInventoryData[playerID][info.itemName] += info.count;
       if (info.id === undefined) {
         return;
       }
@@ -196,20 +196,8 @@ io.on('connection', (socket: Socket) => {
     }
   });
 
-  socket.on('pickupObj', (playerId: number, id: number, type: 'throwable' | 'envObj') => {
-    if (!playerInventoryData[playerId]) {
-      playerInventoryData[playerId] = {};
-    }
-    let objStorage = type === 'envObj' ? curEnvObjects : collidedThrowablePositions;
-    if (objStorage[id]) {
-      let dropName = objDrops[objStorage[id].name];
-
-      let curAmount = playerInventoryData[playerId][dropName];
-      playerInventoryData[playerId][dropName] = !curAmount ? 1 : curAmount + 1;
-      delete objStorage[id];
-      io.emit('deletePickupableObj', id, type);
-      socket.emit('pickupVerified', dropName, 1);
-    }
+  socket.on('pickupObj', (playerID: number, id: number, type: 'throwable' | 'envObj') => {
+    pickupObjLoot(playerID, {itemName: objDrops[curEnvObjects[id].name], count: 1, id: id, type});
   });
 
 
@@ -220,12 +208,30 @@ io.on('connection', (socket: Socket) => {
     }
 
     socket.disconnect(true);
-    delete playerPosData[playerId];
-    io.emit('deletePlayer', playerId);
+    delete playerPosData[playerID];
+    io.emit('deletePlayer', playerID);
     for (let id in mobData) {
       unassignedMobs[id] = mobData[id];
     }
   });
+
+
+  const pickupObjLoot = (playerID: number, objDetails: {itemName: Drop, count: number, id: number, type: 'envObj' | 'throwable'}, mineable = false) => {
+    if (!playerInventoryData[playerID]) {
+      playerInventoryData[playerID] = {};
+    }
+    let objStorage = objDetails.type === 'envObj' ? curEnvObjects : collidedThrowablePositions;
+    if (!objStorage[objDetails.id]) {
+      return;
+    }
+    let curAmount = playerInventoryData[playerID][objDetails.itemName];
+    playerInventoryData[playerID][objDetails.itemName] = !curAmount ? 1 : curAmount + 1;
+    socket.emit('pickupVerified', objDetails. itemName, objDetails.count);
+    if (!mineable) {
+      delete objStorage[objDetails.id];
+      io.emit('deletePickupableObj', objDetails.id, objDetails.type);
+    }
+  }
 
   socket.on('newEnvObj', (name: EnvObj, pos: GameObject) => {
     if (pos.x > minMaxPlayerPosX.max || pos.x < minMaxPlayerPosX.min) {
@@ -234,9 +240,29 @@ io.on('connection', (socket: Socket) => {
       } else {
         minMaxPlayerPosX.min = pos.x
       }
-      curEnvObjects[envObjCreateCount] = {name, pos};
+      let miningDetails = mineableObjectDetails[name];
+      let envObjInfo: {name: EnvObj, pos: GameObject, health?: number} = {name, pos};
+      if (miningDetails) {
+        envObjInfo = {name, pos, health: miningDetails.startHealth};
+      }
+      curEnvObjects[envObjCreateCount] = envObjInfo;
       io.emit('newEnvObj', {id: envObjCreateCount, name, pos});
       envObjCreateCount++;
+    }
+  });
+
+  socket.on('mineObj', (playerID: number, objDetails: {name: EnvObj, id: number}) => {
+    let envObj = curEnvObjects[objDetails.id]
+    if (!envObj || !envObj.health) {
+      return;
+    }
+    envObj.health--;
+    if (envObj.health % mineableObjectDetails[objDetails.name]!?.breakHealthIncrement === 0) {
+      pickupObjLoot(playerID, {itemName: objDrops[objDetails.name], count: mineableObjectDetails[objDetails.name]!.lootCount, id: objDetails.id, type: 'envObj'}, true);
+    }
+    if (envObj.health <= 0) {
+      delete curEnvObjects[objDetails.id];
+      io.emit('deletePickupableObj', objDetails.id, 'envObj');
     }
   });
 
