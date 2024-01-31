@@ -197,7 +197,8 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('pickupObj', (playerID: number, id: number, type: 'throwable' | 'envObj') => {
-    pickupObjLoot(playerID, {itemName: objDrops[curEnvObjects[id].name], count: 1, id: id, type});
+    let objStorage = type === 'envObj' ? curEnvObjects : collidedThrowablePositions;
+    pickupObjLoot(playerID, {itemName: objDrops[objStorage[id].name], count: 1, id: id, type});
   });
 
 
@@ -252,13 +253,16 @@ io.on('connection', (socket: Socket) => {
   });
 
   socket.on('mineObj', (playerID: number, objDetails: {name: EnvObj, id: number}) => {
-    let envObj = curEnvObjects[objDetails.id]
+    let envObj = curEnvObjects[objDetails.id];
     if (!envObj || !envObj.health) {
       return;
     }
     envObj.health--;
     if (envObj.health % mineableObjectDetails[objDetails.name]!?.breakHealthIncrement === 0) {
       pickupObjLoot(playerID, {itemName: objDrops[objDetails.name], count: mineableObjectDetails[objDetails.name]!.lootCount, id: objDetails.id, type: 'envObj'}, true);
+      if (envObj.health > 0) {
+        io.emit('incrementObjBreak', objDetails.id);
+      }
     }
     if (envObj.health <= 0) {
       delete curEnvObjects[objDetails.id];

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "client": "parcel client/src/index.html --dist-dir client/dist -p 2000",
+    "client": "parcel client/src/baseFiles/index.html --dist-dir client/dist -p 2000",
     "server": "nodemon --exec 'ts-node' server/index.ts"
   },
   "author": "",

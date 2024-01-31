@@ -2,7 +2,6 @@ import Game from "../game";
 import global from "../global";
 import {externalSetUsePos} from "../../UI/index";
 import { useComplete } from "../../UI/DisplayUse";
-import { FacebookInstantGamesLeaderboard } from "phaser";
 
 type envObjData = {id: number | string, name: EnvObj, pos: GameObject};
 
@@ -129,6 +128,14 @@ export default class EnvironmentController {
         delete requestingPickup[id];
       }
     });
+
+
+    global.socket.on('incrementObjBreak', (id: number) => { //--fix when out of render distance
+      if (envObjs[id]) {
+        envObjs[id].setScale(envObjs[id].scale/1.2);
+        envObjs[id].y += envObjs[id].height/4;
+      }
+    });
   };
 
   deleteEnvObj(id: number | string) {
@@ -168,6 +175,7 @@ export default class EnvironmentController {
   }
 
   handleOverlap(hoverDetector: Phaser.Types.Physics.Arcade.GameObjectWithBody, obj: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
+    //@ts-ignore
     this.game.EnvironmentController.overlapObj = obj; //this = HoverDetectionController
     this.game.EnvironmentController.overlap = true;
   };
@@ -180,6 +188,11 @@ export default class EnvironmentController {
     }
     if (this.hit) {
       global.socket.emit('mineObj', global.curPlayerData.id, {name: this.overlapObj.getData('envObjName'), id: this.overlapObj.getData('id')});
+      let hoverDetector = this.game.HoverDetectionController.hoverCollider;
+      let colors = [0XFFE800, 0XFFFFFF];
+      let emitter = this.game.add.particles(hoverDetector.x, hoverDetector.y, 'spark', {quantity: 10, speed: {min: -200, max: 200}, scale: {start: 3, end: 0}, lifespan: 200, emitting: false, tint: colors, gravityY: 150}).setDepth(2);
+      emitter.explode();
+      setTimeout(() => emitter.destroy(), 500);
       this.hit = false;
     }
   }

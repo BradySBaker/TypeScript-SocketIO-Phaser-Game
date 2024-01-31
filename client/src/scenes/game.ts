@@ -41,7 +41,8 @@ export default class Game extends Phaser.Scene {
     this.load.image('mountains1', './assets/mountains1.png');
     this.load.image('mountains2', './assets/mountains2.png');
     this.load.image('grass', './assets/grass.png');
-    this.load.image('bloodDrop', './assets/bloodDrop.png');
+    this.load.image('bloodDrop', './assets/particles/bloodDrop.png');
+    this.load.image('spark', './assets/particles/spark.png');
 
     this.load.image('skugBody', './assets/mobs/skug/body.png');
     this.load.image('skugHead', './assets/mobs/skug/head.png');
@@ -88,7 +89,7 @@ export default class Game extends Phaser.Scene {
   }
 
 
-  update(time, delta: number) {
+  update(time: number, delta: number) {
     this.deltaTime = delta / (1000 / 60);
     this.PlayerController.handleMovement();
     this.PlayerController.interpolatePlayerPositions();
@@ -101,7 +102,7 @@ export default class Game extends Phaser.Scene {
     this.EnvironmentController.handleDisplayUI();
     if (this.PlayerController.spaceKey.isDown) {
       if (global.mobCount < 3) {
-        this.MobController.spawn(global.curPlayerData.body, 'quilFluff');
+        this.MobController.spawn(global.curPlayerData.body, 'skug');
       }
     }
     this.HoverDetectionController.positionColliderToMouse();
