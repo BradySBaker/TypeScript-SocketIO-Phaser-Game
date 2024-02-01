@@ -4,7 +4,7 @@ import craftingRecipes from '../craftingRecipes';
 type Drop = 'bone' | 'stone' | 'goo' | 'spear' | 'bone_pickaxe' | 'bone_hatchet';
 
 type MobTypes = 'goat' | 'skug' | 'quilFluff';
-type EnvObj = 'stickyFern' | 'stone' | 'rock';
+type EnvObj = 'stickyFern' | 'stone' | 'rock' | 'tree';
 type Throwable = 'stone' | 'spear';
 
 type GameObject = {
@@ -23,7 +23,7 @@ let playerCount: number = 0;
 
 let mobInfo = {goat: {health: 5, dropMax: 0, dropName: 'bone', dropMin: 1}, skug: {health: 10, dropMax: 3, dropMin: 1, dropName: 'bone'}, quilFluff: {health: 3, dropMax: 1, dropMin: 0, dropName: 'bone'}};
 
-let objDrops: {[name in Throwable | EnvObj]: Drop} = {stickyFern: 'goo', stone: 'stone', spear: 'spear', rock: 'stone'};
+let objDrops: {[name in Throwable | EnvObj]: Drop} = {stickyFern: 'goo', stone: 'stone', spear: 'spear', rock: 'stone', tree: 'bone'};
 
 let projectileCount: number = 0;
 
@@ -35,7 +35,7 @@ let playerInventoryData: {[playerID: number ]: { [itemID: string | number]: numb
 let recentDrops: {[dropName: string]: number} = {};
 
 let curEnvObjects: {[EnvObjId: string | number]: {name: EnvObj, pos: GameObject, health?: number}} = {};
-let mineableObjectDetails: {[name in EnvObj]?: {startHealth: number, breakHealthIncrement: number /* how much health to shrink */, lootCount: number}} = {'rock': {startHealth: 9, breakHealthIncrement: 3, lootCount: 1 /* Multiplied by pickaxe strength */}};
+let mineableObjectDetails: {[name in EnvObj]?: {startHealth: number, breakHealthIncrement: number /* how much health to shrink */, lootCount: number}} = {'rock': {startHealth: 9, breakHealthIncrement: 3, lootCount: 1 /* Multiplied by pickaxe strength */}, 'tree': {startHealth: 9, breakHealthIncrement: 3, lootCount: 1}};
 
 let connectedClients: string[] = [];
 

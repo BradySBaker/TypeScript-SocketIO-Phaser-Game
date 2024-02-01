@@ -10,9 +10,10 @@ const envObj_RENDER_DISTANCE = 2000; //should be 2000!
 let prevPlayerAreaX: undefined | number;
 
 let envObjSettings: {[name in EnvObj]: {rate: number, size: number, randomRotation: boolean, pickupable: boolean, toolType?: ToolCategory}} = {
-  stickyFern: {rate: .33, size: 3, randomRotation: false, pickupable: true},
-  stone: {rate: .33, size: 1.5, randomRotation: true, pickupable: true},
-  rock: {rate: .33, size: 3.5, randomRotation: false, pickupable: false, toolType: 'mining'}
+  stickyFern: {rate: .25, size: 3, randomRotation: false, pickupable: true},
+  stone: {rate: .25, size: 1.5, randomRotation: true, pickupable: true},
+  rock: {rate: .25, size: 3.5, randomRotation: false, pickupable: false, toolType: 'mining'},
+  tree: {rate: .25, size: 8, randomRotation: false, pickupable: false, toolType: 'chopping'}
 }; //rates must add up to 100
 
 let envObjs: {[id: number | string]: Phaser.GameObjects.Sprite} = {};
@@ -43,7 +44,7 @@ export default class EnvironmentController {
 
   spawnEnvObj(envObjData: envObjData) {
     let settings = envObjSettings[envObjData.name];
-    let newEnvObj = this.game.add.sprite(envObjData.pos.x, envObjData.pos.y, envObjData.name).setScale(settings.size);
+    let newEnvObj = this.game.add.sprite(envObjData.pos.x, envObjData.pos.y, envObjData.name).setScale(settings.size).setDepth(envObjData.name === 'tree' ? 1 : 0); //--Fix depth make modular
     newEnvObj.x;
 
     if (settings.randomRotation) {
@@ -52,9 +53,13 @@ export default class EnvironmentController {
       newEnvObj.y += 10;
     }
     newEnvObj.setData({id: envObjData.id, objtype: 'envObj', envObjName: envObjData.name, toolType: envObjSettings[envObjData.name].toolType}); //Obj type is labeled for pickup
-    newEnvObj.y -= (newEnvObj.height * 3)/2;
+    newEnvObj.y -= (newEnvObj.height * newEnvObj.scale)/2;
     envObjs[envObjData.id] = newEnvObj;
     this.envObjGroup.add(newEnvObj);
+    if (envObjData.name === 'tree') { //--Fix make modular [moves collider to the trunk]
+      (newEnvObj.body as Phaser.Physics.Arcade.Body).setSize(newEnvObj.scale/2, newEnvObj.scale*2);
+      (newEnvObj.body as Phaser.Physics.Arcade.Body).setOffset(newEnvObj.width/2.2, newEnvObj.height/2);
+    }
   };
 
   validateAndCreateEnvObj(pos: GameObject) {
