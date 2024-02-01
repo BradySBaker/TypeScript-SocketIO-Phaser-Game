@@ -9,10 +9,10 @@ const envObj_RENDER_DISTANCE = 2000; //should be 2000!
 
 let prevPlayerAreaX: undefined | number;
 
-let envObjSettings: {[name in EnvObj]: {rate: number, size: number, randomRotation: boolean, pickupable: boolean}} = {
+let envObjSettings: {[name in EnvObj]: {rate: number, size: number, randomRotation: boolean, pickupable: boolean, toolType?: ToolCategory}} = {
   stickyFern: {rate: .33, size: 3, randomRotation: false, pickupable: true},
   stone: {rate: .33, size: 1.5, randomRotation: true, pickupable: true},
-  rock: {rate: .33, size: 3.5, randomRotation: false, pickupable: false}
+  rock: {rate: .33, size: 3.5, randomRotation: false, pickupable: false, toolType: 'mining'}
 }; //rates must add up to 100
 
 let envObjs: {[id: number | string]: Phaser.GameObjects.Sprite} = {};
@@ -51,7 +51,7 @@ export default class EnvironmentController {
       newEnvObj.angle = randomAngle;
       newEnvObj.y += 10;
     }
-    newEnvObj.setData({id: envObjData.id, objtype: 'envObj', envObjName: envObjData.name}); //Obj type is labeled for pickup
+    newEnvObj.setData({id: envObjData.id, objtype: 'envObj', envObjName: envObjData.name, toolType: envObjSettings[envObjData.name].toolType}); //Obj type is labeled for pickup
     newEnvObj.y -= (newEnvObj.height * 3)/2;
     envObjs[envObjData.id] = newEnvObj;
     this.envObjGroup.add(newEnvObj);
@@ -180,9 +180,12 @@ export default class EnvironmentController {
     this.game.EnvironmentController.overlap = true;
   };
 
-  handleMineableObjects() {
+  handleBreakableObjects() {
+    if (global.CollectionTools[global.equiped].toolType !== this.overlapObj.getData('toolType')) {
+      return;
+    }
     if (!this.miningIcon) {
-      this.miningIcon = this.game.add.sprite(this.overlapObj.x, this.overlapObj.y, 'bone_pickaxe').setDepth(2);
+      this.miningIcon = this.game.add.sprite(this.overlapObj.x, this.overlapObj.y, global.equiped).setDepth(2);
     } else {
       this.miningIcon.setPosition(this.overlapObj.x, this.overlapObj.y);
     }
@@ -237,7 +240,7 @@ export default class EnvironmentController {
       if (pickupable) {
         this.handlePickupableObjects();
       } else if (this.game.ToolController.curCollectionTool) {
-        this.handleMineableObjects();
+        this.handleBreakableObjects();
       }
     } else {
       this.overlap = false;

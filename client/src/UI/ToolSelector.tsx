@@ -27,7 +27,7 @@ const ToolSelector: React.FC<{numKeyPress: string, setNumKeyPress: Function , ne
   }, [numKeyPress]);
 
   useEffect(() => {
-    if (global.Tools[newPickup.itemName]) {
+    if (global.Weapons[newPickup.itemName] || global.CollectionTools[newPickup.itemName]) {
       let itemName = newPickup.itemName;
       let itemIndex = findIndexOf(itemName);
       if (itemIndex === -1) {

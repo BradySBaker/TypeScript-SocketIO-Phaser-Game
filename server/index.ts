@@ -1,7 +1,7 @@
 import { Socket, Server } from 'socket.io';
 import craftingRecipes from '../craftingRecipes';
 
-type Drop = 'bone' | 'stone' | 'goo' | 'spear' | 'bone_pickaxe';
+type Drop = 'bone' | 'stone' | 'goo' | 'spear' | 'bone_pickaxe' | 'bone_hatchet';
 
 type MobTypes = 'goat' | 'skug' | 'quilFluff';
 type EnvObj = 'stickyFern' | 'stone' | 'rock';

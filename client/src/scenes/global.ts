@@ -12,9 +12,10 @@ export default {
   mobCount: 0 as number,
   inventory: {} as {[itemName: string]: number},
   Throwables: {'stone': true, 'spear': true} as {[type: string]: boolean},
-  Tools: {'stone': true, 'spear': true, 'bone_pickaxe': true} as {[type: string]: boolean},
+  Weapons: {'stone': true, 'spear': true} as {[type: string]: boolean},
+  CollectionTools: {'bone_pickaxe': {toolType: 'mining'}, 'bone_hatchet': {toolType: 'chopping'}} as {[type: string]: {toolType: ToolCategory}},
   //This is for finding images only [for example stone is a tool and an env element] [this should be depending on where the image is located]
   EnvImages: ['stickyFern', 'rock'] as EnvObj[],
-  ItemImages: ['bone' , 'goo', 'stone', 'grapple', 'spear', 'bone_pickaxe'] as Drop[]
+  ItemImages: ['bone' , 'goo', 'stone', 'grapple', 'spear', 'bone_pickaxe', 'bone_hatchet'] as Drop[]
 
 }
