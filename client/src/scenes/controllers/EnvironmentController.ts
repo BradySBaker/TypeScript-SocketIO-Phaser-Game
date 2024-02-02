@@ -9,7 +9,12 @@ const envObj_RENDER_DISTANCE = 2000; //should be 2000!
 
 let prevPlayerAreaX: undefined | number;
 
-let envObjSettings: {[name in EnvObj]: {rate: number, size: number, randomRotation: boolean}} = {stickyFern: {rate: .5, size: 3, randomRotation: false}, stone: {rate: .5, size: 1.5, randomRotation: true}}; //rates must add up to 100
+let envObjSettings: {[name in EnvObj]: {rate: number, size: number, randomRotation: boolean, pickupable: boolean}} = {
+  stickyFern: {rate: .33, size: 3, randomRotation: false, pickupable: true},
+  stone: {rate: .33, size: 1.5, randomRotation: true, pickupable: true},
+  rock: {rate: .33, size: 3.5, randomRotation: false, pickupable: false}
+}; //rates must add up to 100
+
 let envObjs: {[id: number | string]: Phaser.GameObjects.Sprite} = {};
 let allEnvObjectData: {[areaX: number]: {[id: number | string]: {name: EnvObj, pos: GameObject}}} = {}; //Will house objects based on areaX to + 2000
 
@@ -25,6 +30,8 @@ export default class EnvironmentController {
   overlap = false;
   overlapObj!: Phaser.GameObjects.Sprite;
   overlapFalseTime = 10;
+  miningIcon!: Phaser.GameObjects.Sprite | undefined;
+  hit = false;
   constructor(game: Game) {
      this.game = game;
      this.envObjGroup = game.physics.add.group({
@@ -37,12 +44,14 @@ export default class EnvironmentController {
   spawnEnvObj(envObjData: envObjData) {
     let settings = envObjSettings[envObjData.name];
     let newEnvObj = this.game.add.sprite(envObjData.pos.x, envObjData.pos.y, envObjData.name).setScale(settings.size);
+    newEnvObj.x;
+
     if (settings.randomRotation) {
       let randomAngle = Math.floor(Math.random() * 361) - 180;
       newEnvObj.angle = randomAngle;
       newEnvObj.y += 10;
     }
-    newEnvObj.setData({id: envObjData.id, objtype: 'envObj'}); //Obj type is labeled for pickup
+    newEnvObj.setData({id: envObjData.id, objtype: 'envObj', envObjName: envObjData.name}); //Obj type is labeled for pickup
     newEnvObj.y -= (newEnvObj.height * 3)/2;
     envObjs[envObjData.id] = newEnvObj;
     this.envObjGroup.add(newEnvObj);
@@ -102,12 +111,13 @@ export default class EnvironmentController {
         }
       } else {
         let obj: Phaser.GameObjects.Sprite | undefined;
-        if (this.game.ThrowWEPC.attatchedThrowableObjs[id]) {
-          obj = this.game.ThrowWEPC.attatchedThrowableObjs[id].obj;
-          delete this.game.ThrowWEPC.attatchedThrowableObjs[id];
-        } else if (this.game.ThrowWEPC.groundThrowableObjs[id]) {
-          obj = this.game.ThrowWEPC.groundThrowableObjs[id];
-          delete this.game.ThrowWEPC.groundThrowableObjs[id];
+        let ThrowWEPC = this.game.ToolController.ThrowWEPC;
+        if (ThrowWEPC.attatchedThrowableObjs[id]) {
+          obj = ThrowWEPC.attatchedThrowableObjs[id].obj;
+          delete ThrowWEPC.attatchedThrowableObjs[id];
+        } else if (ThrowWEPC.groundThrowableObjs[id]) {
+          obj = ThrowWEPC.groundThrowableObjs[id];
+          delete ThrowWEPC.groundThrowableObjs[id];
         }
         if (obj !== undefined) {
           this.envObjGroup.remove(obj);
@@ -116,6 +126,14 @@ export default class EnvironmentController {
       }
       if (requestingPickup[id]) {
         delete requestingPickup[id];
+      }
+    });
+
+
+    global.socket.on('incrementObjBreak', (id: number) => { //--fix when out of render distance
+      if (envObjs[id]) {
+        envObjs[id].setScale(envObjs[id].scale/1.2);
+        envObjs[id].y += envObjs[id].height/4;
       }
     });
   };
@@ -157,9 +175,49 @@ export default class EnvironmentController {
   }
 
   handleOverlap(hoverDetector: Phaser.Types.Physics.Arcade.GameObjectWithBody, obj: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
+    //@ts-ignore
     this.game.EnvironmentController.overlapObj = obj; //this = HoverDetectionController
     this.game.EnvironmentController.overlap = true;
   };
+
+  handleMineableObjects() {
+    if (!this.miningIcon) {
+      this.miningIcon = this.game.add.sprite(this.overlapObj.x, this.overlapObj.y, 'bone_pickaxe').setDepth(2);
+    } else {
+      this.miningIcon.setPosition(this.overlapObj.x, this.overlapObj.y);
+    }
+    if (this.hit) {
+      global.socket.emit('mineObj', global.curPlayerData.id, {name: this.overlapObj.getData('envObjName'), id: this.overlapObj.getData('id')});
+      let hoverDetector = this.game.HoverDetectionController.hoverCollider;
+      let colors = [0XFFE800, 0XFFFFFF];
+      let emitter = this.game.add.particles(hoverDetector.x, hoverDetector.y, 'spark', {quantity: 10, speed: {min: -200, max: 200}, scale: {start: 3, end: 0}, lifespan: 200, emitting: false, tint: colors, gravityY: 150}).setDepth(2);
+      emitter.explode();
+      setTimeout(() => emitter.destroy(), 500);
+      this.hit = false;
+    }
+  }
+
+  handlePickupableObjects() {
+    const camera = this.game.cameras.main;
+    externalSetUsePos({x: ((this.overlapObj.x - camera.worldView.x) * camera.zoom) - this.overlapObj.height/2, y: ((this.overlapObj.y - camera.worldView.y) * camera.zoom) - this.overlapObj.height/2});
+    if (prevUseComplete === useComplete) {
+      this.overlap = false;
+      return;
+    }
+
+    prevUseComplete = useComplete;
+
+    if (useComplete) { //Picked up
+      this.pickupEnvObj(this.overlapObj.getData('id'), this.overlapObj.getData('objtype'));
+    }
+  }
+
+
+  toolHit() {
+    if (this.miningIcon) {
+      this.hit = true;
+    }
+  }
 
   handleDisplayUI() {
     if (!externalSetUsePos) {
@@ -171,21 +229,24 @@ export default class EnvironmentController {
       this.overlapFalseTime = 0;
     }
     if (this.overlapFalseTime < 4) {
-      let camera = this.game.cameras.main
-      externalSetUsePos({x: ((this.overlapObj.x - camera.worldView.x) * camera.zoom) - this.overlapObj.height/2, y: ((this.overlapObj.y - camera.worldView.y) * camera.zoom) - this.overlapObj.height/2});
-
-      if (prevUseComplete === useComplete) {
-        this.overlap = false;
-        return;
+      let name = this.overlapObj.getData('envObjName') as EnvObj;
+      let pickupable = true;
+      if (name) {
+        pickupable = envObjSettings[name as EnvObj].pickupable;
       }
-      prevUseComplete = useComplete;
-
-      if (useComplete) { //Picked up
-        this.pickupEnvObj(this.overlapObj.getData('id'), this.overlapObj.getData('objtype'));
+      if (pickupable) {
+        this.handlePickupableObjects();
+      } else if (this.game.ToolController.curCollectionTool) {
+        this.handleMineableObjects();
       }
     } else {
       this.overlap = false;
       externalSetUsePos(false);
+      if (this.miningIcon) {
+        this.miningIcon.destroy();
+        this.miningIcon = undefined;
+        this.hit = false;
+      }
     }
     this.overlap = false;
   };

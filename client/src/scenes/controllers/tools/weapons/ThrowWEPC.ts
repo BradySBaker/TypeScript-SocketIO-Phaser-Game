@@ -1,7 +1,6 @@
 import Game from '../../../game.js';
 
 import global from '../../../global.js';
-import createParticles from "../../Particles.js";
 
 import WeaponSettings from "./WeaponSettings.js";
 import {externalSetPickup} from "../../../../UI/index.js";
@@ -192,7 +191,8 @@ export default class ThrowWEPC {
     const tipX = obj.x + obj.width * Math.cos(Phaser.Math.DegToRad(obj.angle));
     const tipY = obj.y + obj.width * Math.sin(Phaser.Math.DegToRad(obj.angle));
     if (!particles) {
-      particles = createParticles(this.game, {x: tipX, y: tipY}, obj.angle + 180);
+      let pAngle = obj.angle + 180;
+      particles = this.game.add.particles(obj.x, obj.y, 'bloodDrop', {quantity: 1, speed: {min: -200, max: 200}, scale: {start: 1, end: 0}, lifespan: 500, frequency: 30,  angle: { min: pAngle - 20, max: pAngle + 20 }})
     } else {
       particles.setPosition(tipX, tipY);
     }
