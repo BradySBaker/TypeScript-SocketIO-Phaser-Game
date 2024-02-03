@@ -1,3 +1,5 @@
 node_modules
 .parcel-cache
 ./server/compiled
+client/dist/*
+!client/dist/assets/
