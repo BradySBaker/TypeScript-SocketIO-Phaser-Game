@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import global from "../../scenes/global";
+import global from "../../controllers/global";
 let inventoryPos: {[id: string]: GameObject} = {};
 const Inventory: React.FC <{newPickup: {count: number, itemName: string}}> = ({newPickup}) => {
   const [boxElements, setBoxElements] = useState(() =>Array.from({ length: 5 }, () => Array(5).fill(undefined)));
