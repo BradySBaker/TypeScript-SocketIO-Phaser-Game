@@ -100,8 +100,12 @@ export default class ToolController {
     let toolXOffset = this.PlayerController.player.direction === 'right' ? 15 : -15;
     let toolYOffset = 10;
     if (global.CollectionTools[global.equiped]) {
-      if (!this.curCollectionTool) {
+      if (!this.curCollectionTool || this.curCollectionTool.getData('toolName') !== global.equiped) {
+        if (this.curCollectionTool) {
+          this.curCollectionTool.destroy();
+        }
         this.curCollectionTool = this.game.add.sprite(this.PlayerController.player.pos.x + toolXOffset, this.PlayerController.player.pos.y - toolYOffset, global.equiped).setDepth(1).setScale(1.5);
+        this.curCollectionTool.setData('toolName', global.equiped);
         this.curCollectionTool.angle = this.toolStartAngle;
       } else {
         this.curCollectionTool.setPosition(this.PlayerController.player.pos.x + toolXOffset, this.PlayerController.player.pos.y - toolYOffset);

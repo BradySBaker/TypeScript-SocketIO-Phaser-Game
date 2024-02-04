@@ -17,5 +17,5 @@ type EnvObj = 'stickyFern' | 'stone' | 'rock' | 'tree';
 
 type Throwable = 'stone' | 'spear';
 type Tool = 'spear' | 'grapple' | 'stone' | 'bone_pickaxe' | 'bone_hatchet';
-type Drop = 'bone' | 'stone' | 'goo' | 'spear' | 'bone_pickaxe' | 'bone_hatchet';
+type Drop = 'bone' | 'stone' | 'goo' | 'spear' | 'bone_pickaxe' | 'bone_hatchet' | 'wood';
 type ToolCategory = 'mining' | 'chopping';

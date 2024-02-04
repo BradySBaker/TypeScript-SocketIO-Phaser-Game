@@ -9,11 +9,13 @@ const envObj_RENDER_DISTANCE = 2000; //should be 2000!
 
 let prevPlayerAreaX: undefined | number;
 
-let envObjSettings: {[name in EnvObj]: {rate: number, size: number, randomRotation: boolean, pickupable: boolean, toolType?: ToolCategory}} = {
+let objsToShake: {[id: string]: number} = {}; //Number is time
+
+let envObjSettings: {[name in EnvObj]: {rate: number, size: number, randomRotation: boolean, pickupable: boolean, toolType?: ToolCategory, hitAction?: 'shake' | 'shrink'}} = {
   stickyFern: {rate: .25, size: 3, randomRotation: false, pickupable: true},
   stone: {rate: .25, size: 1.5, randomRotation: true, pickupable: true},
-  rock: {rate: .25, size: 3.5, randomRotation: false, pickupable: false, toolType: 'mining'},
-  tree: {rate: .25, size: 8, randomRotation: false, pickupable: false, toolType: 'chopping'}
+  rock: {rate: .25, size: 3.5, randomRotation: false, pickupable: false, toolType: 'mining', hitAction: 'shrink'},
+  tree: {rate: .25, size: 8, randomRotation: false, pickupable: false, toolType: 'chopping', hitAction: 'shake'}
 }; //rates must add up to 100
 
 let envObjs: {[id: number | string]: Phaser.GameObjects.Sprite} = {};
@@ -135,10 +137,15 @@ export default class EnvironmentController {
     });
 
 
-    global.socket.on('incrementObjBreak', (id: number) => { //--fix when out of render distance
+    global.socket.on('objectHitThresholdReached', (id: number) => { //--fix when out of render distance
       if (envObjs[id]) {
-        envObjs[id].setScale(envObjs[id].scale/1.2);
-        envObjs[id].y += envObjs[id].height/4;
+        let objName = envObjs[id].getData('envObjName') as EnvObj;
+        if (envObjSettings[objName].hitAction === 'shake') {
+          objsToShake[id] = 0;
+        } else { //Fix for modularity
+          envObjs[id].setScale(envObjs[id].scale/1.2);
+          envObjs[id].y += envObjs[id].height/4;
+        }
       }
     });
   };
@@ -179,6 +186,24 @@ export default class EnvironmentController {
     }
   }
 
+
+  handleShakeEffects() {
+    for (let id in objsToShake) {
+      let time = objsToShake[id];
+      if (time < 3) {
+        envObjs[id].angle += 1 * this.game.deltaTime;
+      } else if (time >= 6 && time < 9) {
+        envObjs[id].angle -= 1 * this.game.deltaTime;
+      } else {
+        envObjs[id].angle = 0;
+        delete objsToShake[id];
+        continue;
+      }
+      objsToShake[id] += this.game.deltaTime;
+    }
+  }
+
+
   handleOverlap(hoverDetector: Phaser.Types.Physics.Arcade.GameObjectWithBody, obj: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
     //@ts-ignore
     this.game.EnvironmentController.overlapObj = obj; //this = HoverDetectionController
@@ -187,6 +212,8 @@ export default class EnvironmentController {
 
   handleBreakableObjects() {
     if (global.CollectionTools[global.equiped].toolType !== this.overlapObj.getData('toolType')) {
+      this.miningIcon?.destroy()
+      this.miningIcon = undefined;
       return;
     }
     if (!this.miningIcon) {
