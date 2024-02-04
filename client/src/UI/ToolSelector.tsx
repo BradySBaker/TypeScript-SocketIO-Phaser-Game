@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import global from "../scenes/global";
+import global from "../scene/global";
 // import dropTypesAndCrafting from "../../../dropTypesAndCrafting";
 let tools: {name: string, count: number}[] = new Array(6);
 tools.fill({name: '', count: 0});
@@ -27,7 +27,7 @@ const ToolSelector: React.FC<{numKeyPress: string, setNumKeyPress: Function , ne
   }, [numKeyPress]);
 
   useEffect(() => {
-    if (global.Tools[newPickup.itemName]) {
+    if (global.Weapons[newPickup.itemName] || global.CollectionTools[newPickup.itemName]) {
       let itemName = newPickup.itemName;
       let itemIndex = findIndexOf(itemName);
       if (itemIndex === -1) {

@@ -32,7 +32,7 @@ export default class TerrainHandler {
     }
     this.prevChunks[index] = [];
     prevChunk.forEach((pos, idx) => {
-      let curRect = this.game.add.tileSprite(pos.x, pos.y, this.blockDetails.width, this.blockDetails.height, 'grass').setDepth(1);
+      let curRect = this.game.add.tileSprite(pos.x, pos.y, this.blockDetails.width, this.blockDetails.height, 'grass').setDepth(2);
       this.blockGroup.add(curRect);
       this.prevChunks[index][idx] = curRect;
       if (idx === prevChunk.length - 1 && lastChunk) {

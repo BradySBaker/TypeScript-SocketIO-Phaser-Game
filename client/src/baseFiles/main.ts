@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import Game from "../scenes/game.js";
+import Game from "../scene/game.js";
 
 
 const config = {
@@ -11,7 +11,7 @@ const config = {
 		default: 'arcade',
 		arcade: {
 			gravity: { y: 0 },
-			debug: true
+			debug: false
 		}
 	},
   input: {

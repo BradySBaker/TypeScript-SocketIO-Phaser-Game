@@ -9,10 +9,13 @@ const envObj_RENDER_DISTANCE = 2000; //should be 2000!
 
 let prevPlayerAreaX: undefined | number;
 
-let envObjSettings: {[name in EnvObj]: {rate: number, size: number, randomRotation: boolean, pickupable: boolean}} = {
-  stickyFern: {rate: .33, size: 3, randomRotation: false, pickupable: true},
-  stone: {rate: .33, size: 1.5, randomRotation: true, pickupable: true},
-  rock: {rate: .33, size: 3.5, randomRotation: false, pickupable: false}
+let objsToShake: {[id: string]: number} = {}; //Number is time
+
+let envObjSettings: {[name in EnvObj]: {rate: number, size: number, randomRotation: boolean, pickupable: boolean, toolType?: ToolCategory, hitAction?: 'shake' | 'shrink'}} = {
+  stickyFern: {rate: .25, size: 3, randomRotation: false, pickupable: true},
+  stone: {rate: .25, size: 1.5, randomRotation: true, pickupable: true},
+  rock: {rate: .25, size: 3.5, randomRotation: false, pickupable: false, toolType: 'mining', hitAction: 'shrink'},
+  tree: {rate: .25, size: 8, randomRotation: false, pickupable: false, toolType: 'chopping', hitAction: 'shake'}
 }; //rates must add up to 100
 
 let envObjs: {[id: number | string]: Phaser.GameObjects.Sprite} = {};
@@ -43,7 +46,7 @@ export default class EnvironmentController {
 
   spawnEnvObj(envObjData: envObjData) {
     let settings = envObjSettings[envObjData.name];
-    let newEnvObj = this.game.add.sprite(envObjData.pos.x, envObjData.pos.y, envObjData.name).setScale(settings.size);
+    let newEnvObj = this.game.add.sprite(envObjData.pos.x, envObjData.pos.y, envObjData.name).setScale(settings.size).setDepth(envObjData.name === 'tree' ? 1 : 0); //--Fix depth make modular
     newEnvObj.x;
 
     if (settings.randomRotation) {
@@ -51,10 +54,14 @@ export default class EnvironmentController {
       newEnvObj.angle = randomAngle;
       newEnvObj.y += 10;
     }
-    newEnvObj.setData({id: envObjData.id, objtype: 'envObj', envObjName: envObjData.name}); //Obj type is labeled for pickup
-    newEnvObj.y -= (newEnvObj.height * 3)/2;
+    newEnvObj.setData({id: envObjData.id, objtype: 'envObj', envObjName: envObjData.name, toolType: envObjSettings[envObjData.name].toolType}); //Obj type is labeled for pickup
+    newEnvObj.y -= (newEnvObj.height * newEnvObj.scale)/2;
     envObjs[envObjData.id] = newEnvObj;
     this.envObjGroup.add(newEnvObj);
+    if (envObjData.name === 'tree') { //--Fix make modular [moves collider to the trunk]
+      (newEnvObj.body as Phaser.Physics.Arcade.Body).setSize(newEnvObj.scale/2, newEnvObj.scale*2);
+      (newEnvObj.body as Phaser.Physics.Arcade.Body).setOffset(newEnvObj.width/2.2, newEnvObj.height/2);
+    }
   };
 
   validateAndCreateEnvObj(pos: GameObject) {
@@ -130,10 +137,15 @@ export default class EnvironmentController {
     });
 
 
-    global.socket.on('incrementObjBreak', (id: number) => { //--fix when out of render distance
+    global.socket.on('objectHitThresholdReached', (id: number) => { //--fix when out of render distance
       if (envObjs[id]) {
-        envObjs[id].setScale(envObjs[id].scale/1.2);
-        envObjs[id].y += envObjs[id].height/4;
+        let objName = envObjs[id].getData('envObjName') as EnvObj;
+        if (envObjSettings[objName].hitAction === 'shake') {
+          objsToShake[id] = 0;
+        } else { //Fix for modularity
+          envObjs[id].setScale(envObjs[id].scale/1.2);
+          envObjs[id].y += envObjs[id].height/4;
+        }
       }
     });
   };
@@ -174,15 +186,38 @@ export default class EnvironmentController {
     }
   }
 
+
+  handleShakeEffects() {
+    for (let id in objsToShake) {
+      let time = objsToShake[id];
+      if (time < 3) {
+        envObjs[id].angle += 1 * this.game.deltaTime;
+      } else if (time >= 6 && time < 9) {
+        envObjs[id].angle -= 1 * this.game.deltaTime;
+      } else {
+        envObjs[id].angle = 0;
+        delete objsToShake[id];
+        continue;
+      }
+      objsToShake[id] += this.game.deltaTime;
+    }
+  }
+
+
   handleOverlap(hoverDetector: Phaser.Types.Physics.Arcade.GameObjectWithBody, obj: Phaser.Types.Physics.Arcade.GameObjectWithBody) {
     //@ts-ignore
     this.game.EnvironmentController.overlapObj = obj; //this = HoverDetectionController
     this.game.EnvironmentController.overlap = true;
   };
 
-  handleMineableObjects() {
+  handleBreakableObjects() {
+    if (global.CollectionTools[global.equiped].toolType !== this.overlapObj.getData('toolType')) {
+      this.miningIcon?.destroy()
+      this.miningIcon = undefined;
+      return;
+    }
     if (!this.miningIcon) {
-      this.miningIcon = this.game.add.sprite(this.overlapObj.x, this.overlapObj.y, 'bone_pickaxe').setDepth(2);
+      this.miningIcon = this.game.add.sprite(this.overlapObj.x, this.overlapObj.y, global.equiped).setDepth(2);
     } else {
       this.miningIcon.setPosition(this.overlapObj.x, this.overlapObj.y);
     }
@@ -237,7 +272,7 @@ export default class EnvironmentController {
       if (pickupable) {
         this.handlePickupableObjects();
       } else if (this.game.ToolController.curCollectionTool) {
-        this.handleMineableObjects();
+        this.handleBreakableObjects();
       }
     } else {
       this.overlap = false;
