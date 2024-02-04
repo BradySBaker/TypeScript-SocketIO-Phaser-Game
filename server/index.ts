@@ -132,6 +132,7 @@ io.on('connection', (socket: Socket) => {
       dropId++;
       delete mobHealths[mobId];
     } else {
+      console.log(info.playerID)
       io.emit('damagedMob', mobId, info.playerID);
     }
   });

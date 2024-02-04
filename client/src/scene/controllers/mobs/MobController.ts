@@ -44,7 +44,7 @@ export default class MobController {
 
 
   damage(id: number | string, info: {type: string, pos: GameObject, weaponName: Throwable}) {
-    global.socket.emit('damageMob', id, {pos: {x: Math.round(info.pos.x), y: Math.round(info.pos.y)}, type: info.type, weaponName: info.weaponName, playerId: global.curPlayerData.id});
+    global.socket.emit('damageMob', id, {pos: {x: Math.round(info.pos.x), y: Math.round(info.pos.y)}, type: info.type, weaponName: info.weaponName, playerID: global.curPlayerData.id});
   }
 
   handleGround(mob: Mob, type: MobTypes) {
@@ -93,7 +93,7 @@ export default class MobController {
       }
     }
     if (moveX + mob.container.x < 320) { //stop mob at edge
-      mob.move.vx = 0;
+      moveX = 0;
     }
 
     this.controllers[type].handleLimbs(mob.container, {x: moveX + mob.container.x, y: mob.move.vy + mob.container.y});

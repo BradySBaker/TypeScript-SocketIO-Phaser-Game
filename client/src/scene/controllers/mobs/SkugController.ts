@@ -20,7 +20,7 @@ export default class SkugController {
   create(pos: GameObject, id: number | string): Phaser.GameObjects.Container {
     const body = this.game.add.sprite(0, 0, 'skugBody').setName('body');
     const head = this.game.add.sprite(16, -5, 'skugHead').setName('head').setOrigin(0, 0);
-    head.angle = -40;
+    head.angle = -20;
     const leg1 = this.game.add.sprite(3, 15, 'skugLeg').setName('leg1').setOrigin(0.5, 0);
     const leg2 = this.game.add.sprite(-7, 15, 'skugLeg').setName('leg2').setOrigin(0.5, 0);
 
@@ -76,7 +76,10 @@ export default class SkugController {
       }
       leg1.angle += leg1AngleAdd * this.game.deltaTime;
       leg2.angle += leg2AngleAdd * this.game.deltaTime;
-      head.angle += headAngleAdd * this.game.deltaTime;
+      let newAngle = head.angle + headAngleAdd * this.game.deltaTime
+      if (newAngle >= -140 && newAngle <= 40) {
+        head.angle += headAngleAdd * this.game.deltaTime;
+      }
       if (leg2.angle >= skugSpeed * 30) {
         container.setData('frontLegForward', true);
       }
@@ -92,6 +95,7 @@ export default class SkugController {
 
   handleDamage(mob: Mob) {
     let damagingPlayer = global.playersData[mob.damagedByPlayer!];
+
     if (!damagingPlayer || mob.curMovementTimer >= 800) {
       mob.damagedByPlayer = undefined;
       mob.curMovementTimer = 0;
