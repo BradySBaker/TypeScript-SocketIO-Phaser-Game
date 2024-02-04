@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 import craftingRecipes from '../../../../craftingRecipes.js';
-import global from "../../controllers/global.js";
+import global from "../../scene/global.js";
 
 const CraftingMenu: React.FC <{newPickup: {count: number, itemName: string}, setNewPickup: Function}> = ({newPickup, setNewPickup}) => {
   const [recipeBoxes, setRecipeBoxes] = useState<React.JSX.Element[]>([]);

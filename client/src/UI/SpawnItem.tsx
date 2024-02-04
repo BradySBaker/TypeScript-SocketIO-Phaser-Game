@@ -1,5 +1,5 @@
 import React, {useEffect, useState} from "react";
-import global from "../controllers/global";
+import global from "../scene/global";
 
 const SpawnItem = () => { //Fix send data to server
   const [spawnButtons, setSpawnButtons] = useState<React.ReactNode[]>([]);

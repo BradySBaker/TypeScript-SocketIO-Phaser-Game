@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-import global from "../controllers/global";
+import global from "../scene/global";
 // import dropTypesAndCrafting from "../../../dropTypesAndCrafting";
 let tools: {name: string, count: number}[] = new Array(6);
 tools.fill({name: '', count: 0});

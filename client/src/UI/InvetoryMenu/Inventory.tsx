@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 
-import global from "../../controllers/global";
+import global from "../../scene/global";
 let inventoryPos: {[id: string]: GameObject} = {};
 const Inventory: React.FC <{newPickup: {count: number, itemName: string}}> = ({newPickup}) => {
   const [boxElements, setBoxElements] = useState(() =>Array.from({ length: 5 }, () => Array(5).fill(undefined)));
@@ -17,18 +17,20 @@ const Inventory: React.FC <{newPickup: {count: number, itemName: string}}> = ({n
   useEffect(() => {
     let newBoxElements = [...boxElements];
     for (let itemName in global.inventory) {
+      if (global.inventory[itemName] < 1) {
+        if (inventoryPos[itemName]) {
+          newBoxElements[inventoryPos[itemName].x][inventoryPos[itemName].y] = undefined;
+          delete inventoryPos[itemName];
+        }
+        delete global.inventory[itemName];
+        return;
+      }
       if (!inventoryPos[itemName]) {
         let newPos = findFirstUndefinedPosition(newBoxElements);
-        if (!newPos) {
+        if (!newPos) { //Fix when no newPos
           return;
         }
         inventoryPos[itemName] = newPos;
-      }
-      if (global.inventory[itemName] < 1) {
-        console.log(itemName);
-        newBoxElements[inventoryPos[itemName].x][inventoryPos[itemName].y] = undefined;
-        delete inventoryPos[itemName];
-        delete global.inventory[itemName];
       }
       let count = global.inventory[itemName];
       newBoxElements[inventoryPos[itemName].x][inventoryPos[itemName].y] = {itemName, count};

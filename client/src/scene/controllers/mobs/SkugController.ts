@@ -95,11 +95,11 @@ export default class SkugController {
     if (!damagingPlayer || mob.curMovementTimer >= 800) {
       mob.damagedByPlayer = undefined;
       mob.curMovementTimer = 0;
-      mob.vx = 0;
+      mob.move.vx = 0;
       return;
     }
     let xDist = mob.container.x - damagingPlayer.body.x;
-    mob.vx = xDist > 0 ? this.speed * 1.5 : -this.speed * 1.5;
+    mob.move.vx = xDist > 0 ? this.speed * 1.5 : -this.speed * 1.5;
     mob.curMovementTimer += this.game.deltaTime;
   }
 
