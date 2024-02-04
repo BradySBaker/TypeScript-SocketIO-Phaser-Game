@@ -17,3 +17,5 @@ With a longstanding interest in learning TypeScript and Socket.IO, I figured the
 This project has proven to be an invaluable learning experience, offering insights not only into acquiring new programming languages but also providing a comprehensive understanding of the intricacies involved in creating multiplayer games.
 The multiplayer aspect has emerged as the most challenging component of this project. Navigating decisions on organizing data exchanged between the client and server, determining the relevant data to transmit, and devising strategies to handle diverse scenarios has demanded substantial deliberation and problem-solving.
 I look forward to continuing my work on this project and similar endeavors in the future!
+
+![]([https://github.com/BradySBaker/TypeScript-SocketIO-Phaser-Game/game.gif])
