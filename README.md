@@ -18,4 +18,4 @@ This project has proven to be an invaluable learning experience, offering insigh
 The multiplayer aspect has emerged as the most challenging component of this project. Navigating decisions on organizing data exchanged between the client and server, determining the relevant data to transmit, and devising strategies to handle diverse scenarios has demanded substantial deliberation and problem-solving.
 I look forward to continuing my work on this project and similar endeavors in the future!
 
-![](https://github.com/BradySBaker/TypeScript-SocketIO-Phaser-Game/multiplayerGame.gif)
+![](https://github.com/BradySBaker/TypeScript-SocketIO-Phaser-Game/blob/main/multiplayerGame.gif)
